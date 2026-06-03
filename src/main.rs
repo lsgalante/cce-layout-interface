@@ -99,6 +99,8 @@ struct LayoutApp {
     last_selected: Option<usize>,
     page_w: f32,
     page_h: f32,
+    pan_x: f32,
+    pan_y: f32,
 }
 
 fn get_monitor_ppi() -> f32 {
@@ -159,8 +161,8 @@ impl LayoutApp {
         let zoom = self.render_zoom();
         let page_w = self.page_w * zoom;
         let page_h = self.page_h * zoom;
-        let page_x = 280.0 + (canvas_w - page_w) / 2.0;
-        let page_y = 26.0 + (canvas_h - page_h) / 2.0;
+        let page_x = 280.0 + (canvas_w - page_w) / 2.0 + self.pan_x;
+        let page_y = 26.0 + (canvas_h - page_h) / 2.0 + self.pan_y;
         
         // 1. MenuBar text labels
         labels.extend(self.menu_bar.text_labels());
@@ -669,6 +671,8 @@ impl Application for LayoutApp {
             last_selected: None,
             page_w,
             page_h,
+            pan_x: 0.0,
+            pan_y: 0.0,
         };
 
         app.sync_sidebar_fields();
@@ -696,6 +700,8 @@ impl Application for LayoutApp {
                 self.elements.clear();
                 self.selected_idx = None;
                 self.dragging = None;
+                self.pan_x = 0.0;
+                self.pan_y = 0.0;
                 self.sync_sidebar_fields();
                 *needs_rebuild = true;
                 self.needs_rebuild = true;
@@ -882,8 +888,8 @@ impl Application for LayoutApp {
         let zoom = self.render_zoom();
         
         // Centered Paper Position
-        let page_x = 280.0 + (canvas_w - self.page_w * zoom) / 2.0;
-        let page_y = 26.0 + (canvas_h - self.page_h * zoom) / 2.0;
+        let page_x = 280.0 + (canvas_w - self.page_w * zoom) / 2.0 + self.pan_x;
+        let page_y = 26.0 + (canvas_h - self.page_h * zoom) / 2.0 + self.pan_y;
 
         // Dark slate canvas backdrop
         quads.push((280.0, 26.0, canvas_w, canvas_h, [0.12, 0.12, 0.15, 1.0]));
@@ -1138,8 +1144,8 @@ impl Application for LayoutApp {
                 let zoom = self.render_zoom();
                 let page_w = self.page_w * zoom;
                 let page_h = self.page_h * zoom;
-                let page_x = 280.0 + (canvas_w - page_w) / 2.0;
-                let page_y = 26.0 + (canvas_h - page_h) / 2.0;
+                let page_x = 280.0 + (canvas_w - page_w) / 2.0 + self.pan_x;
+                let page_y = 26.0 + (canvas_h - page_h) / 2.0 + self.pan_y;
                 
                 let cx = (px - page_x) / zoom;
                 let cy = (py - page_y) / zoom;
@@ -1231,6 +1237,8 @@ impl Application for LayoutApp {
                                     if sel < PRESETS.len() {
                                         self.page_w = PRESETS[sel].w;
                                         self.page_h = PRESETS[sel].h;
+                                        self.pan_x = 0.0;
+                                        self.pan_y = 0.0;
                                     }
                                 }
                             }
@@ -1349,8 +1357,8 @@ impl Application for LayoutApp {
                 let zoom = self.render_zoom();
                 let page_w = self.page_w * zoom;
                 let page_h = self.page_h * zoom;
-                let page_x = 280.0 + (canvas_w - page_w) / 2.0;
-                let page_y = 26.0 + (canvas_h - page_h) / 2.0;
+                let page_x = 280.0 + (canvas_w - page_w) / 2.0 + self.pan_x;
+                let page_y = 26.0 + (canvas_h - page_h) / 2.0 + self.pan_y;
                 
                 let cx = (px - page_x) / zoom;
                 let cy = (py - page_y) / zoom;
@@ -1416,6 +1424,15 @@ impl Application for LayoutApp {
                     self.needs_rebuild = true;
                 }
             }
+        } else {
+            let (dx, dy) = match delta {
+                MouseScrollDelta::LineDelta(x, y) => (*x * 24.0, *y * 24.0),
+                MouseScrollDelta::PixelDelta(pos) => (pos.x as f32, pos.y as f32),
+            };
+            self.pan_x += dx;
+            self.pan_y += dy;
+            *needs_rebuild = true;
+            self.needs_rebuild = true;
         }
     }
 
@@ -1431,6 +1448,8 @@ impl Application for LayoutApp {
                         if sel < PRESETS.len() {
                             self.page_w = PRESETS[sel].w;
                             self.page_h = PRESETS[sel].h;
+                            self.pan_x = 0.0;
+                            self.pan_y = 0.0;
                         }
                     }
                 }
