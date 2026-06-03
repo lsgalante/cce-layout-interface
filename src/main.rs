@@ -92,6 +92,10 @@ struct LayoutApp {
     btn_add_rect: Button,
     btn_add_banner: Button,
 
+    // Page 3: View settings controls
+    btn_toggle_rulers: Button,
+    rulers_enabled: bool,
+
     last_selected: Option<usize>,
     page_w: f32,
     page_h: f32,
@@ -102,6 +106,14 @@ impl LayoutApp {
         self.text_items.clear();
         
         let mut labels = Vec::new();
+
+        let canvas_w = self.width as f32 - 280.0;
+        let canvas_h = self.height as f32 - 26.0;
+        let zoom = self.slider_zoom.value();
+        let page_w = self.page_w * zoom;
+        let page_h = self.page_h * zoom;
+        let page_x = 280.0 + (canvas_w - page_w) / 2.0;
+        let page_y = 26.0 + (canvas_h - page_h) / 2.0;
         
         // 1. MenuBar text labels
         labels.extend(self.menu_bar.text_labels());
@@ -111,15 +123,7 @@ impl LayoutApp {
         
         // 3. Conditional Page rendering
         if self.paginator.selected_page() == 0 {
-            // Page Settings tab
-            labels.push(TextLabel {
-                text: "PAGE SETTINGS".to_string(),
-                x: 20.0,
-                y: 82.0,
-                font_size: 13.0,
-                color: [0xee, 0xee, 0xf5],
-            });
-
+            // Page Settings tab (no header)
             labels.extend(self.dropdown_presets.text_labels());
 
             // Add drop down list labels dynamically if open
@@ -141,18 +145,18 @@ impl LayoutApp {
                 }
             }
 
-            // Display active page width and height
+            // Display active page width and height (shifted up from 160/180)
             labels.push(TextLabel {
                 text: format!("Width: {} px", self.page_w),
                 x: 20.0,
-                y: 160.0,
+                y: 140.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
             labels.push(TextLabel {
                 text: format!("Height: {} px", self.page_h),
                 x: 20.0,
-                y: 180.0,
+                y: 160.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
@@ -219,15 +223,7 @@ impl LayoutApp {
                 });
             }
         } else if self.paginator.selected_page() == 2 {
-            // Canvas Options Page
-            labels.push(TextLabel {
-                text: "CANVAS OPTIONS".to_string(),
-                x: 20.0,
-                y: 82.0,
-                font_size: 13.0,
-                color: [0xee, 0xee, 0xf5],
-            });
-
+            // Canvas Options Page (no header)
             labels.extend(self.btn_toggle_grid.text_labels());
             labels.extend(self.btn_clear_canvas.text_labels());
             labels.extend(self.btn_add_text.text_labels());
@@ -237,34 +233,68 @@ impl LayoutApp {
             labels.push(TextLabel {
                 text: format!("Grid Snapping: {}", if self.grid_enabled { "ON (20px)" } else { "OFF" }),
                 x: 20.0,
-                y: 370.0,
+                y: 350.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
             labels.push(TextLabel {
                 text: format!("Total Elements: {}", self.elements.len()),
                 x: 20.0,
-                y: 390.0,
+                y: 370.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
         } else {
-            // View Options Page
-            labels.push(TextLabel {
-                text: "VIEW OPTIONS".to_string(),
-                x: 20.0,
-                y: 82.0,
-                font_size: 13.0,
-                color: [0xee, 0xee, 0xf5],
-            });
-
+            // View Options Page (no header)
             labels.push(TextLabel {
                 text: format!("Zoom: {:.0}%", self.slider_zoom.value() * 100.0),
                 x: 20.0,
-                y: 120.0,
+                y: 90.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
+
+            labels.push(TextLabel {
+                text: format!("Rulers: {}", if self.rulers_enabled { "ON" } else { "OFF" }),
+                x: 20.0,
+                y: 160.0,
+                font_size: 11.0,
+                color: [0x83, 0x83, 0x8a],
+            });
+
+            labels.extend(self.btn_toggle_rulers.text_labels());
+        }
+
+        if self.rulers_enabled {
+            // X Ruler Labels
+            let mut val = 0.0;
+            while val <= self.page_w {
+                if val as i32 % 100 == 0 {
+                    labels.push(TextLabel {
+                        text: format!("{}", val),
+                        x: page_x + val * zoom + 2.0,
+                        y: page_y - 16.0,
+                        font_size: 8.0,
+                        color: [0xaa, 0xaa, 0xbb],
+                    });
+                }
+                val += 50.0;
+            }
+
+            // Y Ruler Labels
+            let mut val = 0.0;
+            while val <= self.page_h {
+                if val as i32 % 100 == 0 {
+                    labels.push(TextLabel {
+                        text: format!("{}", val),
+                        x: page_x - 18.0,
+                        y: page_y + val * zoom + 2.0,
+                        font_size: 8.0,
+                        color: [0xaa, 0xaa, 0xbb],
+                    });
+                }
+                val += 50.0;
+            }
         }
 
         // Help Instructions at the bottom of the sidebar
@@ -298,13 +328,6 @@ impl LayoutApp {
         });
 
         // 5. Canvas Element Labels (drawn relative to the paper sheet)
-        let canvas_w = self.width as f32 - 280.0;
-        let canvas_h = self.height as f32 - 26.0;
-        let zoom = self.slider_zoom.value();
-        let page_w = self.page_w * zoom;
-        let page_h = self.page_h * zoom;
-        let page_x = 280.0 + (canvas_w - page_w) / 2.0;
-        let page_y = 26.0 + (canvas_h - page_h) / 2.0;
 
         for (idx, element) in self.elements.iter().enumerate() {
             match element {
@@ -521,6 +544,9 @@ impl Application for LayoutApp {
         let btn_add_rect = Button::new(0.0, 0.0, 0.0, 0.0).with_label("Add Rectangle");
         let btn_add_banner = Button::new(0.0, 0.0, 0.0, 0.0).with_label("Add Banner");
 
+        // Page 3 Buttons
+        let btn_toggle_rulers = Button::new(0.0, 0.0, 0.0, 0.0).with_label("Toggle Rulers");
+
         let mut app = Self {
             menu_bar,
             paginator,
@@ -553,6 +579,8 @@ impl Application for LayoutApp {
             btn_add_text,
             btn_add_rect,
             btn_add_banner,
+            btn_toggle_rulers,
+            rulers_enabled: false,
             
             last_selected: None,
             page_w,
@@ -662,8 +690,8 @@ impl Application for LayoutApp {
             // Set paginator bounds in the sidebar region
             self.paginator.set_rect(0.0, 26.0, 280.0, size.height - 26.0);
             
-            // Layout presets dropdown selector
-            self.dropdown_presets.set_rect(20.0, 110.0, 240.0, 26.0);
+            // Layout presets dropdown selector (shifted up to y=90.0)
+            self.dropdown_presets.set_rect(20.0, 90.0, 240.0, 26.0);
  
             // Position Layout properties control widgets (widened to 240px and realigned below top tabs)
             self.sidebar_x.set_rect(20.0, 90.0, 110.0, 26.0);
@@ -676,14 +704,17 @@ impl Application for LayoutApp {
             self.slider_r.set_rect(20.0, 330.0, 240.0, 18.0);
             self.slider_g.set_rect(20.0, 370.0, 240.0, 18.0);
             self.slider_b.set_rect(20.0, 410.0, 240.0, 18.0);
-            self.slider_zoom.set_rect(20.0, 140.0, 240.0, 18.0);
+            self.slider_zoom.set_rect(20.0, 110.0, 240.0, 18.0);
  
-            // Canvas Page buttons (widened to 240px and realigned below top tabs)
-            self.btn_toggle_grid.set_rect(20.0, 110.0, 240.0, 26.0);
-            self.btn_clear_canvas.set_rect(20.0, 160.0, 240.0, 26.0);
-            self.btn_add_text.set_rect(20.0, 210.0, 240.0, 26.0);
-            self.btn_add_rect.set_rect(20.0, 260.0, 240.0, 26.0);
-            self.btn_add_banner.set_rect(20.0, 310.0, 240.0, 26.0);
+            // Canvas Page buttons (shifted up by 20px)
+            self.btn_toggle_grid.set_rect(20.0, 90.0, 240.0, 26.0);
+            self.btn_clear_canvas.set_rect(20.0, 140.0, 240.0, 26.0);
+            self.btn_add_text.set_rect(20.0, 190.0, 240.0, 26.0);
+            self.btn_add_rect.set_rect(20.0, 240.0, 240.0, 26.0);
+            self.btn_add_banner.set_rect(20.0, 290.0, 240.0, 26.0);
+
+            // View Page rulers button
+            self.btn_toggle_rulers.set_rect(20.0, 180.0, 240.0, 26.0);
  
             self.rebuild_text_items();
             self.needs_rebuild = false;
@@ -697,8 +728,8 @@ impl Application for LayoutApp {
  
         // 2. Render Page Content
         if self.paginator.selected_page() == 0 {
-            // Render Page 0: Presets Dropdown
-            quads.push((20.0, 110.0, 240.0, 26.0, self.dropdown_presets.color()));
+            // Render Page 0: Presets Dropdown (shifted up to y=90)
+            quads.push((20.0, 90.0, 240.0, 26.0, self.dropdown_presets.color()));
             quads.extend(self.dropdown_presets.extra_quads());
         } else if self.paginator.selected_page() == 1 {
             // Render Page 1: Element Properties
@@ -721,26 +752,29 @@ impl Application for LayoutApp {
             quads.push((bx, by, bw, bh, self.slider_b.color()));
             quads.extend(self.slider_b.extra_quads());
         } else if self.paginator.selected_page() == 2 {
-            // Render Page 2: Canvas settings
-            quads.push((20.0, 110.0, 240.0, 26.0, self.btn_toggle_grid.color()));
+            // Render Page 2: Canvas settings (shifted up by 20px)
+            quads.push((20.0, 90.0, 240.0, 26.0, self.btn_toggle_grid.color()));
             quads.extend(self.btn_toggle_grid.extra_quads());
             
-            quads.push((20.0, 160.0, 240.0, 26.0, self.btn_clear_canvas.color()));
+            quads.push((20.0, 140.0, 240.0, 26.0, self.btn_clear_canvas.color()));
             quads.extend(self.btn_clear_canvas.extra_quads());
             
-            quads.push((20.0, 210.0, 240.0, 26.0, self.btn_add_text.color()));
+            quads.push((20.0, 190.0, 240.0, 26.0, self.btn_add_text.color()));
             quads.extend(self.btn_add_text.extra_quads());
             
-            quads.push((20.0, 260.0, 240.0, 26.0, self.btn_add_rect.color()));
+            quads.push((20.0, 240.0, 240.0, 26.0, self.btn_add_rect.color()));
             quads.extend(self.btn_add_rect.extra_quads());
             
-            quads.push((20.0, 310.0, 240.0, 26.0, self.btn_add_banner.color()));
+            quads.push((20.0, 290.0, 240.0, 26.0, self.btn_add_banner.color()));
             quads.extend(self.btn_add_banner.extra_quads());
         } else {
             // Render Page 3: View settings
             let (zx, zy, zw, zh) = self.slider_zoom.rect();
             quads.push((zx, zy, zw, zh, self.slider_zoom.color()));
             quads.extend(self.slider_zoom.extra_quads());
+
+            quads.push((20.0, 180.0, 240.0, 26.0, self.btn_toggle_rulers.color()));
+            quads.extend(self.btn_toggle_rulers.extra_quads());
         }
 
         // Divider between Sidebar and Canvas
@@ -757,6 +791,50 @@ impl Application for LayoutApp {
 
         // Dark slate canvas backdrop
         quads.push((280.0, 26.0, canvas_w, canvas_h, [0.12, 0.12, 0.15, 1.0]));
+
+        // Axis Rulers
+        if self.rulers_enabled {
+            let ruler_bg = [0.18, 0.18, 0.22, 1.0];
+            let tick_color = [0.45, 0.45, 0.50, 0.8];
+            let border_col = [0.30, 0.30, 0.35, 1.0];
+
+            // Rulers backgrounds
+            quads.push((page_x - 20.0, page_y - 20.0, self.page_w * zoom + 20.0, 20.0, ruler_bg));
+            quads.push((page_x - 20.0, page_y - 20.0, 20.0, self.page_h * zoom + 20.0, ruler_bg));
+
+            // Outer borders
+            quads.push((page_x - 20.0, page_y, self.page_w * zoom + 20.0, 1.0, border_col));
+            quads.push((page_x, page_y - 20.0, 1.0, self.page_h * zoom + 20.0, border_col));
+
+            // X Axis Ticks
+            let mut val = 0.0;
+            while val <= self.page_w {
+                let tx = page_x + val * zoom;
+                if val as i32 % 100 == 0 {
+                    quads.push((tx, page_y - 12.0, 1.0, 12.0, tick_color));
+                } else {
+                    quads.push((tx, page_y - 6.0, 1.0, 6.0, tick_color));
+                }
+                val += 50.0;
+            }
+
+            // Y Axis Ticks
+            let mut val = 0.0;
+            while val <= self.page_h {
+                let ty = page_y + val * zoom;
+                if val as i32 % 100 == 0 {
+                    quads.push((page_x - 12.0, ty, 12.0, 1.0, tick_color));
+                } else {
+                    quads.push((page_x - 6.0, ty, 6.0, 1.0, tick_color));
+                }
+                val += 50.0;
+            }
+
+            // Corner block
+            quads.push((page_x - 20.0, page_y - 20.0, 20.0, 20.0, [0.15, 0.15, 0.18, 1.0]));
+            quads.push((page_x - 20.0, page_y - 20.0, 20.0, 1.0, border_col));
+            quads.push((page_x - 20.0, page_y - 20.0, 1.0, 20.0, border_col));
+        }
 
         // Paper drop shadow
         quads.push((page_x + 3.0, page_y + 3.0, self.page_w * zoom, self.page_h * zoom, [0.05, 0.05, 0.08, 0.35]));
@@ -930,6 +1008,7 @@ impl Application for LayoutApp {
                     if self.slider_zoom.is_dragging() {
                         if self.slider_zoom.drag_update(px, py) { changed = true; }
                     } else if self.slider_zoom.on_cursor_moved(px, py) { changed = true; }
+                    if self.btn_toggle_rulers.on_cursor_moved(px, py) { changed = true; }
                 }
             } else {
                 // Compute centering coordinates for canvas elements
@@ -1114,9 +1193,19 @@ impl Application for LayoutApp {
                         }
                     }
                 } else {
-                    // View page input (zoom slider)
-                    self.slider_zoom.mouse_input(button, state, px, py);
-                    changed = true;
+                    // View page input (zoom slider & rulers button)
+                    if state == ElementState::Pressed {
+                        if self.btn_toggle_rulers.mouse_input(button, state, px, py) { changed = true; }
+                        if self.slider_zoom.mouse_input(button, state, px, py) { changed = true; }
+                    } else if state == ElementState::Released {
+                        if self.btn_toggle_rulers.mouse_input(button, state, px, py) {
+                            if self.btn_toggle_rulers.take_click() {
+                                self.rulers_enabled = !self.rulers_enabled;
+                            }
+                            changed = true;
+                        }
+                        if self.slider_zoom.mouse_input(button, state, px, py) { changed = true; }
+                    }
                 }
             } else {
                 // Compute centering coordinates for canvas elements
