@@ -83,6 +83,7 @@ struct LayoutApp {
     slider_r: Slider,
     slider_g: Slider,
     slider_b: Slider,
+    slider_zoom: Slider,
     
     // Page 1: Canvas settings controls
     btn_toggle_grid: Button,
@@ -156,7 +157,7 @@ impl LayoutApp {
                 color: [0x83, 0x83, 0x8a],
             });
         } else if self.paginator.selected_page() == 1 {
-            // Layout Properties tab
+            // Element Properties tab (renamed from Layout)
             labels.extend(self.sidebar_x.text_labels());
             labels.extend(self.sidebar_y.text_labels());
             labels.extend(self.sidebar_w.text_labels());
@@ -217,7 +218,7 @@ impl LayoutApp {
                     color: [0x60, 0x60, 0x68],
                 });
             }
-        } else {
+        } else if self.paginator.selected_page() == 2 {
             // Canvas Options Page
             labels.push(TextLabel {
                 text: "CANVAS OPTIONS".to_string(),
@@ -244,6 +245,23 @@ impl LayoutApp {
                 text: format!("Total Elements: {}", self.elements.len()),
                 x: 20.0,
                 y: 390.0,
+                font_size: 11.0,
+                color: [0x83, 0x83, 0x8a],
+            });
+        } else {
+            // View Options Page
+            labels.push(TextLabel {
+                text: "VIEW OPTIONS".to_string(),
+                x: 20.0,
+                y: 82.0,
+                font_size: 13.0,
+                color: [0xee, 0xee, 0xf5],
+            });
+
+            labels.push(TextLabel {
+                text: format!("Zoom: {:.0}%", self.slider_zoom.value() * 100.0),
+                x: 20.0,
+                y: 120.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
@@ -282,17 +300,20 @@ impl LayoutApp {
         // 5. Canvas Element Labels (drawn relative to the paper sheet)
         let canvas_w = self.width as f32 - 280.0;
         let canvas_h = self.height as f32 - 26.0;
-        let page_x = 280.0 + (canvas_w - self.page_w) / 2.0;
-        let page_y = 26.0 + (canvas_h - self.page_h) / 2.0;
+        let zoom = self.slider_zoom.value();
+        let page_w = self.page_w * zoom;
+        let page_h = self.page_h * zoom;
+        let page_x = 280.0 + (canvas_w - page_w) / 2.0;
+        let page_y = 26.0 + (canvas_h - page_h) / 2.0;
 
         for (idx, element) in self.elements.iter().enumerate() {
             match element {
                 Element::Text { text, x, y, w: _, h: _, font_size, color } => {
                     labels.push(TextLabel {
                         text: text.clone(),
-                        x: page_x + *x + 8.0,
-                        y: page_y + *y + 6.0,
-                        font_size: *font_size,
+                        x: page_x + *x * zoom + 8.0 * zoom,
+                        y: page_y + *y * zoom + 6.0 * zoom,
+                        font_size: *font_size * zoom,
                         color: [
                             (color[0] * 255.0).clamp(0.0, 255.0) as u8,
                             (color[1] * 255.0).clamp(0.0, 255.0) as u8,
@@ -307,9 +328,9 @@ impl LayoutApp {
                     };
                     labels.push(TextLabel {
                         text: format!("{} #{}", type_str, idx + 1),
-                        x: page_x + *x + 8.0,
-                        y: page_y + *y + 6.0,
-                        font_size: 11.0,
+                        x: page_x + *x * zoom + 8.0 * zoom,
+                        y: page_y + *y * zoom + 6.0 * zoom,
+                        font_size: 11.0 * zoom,
                         color: [0xee, 0xee, 0xf5],
                     });
                 }
@@ -419,7 +440,7 @@ impl Application for LayoutApp {
             .with_item("View", &["Toggle Grid"]);
 
         // Build the sidebar Paginator
-        let paginator = Paginator::new(80.0, vec!["Page".to_string(), "Layout".to_string(), "Canvas".to_string()])
+        let paginator = Paginator::new(80.0, vec!["Page".to_string(), "Element".to_string(), "Canvas".to_string(), "View".to_string()])
             .with_tabs_at_top(true);
 
         // Default paper sheet sizing (Letter)
@@ -491,6 +512,7 @@ impl Application for LayoutApp {
         let slider_r = Slider::new().with_range(0.0, 1.0).with_value(0.5);
         let slider_g = Slider::new().with_range(0.0, 1.0).with_value(0.5);
         let slider_b = Slider::new().with_range(0.0, 1.0).with_value(0.5);
+        let slider_zoom = Slider::new().with_range(0.5, 2.0).with_value(1.0);
 
         // Page 1 Buttons
         let btn_toggle_grid = Button::new(0.0, 0.0, 0.0, 0.0).with_label("Toggle Grid");
@@ -524,6 +546,7 @@ impl Application for LayoutApp {
             slider_r,
             slider_g,
             slider_b,
+            slider_zoom,
 
             btn_toggle_grid,
             btn_clear_canvas,
@@ -653,6 +676,7 @@ impl Application for LayoutApp {
             self.slider_r.set_rect(20.0, 330.0, 240.0, 18.0);
             self.slider_g.set_rect(20.0, 370.0, 240.0, 18.0);
             self.slider_b.set_rect(20.0, 410.0, 240.0, 18.0);
+            self.slider_zoom.set_rect(20.0, 140.0, 240.0, 18.0);
  
             // Canvas Page buttons (widened to 240px and realigned below top tabs)
             self.btn_toggle_grid.set_rect(20.0, 110.0, 240.0, 26.0);
@@ -677,7 +701,7 @@ impl Application for LayoutApp {
             quads.push((20.0, 110.0, 240.0, 26.0, self.dropdown_presets.color()));
             quads.extend(self.dropdown_presets.extra_quads());
         } else if self.paginator.selected_page() == 1 {
-            // Render Page 1: Layout Properties
+            // Render Page 1: Element Properties
             quads.extend(self.sidebar_x.extra_quads());
             quads.extend(self.sidebar_y.extra_quads());
             quads.extend(self.sidebar_w.extra_quads());
@@ -696,7 +720,7 @@ impl Application for LayoutApp {
             let (bx, by, bw, bh) = self.slider_b.rect();
             quads.push((bx, by, bw, bh, self.slider_b.color()));
             quads.extend(self.slider_b.extra_quads());
-        } else {
+        } else if self.paginator.selected_page() == 2 {
             // Render Page 2: Canvas settings
             quads.push((20.0, 110.0, 240.0, 26.0, self.btn_toggle_grid.color()));
             quads.extend(self.btn_toggle_grid.extra_quads());
@@ -712,6 +736,11 @@ impl Application for LayoutApp {
             
             quads.push((20.0, 310.0, 240.0, 26.0, self.btn_add_banner.color()));
             quads.extend(self.btn_add_banner.extra_quads());
+        } else {
+            // Render Page 3: View settings
+            let (zx, zy, zw, zh) = self.slider_zoom.rect();
+            quads.push((zx, zy, zw, zh, self.slider_zoom.color()));
+            quads.extend(self.slider_zoom.extra_quads());
         }
 
         // Divider between Sidebar and Canvas
@@ -720,35 +749,36 @@ impl Application for LayoutApp {
         // 3. Render Canvas & centered paper sheet
         let canvas_w = self.width as f32 - 280.0;
         let canvas_h = self.height as f32 - 26.0;
+        let zoom = self.slider_zoom.value();
         
         // Centered Paper Position
-        let page_x = 280.0 + (canvas_w - self.page_w) / 2.0;
-        let page_y = 26.0 + (canvas_h - self.page_h) / 2.0;
+        let page_x = 280.0 + (canvas_w - self.page_w * zoom) / 2.0;
+        let page_y = 26.0 + (canvas_h - self.page_h * zoom) / 2.0;
 
         // Dark slate canvas backdrop
         quads.push((280.0, 26.0, canvas_w, canvas_h, [0.12, 0.12, 0.15, 1.0]));
 
         // Paper drop shadow
-        quads.push((page_x + 3.0, page_y + 3.0, self.page_w, self.page_h, [0.05, 0.05, 0.08, 0.35]));
+        quads.push((page_x + 3.0, page_y + 3.0, self.page_w * zoom, self.page_h * zoom, [0.05, 0.05, 0.08, 0.35]));
 
         // Paper sheet backing (Elegant Off-White)
-        quads.push((page_x, page_y, self.page_w, self.page_h, [0.96, 0.96, 0.98, 1.0]));
+        quads.push((page_x, page_y, self.page_w * zoom, self.page_h * zoom, [0.96, 0.96, 0.98, 1.0]));
         
         // Thin paper border outline
         let border_col = [0.75, 0.75, 0.80, 0.5];
-        quads.push((page_x, page_y, self.page_w, 1.0, border_col));
-        quads.push((page_x, page_y + self.page_h - 1.0, self.page_w, 1.0, border_col));
-        quads.push((page_x, page_y, 1.0, self.page_h, border_col));
-        quads.push((page_x + self.page_w - 1.0, page_y, 1.0, self.page_h, border_col));
+        quads.push((page_x, page_y, self.page_w * zoom, 1.0, border_col));
+        quads.push((page_x, page_y + self.page_h * zoom - 1.0, self.page_w * zoom, 1.0, border_col));
+        quads.push((page_x, page_y, 1.0, self.page_h * zoom, border_col));
+        quads.push((page_x + self.page_w * zoom - 1.0, page_y, 1.0, self.page_h * zoom, border_col));
 
         // 4. Snapping Grid inside the paper bounds
         if self.grid_enabled {
-            let spacing = 20.0;
+            let spacing = 20.0 * zoom;
             let dot_color = [0.20, 0.35, 0.60, 0.22];
             let mut cx = spacing;
-            while cx < self.page_w {
+            while cx < self.page_w * zoom {
                 let mut cy = spacing;
-                while cy < self.page_h {
+                while cy < self.page_h * zoom {
                     quads.push((page_x + cx, page_y + cy, 1.5, 1.5, dot_color));
                     cy += spacing;
                 }
@@ -761,30 +791,30 @@ impl Application for LayoutApp {
             match element {
                 Element::Text { text: _, x, y, w, h, font_size: _, color: _ } => {
                     // Translucent text block container overlay
-                    quads.push((page_x + *x, page_y + *y, *w, *h, [0.20, 0.30, 0.70, 0.05]));
+                    quads.push((page_x + *x * zoom, page_y + *y * zoom, *w * zoom, *h * zoom, [0.20, 0.30, 0.70, 0.05]));
                     
                     let border_color = [0.45, 0.45, 0.55, 0.22];
-                    quads.push((page_x + *x, page_y + *y, *w, 1.0, border_color));
-                    quads.push((page_x + *x, page_y + *y + *h - 1.0, *w, 1.0, border_color));
-                    quads.push((page_x + *x, page_y + *y, 1.0, *h, border_color));
-                    quads.push((page_x + *x + *w - 1.0, page_y + *y, 1.0, *h, border_color));
+                    quads.push((page_x + *x * zoom, page_y + *y * zoom, *w * zoom, 1.0, border_color));
+                    quads.push((page_x + *x * zoom, page_y + *y * zoom + *h * zoom - 1.0, *w * zoom, 1.0, border_color));
+                    quads.push((page_x + *x * zoom, page_y + *y * zoom, 1.0, *h * zoom, border_color));
+                    quads.push((page_x + *x * zoom + *w * zoom - 1.0, page_y + *y * zoom, 1.0, *h * zoom, border_color));
                 }
                 Element::Shape { shape_type, x, y, w, h, color } => {
                     match shape_type {
                         ShapeType::Rectangle => {
-                            quads.push((page_x + *x, page_y + *y, *w, *h, *color));
+                            quads.push((page_x + *x * zoom, page_y + *y * zoom, *w * zoom, *h * zoom, *color));
                         }
                         ShapeType::Banner => {
                             // Banner drop shadow
-                            quads.push((page_x + *x + 3.0, page_y + *y + 3.0, *w, *h, [0.05, 0.05, 0.08, 0.3]));
+                            quads.push((page_x + *x * zoom + 3.0, page_y + *y * zoom + 3.0, *w * zoom, *h * zoom, [0.05, 0.05, 0.08, 0.3]));
                             
-                            quads.push((page_x + *x, page_y + *y, *w, *h, *color));
+                            quads.push((page_x + *x * zoom, page_y + *y * zoom, *w * zoom, *h * zoom, *color));
                             
                             let inner_col = [1.0, 1.0, 1.0, 0.2];
-                            quads.push((page_x + *x + 2.0, page_y + *y + 2.0, *w - 4.0, 1.0, inner_col));
-                            quads.push((page_x + *x + 2.0, page_y + *y + *h - 3.0, *w - 4.0, 1.0, inner_col));
-                            quads.push((page_x + *x + 2.0, page_y + *y + 2.0, 1.0, *h - 4.0, inner_col));
-                            quads.push((page_x + *x + *w - 3.0, page_y + *y + 2.0, 1.0, *h - 4.0, inner_col));
+                            quads.push((page_x + *x * zoom + 2.0, page_y + *y * zoom + 2.0, *w * zoom - 4.0, 1.0, inner_col));
+                            quads.push((page_x + *x * zoom + 2.0, page_y + *y * zoom + *h * zoom - 3.0, *w * zoom - 4.0, 1.0, inner_col));
+                            quads.push((page_x + *x * zoom + 2.0, page_y + *y * zoom + 2.0, 1.0, *h * zoom - 4.0, inner_col));
+                            quads.push((page_x + *x * zoom + *w * zoom - 3.0, page_y + *y * zoom + 2.0, 1.0, *h * zoom - 4.0, inner_col));
                         }
                     }
                 }
@@ -797,20 +827,20 @@ impl Application for LayoutApp {
                     Element::Shape { x, y, w, h, .. } => (*x, *y, *w, *h),
                 };
                 let sel_col = [0.15, 0.45, 0.90, 1.0]; // Bright neon blue
-                quads.push((page_x + ex - 1.0, page_y + ey - 1.0, ew + 2.0, 1.0, sel_col));
-                quads.push((page_x + ex - 1.0, page_y + ey + eh, ew + 2.0, 1.0, sel_col));
-                quads.push((page_x + ex - 1.0, page_y + ey - 1.0, 1.0, eh + 2.0, sel_col));
-                quads.push((page_x + ex + ew, page_y + ey - 1.0, 1.0, eh + 2.0, sel_col));
+                quads.push((page_x + ex * zoom - 1.0, page_y + ey * zoom - 1.0, ew * zoom + 2.0, 1.0, sel_col));
+                quads.push((page_x + ex * zoom - 1.0, page_y + ey * zoom + eh * zoom, ew * zoom + 2.0, 1.0, sel_col));
+                quads.push((page_x + ex * zoom - 1.0, page_y + ey * zoom - 1.0, 1.0, eh * zoom + 2.0, sel_col));
+                quads.push((page_x + ex * zoom + ew * zoom, page_y + ey * zoom - 1.0, 1.0, eh * zoom + 2.0, sel_col));
 
                 // Corner handles
                 let hs = 5.0;
                 let hc = [1.0, 1.0, 1.0, 1.0];
                 let hborder = [0.15, 0.45, 0.90, 1.0];
                 let handles = [
-                    (page_x + ex - 2.0, page_y + ey - 2.0),
-                    (page_x + ex + ew - 3.0, page_y + ey - 2.0),
-                    (page_x + ex - 2.0, page_y + ey + eh - 3.0),
-                    (page_x + ex + ew - 3.0, page_y + ey + eh - 3.0),
+                    (page_x + ex * zoom - 2.0, page_y + ey * zoom - 2.0),
+                    (page_x + ex * zoom + ew * zoom - 3.0, page_y + ey * zoom - 2.0),
+                    (page_x + ex * zoom - 2.0, page_y + ey * zoom + eh * zoom - 3.0),
+                    (page_x + ex * zoom + ew * zoom - 3.0, page_y + ey * zoom + eh * zoom - 3.0),
                 ];
                 for (hx, hy) in handles {
                     quads.push((hx, hy, hs, hs, hborder));
@@ -890,22 +920,29 @@ impl Application for LayoutApp {
                     if changed {
                         self.apply_sidebar_changes();
                     }
-                } else {
+                } else if self.paginator.selected_page() == 2 {
                     if self.btn_toggle_grid.on_cursor_moved(px, py) { changed = true; }
                     if self.btn_clear_canvas.on_cursor_moved(px, py) { changed = true; }
                     if self.btn_add_text.on_cursor_moved(px, py) { changed = true; }
                     if self.btn_add_rect.on_cursor_moved(px, py) { changed = true; }
                     if self.btn_add_banner.on_cursor_moved(px, py) { changed = true; }
+                } else {
+                    if self.slider_zoom.is_dragging() {
+                        if self.slider_zoom.drag_update(px, py) { changed = true; }
+                    } else if self.slider_zoom.on_cursor_moved(px, py) { changed = true; }
                 }
             } else {
                 // Compute centering coordinates for canvas elements
                 let canvas_w = self.width as f32 - 280.0;
                 let canvas_h = self.height as f32 - 26.0;
-                let page_x = 280.0 + (canvas_w - self.page_w) / 2.0;
-                let page_y = 26.0 + (canvas_h - self.page_h) / 2.0;
+                let zoom = self.slider_zoom.value();
+                let page_w = self.page_w * zoom;
+                let page_h = self.page_h * zoom;
+                let page_x = 280.0 + (canvas_w - page_w) / 2.0;
+                let page_y = 26.0 + (canvas_h - page_h) / 2.0;
                 
-                let cx = px - page_x;
-                let cy = py - page_y;
+                let cx = (px - page_x) / zoom;
+                let cy = (py - page_y) / zoom;
 
                 if let Some((idx, ox, oy)) = self.dragging {
                     let mut new_x = cx - ox;
@@ -1036,7 +1073,7 @@ impl Application for LayoutApp {
                         self.apply_sidebar_changes();
                         changed = true;
                     }
-                } else {
+                } else if self.paginator.selected_page() == 2 {
                     // Canvas settings page input
                     if state == ElementState::Pressed {
                         if self.btn_toggle_grid.mouse_input(button, state, px, py) { changed = true; }
@@ -1076,16 +1113,23 @@ impl Application for LayoutApp {
                             changed = true;
                         }
                     }
+                } else {
+                    // View page input (zoom slider)
+                    self.slider_zoom.mouse_input(button, state, px, py);
+                    changed = true;
                 }
             } else {
                 // Compute centering coordinates for canvas elements
                 let canvas_w = self.width as f32 - 280.0;
                 let canvas_h = self.height as f32 - 26.0;
-                let page_x = 280.0 + (canvas_w - self.page_w) / 2.0;
-                let page_y = 26.0 + (canvas_h - self.page_h) / 2.0;
+                let zoom = self.slider_zoom.value();
+                let page_w = self.page_w * zoom;
+                let page_h = self.page_h * zoom;
+                let page_x = 280.0 + (canvas_w - page_w) / 2.0;
+                let page_y = 26.0 + (canvas_h - page_h) / 2.0;
                 
-                let cx = px - page_x;
-                let cy = py - page_y;
+                let cx = (px - page_x) / zoom;
+                let cy = (py - page_y) / zoom;
 
                 if state == ElementState::Pressed {
                     let mut found = None;
