@@ -110,7 +110,15 @@ impl LayoutApp {
         
         // 3. Conditional Page rendering
         if self.paginator.selected_page() == 0 {
-            // Layout Properties Page
+            // Page Settings tab
+            labels.push(TextLabel {
+                text: "PAGE SETTINGS".to_string(),
+                x: 95.0,
+                y: 42.0,
+                font_size: 13.0,
+                color: [0xee, 0xee, 0xf5],
+            });
+
             labels.extend(self.dropdown_presets.text_labels());
 
             // Add drop down list labels dynamically if open
@@ -132,6 +140,31 @@ impl LayoutApp {
                 }
             }
 
+            // Display active page width and height
+            labels.push(TextLabel {
+                text: format!("Width: {} px", self.page_w),
+                x: 95.0,
+                y: 120.0,
+                font_size: 11.0,
+                color: [0x83, 0x83, 0x8a],
+            });
+            labels.push(TextLabel {
+                text: format!("Height: {} px", self.page_h),
+                x: 95.0,
+                y: 140.0,
+                font_size: 11.0,
+                color: [0x83, 0x83, 0x8a],
+            });
+        } else if self.paginator.selected_page() == 1 {
+            // Layout Properties tab
+            labels.push(TextLabel {
+                text: "ELEMENT PROPERTIES".to_string(),
+                x: 95.0,
+                y: 42.0,
+                font_size: 13.0,
+                color: [0xee, 0xee, 0xf5],
+            });
+
             labels.extend(self.sidebar_x.text_labels());
             labels.extend(self.sidebar_y.text_labels());
             labels.extend(self.sidebar_w.text_labels());
@@ -142,21 +175,21 @@ impl LayoutApp {
             labels.push(TextLabel {
                 text: format!("Red Color: {:.2}", self.slider_r.value()),
                 x: 95.0,
-                y: 354.0,
+                y: 298.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
             labels.push(TextLabel {
                 text: format!("Green Color: {:.2}", self.slider_g.value()),
                 x: 95.0,
-                y: 394.0,
+                y: 338.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
             labels.push(TextLabel {
                 text: format!("Blue Color: {:.2}", self.slider_b.value()),
                 x: 95.0,
-                y: 434.0,
+                y: 378.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
@@ -165,7 +198,7 @@ impl LayoutApp {
                 labels.push(TextLabel {
                     text: format!("Selected Element #{}", idx + 1),
                     x: 95.0,
-                    y: 480.0,
+                    y: 425.0,
                     font_size: 12.0,
                     color: [0x3b, 0x82, 0xf6],
                 });
@@ -173,21 +206,21 @@ impl LayoutApp {
                 labels.push(TextLabel {
                     text: "No Selection".to_string(),
                     x: 95.0,
-                    y: 480.0,
+                    y: 425.0,
                     font_size: 12.0,
                     color: [0x83, 0x83, 0x8a],
                 });
                 labels.push(TextLabel {
                     text: "Click canvas elements".to_string(),
                     x: 95.0,
-                    y: 502.0,
+                    y: 447.0,
                     font_size: 10.0,
                     color: [0x60, 0x60, 0x68],
                 });
                 labels.push(TextLabel {
                     text: "to edit properties.".to_string(),
                     x: 95.0,
-                    y: 518.0,
+                    y: 463.0,
                     font_size: 10.0,
                     color: [0x60, 0x60, 0x68],
                 });
@@ -394,7 +427,7 @@ impl Application for LayoutApp {
             .with_item("View", &["Toggle Grid"]);
 
         // Build the sidebar Paginator
-        let paginator = Paginator::new(80.0, vec!["Layout".to_string(), "Canvas".to_string()]);
+        let paginator = Paginator::new(80.0, vec!["Page".to_string(), "Layout".to_string(), "Canvas".to_string()]);
 
         // Default paper sheet sizing (Letter)
         let page_w = 510.0;
@@ -615,63 +648,63 @@ impl Application for LayoutApp {
             
             // Layout presets dropdown selector
             self.dropdown_presets.set_rect(95.0, 70.0, 170.0, 26.0);
-
-            // Position Layout properties control widgets (shifted down by 56px to fit page presets)
-            self.sidebar_x.set_rect(95.0, 126.0, 80.0, 26.0);
-            self.sidebar_y.set_rect(185.0, 126.0, 80.0, 26.0);
-            self.sidebar_w.set_rect(95.0, 182.0, 80.0, 26.0);
-            self.sidebar_h.set_rect(185.0, 182.0, 80.0, 26.0);
-            self.sidebar_text.set_rect(95.0, 238.0, 170.0, 26.0);
-            self.sidebar_size.set_rect(95.0, 294.0, 170.0, 26.0);
+ 
+            // Position Layout properties control widgets (shifted back up since presets dropdown is on Page tab)
+            self.sidebar_x.set_rect(95.0, 70.0, 80.0, 26.0);
+            self.sidebar_y.set_rect(185.0, 70.0, 80.0, 26.0);
+            self.sidebar_w.set_rect(95.0, 126.0, 80.0, 26.0);
+            self.sidebar_h.set_rect(185.0, 126.0, 80.0, 26.0);
+            self.sidebar_text.set_rect(95.0, 182.0, 170.0, 26.0);
+            self.sidebar_size.set_rect(95.0, 238.0, 170.0, 26.0);
             
-            self.slider_r.set_rect(95.0, 364.0, 170.0, 18.0);
-            self.slider_g.set_rect(95.0, 404.0, 170.0, 18.0);
-            self.slider_b.set_rect(95.0, 444.0, 170.0, 18.0);
-
+            self.slider_r.set_rect(95.0, 308.0, 170.0, 18.0);
+            self.slider_g.set_rect(95.0, 348.0, 170.0, 18.0);
+            self.slider_b.set_rect(95.0, 388.0, 170.0, 18.0);
+ 
             // Canvas Page buttons
             self.btn_toggle_grid.set_rect(95.0, 70.0, 170.0, 26.0);
             self.btn_clear_canvas.set_rect(95.0, 120.0, 170.0, 26.0);
             self.btn_add_text.set_rect(95.0, 170.0, 170.0, 26.0);
             self.btn_add_rect.set_rect(95.0, 220.0, 170.0, 26.0);
             self.btn_add_banner.set_rect(95.0, 270.0, 170.0, 26.0);
-
+ 
             self.rebuild_text_items();
             self.needs_rebuild = false;
         }
-
+ 
         // 1. Render Paginator Sidebar (includes backgrounds and active tab sliding container)
         quads.extend(self.paginator.extra_quads());
         if let Some(hq) = self.paginator.highlight_quad() {
             quads.push(hq);
         }
-
+ 
         // 2. Render Page Content
         if self.paginator.selected_page() == 0 {
             // Render Page 0: Presets Dropdown
             quads.push((95.0, 70.0, 170.0, 26.0, self.dropdown_presets.color()));
             quads.extend(self.dropdown_presets.extra_quads());
-
-            // Render Page 0 Widgets (Layout properties)
+        } else if self.paginator.selected_page() == 1 {
+            // Render Page 1: Layout Properties
             quads.extend(self.sidebar_x.extra_quads());
             quads.extend(self.sidebar_y.extra_quads());
             quads.extend(self.sidebar_w.extra_quads());
             quads.extend(self.sidebar_h.extra_quads());
             quads.extend(self.sidebar_text.extra_quads());
             quads.extend(self.sidebar_size.extra_quads());
-
+ 
             let (rx, ry, rw, rh) = self.slider_r.rect();
             quads.push((rx, ry, rw, rh, self.slider_r.color()));
             quads.extend(self.slider_r.extra_quads());
-
+ 
             let (gx, gy, gw, gh) = self.slider_g.rect();
             quads.push((gx, gy, gw, gh, self.slider_g.color()));
             quads.extend(self.slider_g.extra_quads());
-
+ 
             let (bx, by, bw, bh) = self.slider_b.rect();
             quads.push((bx, by, bw, bh, self.slider_b.color()));
             quads.extend(self.slider_b.extra_quads());
         } else {
-            // Render Page 1 Widgets (Canvas settings)
+            // Render Page 2: Canvas settings
             quads.push((95.0, 70.0, 170.0, 26.0, self.btn_toggle_grid.color()));
             quads.extend(self.btn_toggle_grid.extra_quads());
             
@@ -840,29 +873,29 @@ impl Application for LayoutApp {
                         if self.dropdown_presets.on_cursor_moved(px, py) {
                             changed = true;
                         }
-                    } else {
-                        if self.sidebar_x.on_cursor_moved(px, py) { changed = true; }
-                        if self.sidebar_y.on_cursor_moved(px, py) { changed = true; }
-                        if self.sidebar_w.on_cursor_moved(px, py) { changed = true; }
-                        if self.sidebar_h.on_cursor_moved(px, py) { changed = true; }
-                        if self.sidebar_text.on_cursor_moved(px, py) { changed = true; }
-                        if self.sidebar_size.on_cursor_moved(px, py) { changed = true; }
-                        
-                        if self.slider_r.is_dragging() {
-                            if self.slider_r.drag_update(px, py) { changed = true; }
-                        } else if self.slider_r.on_cursor_moved(px, py) { changed = true; }
+                    }
+                } else if self.paginator.selected_page() == 1 {
+                    if self.sidebar_x.on_cursor_moved(px, py) { changed = true; }
+                    if self.sidebar_y.on_cursor_moved(px, py) { changed = true; }
+                    if self.sidebar_w.on_cursor_moved(px, py) { changed = true; }
+                    if self.sidebar_h.on_cursor_moved(px, py) { changed = true; }
+                    if self.sidebar_text.on_cursor_moved(px, py) { changed = true; }
+                    if self.sidebar_size.on_cursor_moved(px, py) { changed = true; }
+                    
+                    if self.slider_r.is_dragging() {
+                        if self.slider_r.drag_update(px, py) { changed = true; }
+                    } else if self.slider_r.on_cursor_moved(px, py) { changed = true; }
 
-                        if self.slider_g.is_dragging() {
-                            if self.slider_g.drag_update(px, py) { changed = true; }
-                        } else if self.slider_g.on_cursor_moved(px, py) { changed = true; }
+                    if self.slider_g.is_dragging() {
+                        if self.slider_g.drag_update(px, py) { changed = true; }
+                    } else if self.slider_g.on_cursor_moved(px, py) { changed = true; }
 
-                        if self.slider_b.is_dragging() {
-                            if self.slider_b.drag_update(px, py) { changed = true; }
-                        } else if self.slider_b.on_cursor_moved(px, py) { changed = true; }
-                        
-                        if changed {
-                            self.apply_sidebar_changes();
-                        }
+                    if self.slider_b.is_dragging() {
+                        if self.slider_b.drag_update(px, py) { changed = true; }
+                    } else if self.slider_b.on_cursor_moved(px, py) { changed = true; }
+                    
+                    if changed {
+                        self.apply_sidebar_changes();
                     }
                 } else {
                     if self.btn_toggle_grid.on_cursor_moved(px, py) { changed = true; }
@@ -970,20 +1003,28 @@ impl Application for LayoutApp {
                                     }
                                 }
                             }
-                        } else {
-                            if self.sidebar_x.mouse_input(button, state, px, py) { clicked = true; }
-                            if self.sidebar_y.mouse_input(button, state, px, py) { clicked = true; }
-                            if self.sidebar_w.mouse_input(button, state, px, py) { clicked = true; }
-                            if self.sidebar_h.mouse_input(button, state, px, py) { clicked = true; }
-                            if self.sidebar_text.mouse_input(button, state, px, py) { clicked = true; }
-                            if self.sidebar_size.mouse_input(button, state, px, py) { clicked = true; }
-                            
-                            if self.slider_r.mouse_input(button, state, px, py) { clicked = true; }
-                            if self.slider_g.mouse_input(button, state, px, py) { clicked = true; }
-                            if self.slider_b.mouse_input(button, state, px, py) { clicked = true; }
                         }
 
                         if !self.dropdown_presets.hit_test(px, py) { self.dropdown_presets.unfocus(); }
+
+                        if clicked {
+                            changed = true;
+                        }
+                    }
+                } else if self.paginator.selected_page() == 1 {
+                    if state == ElementState::Pressed {
+                        let mut clicked = false;
+                        if self.sidebar_x.mouse_input(button, state, px, py) { clicked = true; }
+                        if self.sidebar_y.mouse_input(button, state, px, py) { clicked = true; }
+                        if self.sidebar_w.mouse_input(button, state, px, py) { clicked = true; }
+                        if self.sidebar_h.mouse_input(button, state, px, py) { clicked = true; }
+                        if self.sidebar_text.mouse_input(button, state, px, py) { clicked = true; }
+                        if self.sidebar_size.mouse_input(button, state, px, py) { clicked = true; }
+                        
+                        if self.slider_r.mouse_input(button, state, px, py) { clicked = true; }
+                        if self.slider_g.mouse_input(button, state, px, py) { clicked = true; }
+                        if self.slider_b.mouse_input(button, state, px, py) { clicked = true; }
+
                         if !self.sidebar_x.hit_test(px, py) { self.sidebar_x.unfocus(); }
                         if !self.sidebar_y.hit_test(px, py) { self.sidebar_y.unfocus(); }
                         if !self.sidebar_w.hit_test(px, py) { self.sidebar_w.unfocus(); }
@@ -1111,7 +1152,9 @@ impl Application for LayoutApp {
                         }
                     }
                 }
-            } else if self.sidebar_x.editing {
+            }
+        } else if self.paginator.selected_page() == 1 {
+            if self.sidebar_x.editing {
                 if self.sidebar_x.keyboard_input(event) { handled = true; }
             } else if self.sidebar_y.editing {
                 if self.sidebar_y.keyboard_input(event) { handled = true; }
