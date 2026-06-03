@@ -512,7 +512,7 @@ impl Application for LayoutApp {
         let slider_r = Slider::new().with_range(0.0, 1.0).with_value(0.5);
         let slider_g = Slider::new().with_range(0.0, 1.0).with_value(0.5);
         let slider_b = Slider::new().with_range(0.0, 1.0).with_value(0.5);
-        let slider_zoom = Slider::new().with_range(0.5, 2.0).with_value(1.0);
+        let slider_zoom = Slider::new().with_range(0.5, 2.0).with_value(1.0).with_scroll(true);
 
         // Page 1 Buttons
         let btn_toggle_grid = Button::new(0.0, 0.0, 0.0, 0.0).with_label("Toggle Grid");
@@ -1172,7 +1172,28 @@ impl Application for LayoutApp {
         msg_out
     }
 
-    fn handle_mouse_wheel(&mut self, _delta: &MouseScrollDelta, _pos: LogicalPosition, _needs_rebuild: &mut bool) {}
+    fn handle_mouse_wheel(&mut self, delta: &MouseScrollDelta, pos: LogicalPosition, needs_rebuild: &mut bool) {
+        let px = pos.x as f32;
+        let py = pos.y as f32;
+        if px < 280.0 {
+            if self.paginator.selected_page() == 1 {
+                let mut changed = false;
+                if self.slider_r.mouse_wheel(delta, px, py) { changed = true; }
+                if self.slider_g.mouse_wheel(delta, px, py) { changed = true; }
+                if self.slider_b.mouse_wheel(delta, px, py) { changed = true; }
+                if changed {
+                    self.apply_sidebar_changes();
+                    *needs_rebuild = true;
+                    self.needs_rebuild = true;
+                }
+            } else if self.paginator.selected_page() == 3 {
+                if self.slider_zoom.mouse_wheel(delta, px, py) {
+                    *needs_rebuild = true;
+                    self.needs_rebuild = true;
+                }
+            }
+        }
+    }
 
     fn handle_key_input(&mut self, event: &KeyEvent, needs_rebuild: &mut bool) -> Option<Self::Message> {
         let mut handled = false;
