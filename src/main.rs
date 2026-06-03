@@ -803,7 +803,7 @@ impl Application for LayoutApp {
             
             // Layout presets dropdown selector (shifted up to y=90.0)
             self.dropdown_presets.set_rect(20.0, 90.0, 240.0, 26.0);
-            self.page_color_selector.set_rect(20.0, 160.0, 240.0, 26.0);
+            self.page_color_selector.set_rect(20.0, 200.0, 240.0, 26.0);
  
             // Position Layout properties control widgets (widened to 240px and realigned below top tabs)
             self.sidebar_x.set_rect(20.0, 90.0, 110.0, 26.0);
