@@ -3,7 +3,7 @@ use glyphon::{FontSystem, Buffer, Metrics, Attrs};
 use clear_ui::engine::{Application, EngineState, LogicalPosition, LogicalSize, WindowSettings};
 use clear_ui::widget::{
     MouseButton, ElementState, MouseScrollDelta, KeyEvent, TextItem, Widget,
-    MenuBar, TextBox, Slider, TextLabel, Paginator, Button, Dropdown, Toggle
+    MenuBar, TextBox, Slider, TextLabel, Paginator, Button, Dropdown, Toggle, ColorSelector
 };
 
 #[derive(Debug, Clone)]
@@ -73,6 +73,8 @@ struct LayoutApp {
 
     // Page 0: Layout properties controls
     dropdown_presets: Dropdown,
+    page_color_selector: ColorSelector,
+    page_color: [f32; 4],
     sidebar_x: TextBox,
     sidebar_y: TextBox,
     sidebar_w: TextBox,
@@ -174,6 +176,7 @@ impl LayoutApp {
         if self.paginator.selected_page() == 0 {
             // Page Settings tab (no header)
             labels.extend(self.dropdown_presets.text_labels());
+            labels.extend(self.page_color_selector.text_labels());
 
             // Add drop down list labels dynamically if open
             if self.dropdown_presets.open {
@@ -600,6 +603,10 @@ impl Application for LayoutApp {
             0
         ).with_label("Page Size Preset");
 
+        let page_color_selector = ColorSelector::new([245, 245, 250])
+            .with_label("Page Color");
+        let page_color = [0.96, 0.96, 0.98, 1.0];
+
         // Create sidebar textbox inputs
         let sidebar_x = TextBox::new(String::new()).with_label("X Position");
         let sidebar_y = TextBox::new(String::new()).with_label("Y Position");
@@ -648,6 +655,8 @@ impl Application for LayoutApp {
             needs_rebuild: true,
             
             dropdown_presets,
+            page_color_selector,
+            page_color,
             sidebar_x,
             sidebar_y,
             sidebar_w,
@@ -702,6 +711,8 @@ impl Application for LayoutApp {
                 self.dragging = None;
                 self.pan_x = 0.0;
                 self.pan_y = 0.0;
+                self.page_color = [0.96, 0.96, 0.98, 1.0];
+                self.page_color_selector.color = [245, 245, 250];
                 self.sync_sidebar_fields();
                 *needs_rebuild = true;
                 self.needs_rebuild = true;
@@ -765,6 +776,16 @@ impl Application for LayoutApp {
             *needs_rebuild = true;
             self.needs_rebuild = true;
         }
+        let _ = self.page_color_selector.tick(dt);
+        let r = self.page_color_selector.color[0] as f32 / 255.0;
+        let g = self.page_color_selector.color[1] as f32 / 255.0;
+        let b = self.page_color_selector.color[2] as f32 / 255.0;
+        let new_col = [r, g, b, 1.0];
+        if self.page_color != new_col {
+            self.page_color = new_col;
+            *needs_rebuild = true;
+            self.needs_rebuild = true;
+        }
     }
 
     fn view(&mut self, quads: &mut Vec<(f32, f32, f32, f32, [f32; 4])>, size: LogicalSize, scale: f64) {
@@ -782,6 +803,7 @@ impl Application for LayoutApp {
             
             // Layout presets dropdown selector (shifted up to y=90.0)
             self.dropdown_presets.set_rect(20.0, 90.0, 240.0, 26.0);
+            self.page_color_selector.set_rect(20.0, 160.0, 240.0, 26.0);
  
             // Position Layout properties control widgets (widened to 240px and realigned below top tabs)
             self.sidebar_x.set_rect(20.0, 90.0, 110.0, 26.0);
@@ -825,6 +847,26 @@ impl Application for LayoutApp {
             // Render Page 0: Presets Dropdown (shifted up to y=90)
             quads.push((20.0, 90.0, 240.0, 26.0, self.dropdown_presets.color()));
             quads.extend(self.dropdown_presets.extra_quads());
+
+            // Render Page 0: Page Color Selector
+            let (cx, cy, cw, ch) = self.page_color_selector.rect();
+            // We can draw a background for the text input region, similar to other text boxes:
+            let bg_color = if self.page_color_selector.editing {
+                [0.06, 0.10, 0.18, 1.0]
+            } else {
+                [0.08, 0.08, 0.12, 1.0]
+            };
+            let border_color = if self.page_color_selector.editing {
+                [0.20, 0.50, 0.85, 1.0]
+            } else if self.page_color_selector.base().map_or(false, |b| b.hovered) {
+                [0.25, 0.25, 0.35, 1.0]
+            } else {
+                [0.18, 0.18, 0.24, 1.0]
+            };
+            quads.push((cx, cy, cw * 0.65, ch, border_color));
+            quads.push((cx + 1.0, cy + 1.0, cw * 0.65 - 2.0, ch - 2.0, bg_color));
+
+            quads.extend(self.page_color_selector.extra_quads());
         } else if self.paginator.selected_page() == 1 {
             // Render Page 1: Element Properties
             quads.extend(self.sidebar_x.extra_quads());
@@ -955,7 +997,7 @@ impl Application for LayoutApp {
         quads.push((page_x + 3.0, page_y + 3.0, self.page_w * zoom, self.page_h * zoom, [0.05, 0.05, 0.08, 0.35]));
 
         // Paper sheet backing (Elegant Off-White)
-        quads.push((page_x, page_y, self.page_w * zoom, self.page_h * zoom, [0.96, 0.96, 0.98, 1.0]));
+        quads.push((page_x, page_y, self.page_w * zoom, self.page_h * zoom, self.page_color));
         
         // Thin paper border outline
         let border_col = [0.75, 0.75, 0.80, 0.5];
@@ -1099,6 +1141,11 @@ impl Application for LayoutApp {
                             changed = true;
                         }
                     }
+                    if !self.dropdown_presets.open {
+                        if self.page_color_selector.on_cursor_moved(px, py) {
+                            changed = true;
+                        }
+                    }
                 } else if self.paginator.selected_page() == 1 {
                     if self.sidebar_x.on_cursor_moved(px, py) { changed = true; }
                     if self.sidebar_y.on_cursor_moved(px, py) { changed = true; }
@@ -1217,6 +1264,7 @@ impl Application for LayoutApp {
                     if self.paginator.take_click() {
                         self.dropdown_presets.unfocus();
                         self.dropdown_units.unfocus();
+                        self.page_color_selector.unfocus();
                         self.sidebar_x.unfocus();
                         self.sidebar_y.unfocus();
                         self.sidebar_w.unfocus();
@@ -1245,6 +1293,14 @@ impl Application for LayoutApp {
                         }
 
                         if !self.dropdown_presets.hit_test(px, py) { self.dropdown_presets.unfocus(); }
+
+                        if !self.dropdown_presets.open {
+                            if self.page_color_selector.mouse_input(button, state, px, py) {
+                                clicked = true;
+                            }
+                        }
+
+                        if !self.page_color_selector.hit_test(px, py) { self.page_color_selector.unfocus(); }
 
                         if clicked {
                             changed = true;
@@ -1452,6 +1508,10 @@ impl Application for LayoutApp {
                             self.pan_y = 0.0;
                         }
                     }
+                }
+            } else {
+                if self.page_color_selector.keyboard_input(event) {
+                    handled = true;
                 }
             }
         } else if self.paginator.selected_page() == 1 {
