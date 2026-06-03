@@ -113,8 +113,8 @@ impl LayoutApp {
             // Page Settings tab
             labels.push(TextLabel {
                 text: "PAGE SETTINGS".to_string(),
-                x: 95.0,
-                y: 42.0,
+                x: 20.0,
+                y: 82.0,
                 font_size: 13.0,
                 color: [0xee, 0xee, 0xf5],
             });
@@ -143,28 +143,20 @@ impl LayoutApp {
             // Display active page width and height
             labels.push(TextLabel {
                 text: format!("Width: {} px", self.page_w),
-                x: 95.0,
-                y: 120.0,
+                x: 20.0,
+                y: 160.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
             labels.push(TextLabel {
                 text: format!("Height: {} px", self.page_h),
-                x: 95.0,
-                y: 140.0,
+                x: 20.0,
+                y: 180.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
         } else if self.paginator.selected_page() == 1 {
             // Layout Properties tab
-            labels.push(TextLabel {
-                text: "ELEMENT PROPERTIES".to_string(),
-                x: 95.0,
-                y: 42.0,
-                font_size: 13.0,
-                color: [0xee, 0xee, 0xf5],
-            });
-
             labels.extend(self.sidebar_x.text_labels());
             labels.extend(self.sidebar_y.text_labels());
             labels.extend(self.sidebar_w.text_labels());
@@ -174,22 +166,22 @@ impl LayoutApp {
             
             labels.push(TextLabel {
                 text: format!("Red Color: {:.2}", self.slider_r.value()),
-                x: 95.0,
-                y: 298.0,
+                x: 20.0,
+                y: 320.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
             labels.push(TextLabel {
                 text: format!("Green Color: {:.2}", self.slider_g.value()),
-                x: 95.0,
-                y: 338.0,
+                x: 20.0,
+                y: 360.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
             labels.push(TextLabel {
                 text: format!("Blue Color: {:.2}", self.slider_b.value()),
-                x: 95.0,
-                y: 378.0,
+                x: 20.0,
+                y: 400.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
@@ -197,30 +189,30 @@ impl LayoutApp {
             if let Some(idx) = self.selected_idx {
                 labels.push(TextLabel {
                     text: format!("Selected Element #{}", idx + 1),
-                    x: 95.0,
-                    y: 425.0,
+                    x: 20.0,
+                    y: 445.0,
                     font_size: 12.0,
                     color: [0x3b, 0x82, 0xf6],
                 });
             } else {
                 labels.push(TextLabel {
                     text: "No Selection".to_string(),
-                    x: 95.0,
-                    y: 425.0,
+                    x: 20.0,
+                    y: 445.0,
                     font_size: 12.0,
                     color: [0x83, 0x83, 0x8a],
                 });
                 labels.push(TextLabel {
                     text: "Click canvas elements".to_string(),
-                    x: 95.0,
-                    y: 447.0,
+                    x: 20.0,
+                    y: 467.0,
                     font_size: 10.0,
                     color: [0x60, 0x60, 0x68],
                 });
                 labels.push(TextLabel {
                     text: "to edit properties.".to_string(),
-                    x: 95.0,
-                    y: 463.0,
+                    x: 20.0,
+                    y: 483.0,
                     font_size: 10.0,
                     color: [0x60, 0x60, 0x68],
                 });
@@ -229,8 +221,8 @@ impl LayoutApp {
             // Canvas Options Page
             labels.push(TextLabel {
                 text: "CANVAS OPTIONS".to_string(),
-                x: 95.0,
-                y: 42.0,
+                x: 20.0,
+                y: 82.0,
                 font_size: 13.0,
                 color: [0xee, 0xee, 0xf5],
             });
@@ -243,15 +235,15 @@ impl LayoutApp {
             
             labels.push(TextLabel {
                 text: format!("Grid Snapping: {}", if self.grid_enabled { "ON (20px)" } else { "OFF" }),
-                x: 95.0,
-                y: 330.0,
+                x: 20.0,
+                y: 370.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
             labels.push(TextLabel {
                 text: format!("Total Elements: {}", self.elements.len()),
-                x: 95.0,
-                y: 355.0,
+                x: 20.0,
+                y: 390.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
@@ -427,7 +419,8 @@ impl Application for LayoutApp {
             .with_item("View", &["Toggle Grid"]);
 
         // Build the sidebar Paginator
-        let paginator = Paginator::new(80.0, vec!["Page".to_string(), "Layout".to_string(), "Canvas".to_string()]);
+        let paginator = Paginator::new(80.0, vec!["Page".to_string(), "Layout".to_string(), "Canvas".to_string()])
+            .with_tabs_at_top(true);
 
         // Default paper sheet sizing (Letter)
         let page_w = 510.0;
@@ -647,26 +640,26 @@ impl Application for LayoutApp {
             self.paginator.set_rect(0.0, 26.0, 280.0, size.height - 26.0);
             
             // Layout presets dropdown selector
-            self.dropdown_presets.set_rect(95.0, 70.0, 170.0, 26.0);
+            self.dropdown_presets.set_rect(20.0, 110.0, 240.0, 26.0);
  
-            // Position Layout properties control widgets (shifted back up since presets dropdown is on Page tab)
-            self.sidebar_x.set_rect(95.0, 70.0, 80.0, 26.0);
-            self.sidebar_y.set_rect(185.0, 70.0, 80.0, 26.0);
-            self.sidebar_w.set_rect(95.0, 126.0, 80.0, 26.0);
-            self.sidebar_h.set_rect(185.0, 126.0, 80.0, 26.0);
-            self.sidebar_text.set_rect(95.0, 182.0, 170.0, 26.0);
-            self.sidebar_size.set_rect(95.0, 238.0, 170.0, 26.0);
+            // Position Layout properties control widgets (widened to 240px and realigned below top tabs)
+            self.sidebar_x.set_rect(20.0, 90.0, 110.0, 26.0);
+            self.sidebar_y.set_rect(150.0, 90.0, 110.0, 26.0);
+            self.sidebar_w.set_rect(20.0, 146.0, 110.0, 26.0);
+            self.sidebar_h.set_rect(150.0, 146.0, 110.0, 26.0);
+            self.sidebar_text.set_rect(20.0, 202.0, 240.0, 26.0);
+            self.sidebar_size.set_rect(20.0, 258.0, 240.0, 26.0);
             
-            self.slider_r.set_rect(95.0, 308.0, 170.0, 18.0);
-            self.slider_g.set_rect(95.0, 348.0, 170.0, 18.0);
-            self.slider_b.set_rect(95.0, 388.0, 170.0, 18.0);
+            self.slider_r.set_rect(20.0, 330.0, 240.0, 18.0);
+            self.slider_g.set_rect(20.0, 370.0, 240.0, 18.0);
+            self.slider_b.set_rect(20.0, 410.0, 240.0, 18.0);
  
-            // Canvas Page buttons
-            self.btn_toggle_grid.set_rect(95.0, 70.0, 170.0, 26.0);
-            self.btn_clear_canvas.set_rect(95.0, 120.0, 170.0, 26.0);
-            self.btn_add_text.set_rect(95.0, 170.0, 170.0, 26.0);
-            self.btn_add_rect.set_rect(95.0, 220.0, 170.0, 26.0);
-            self.btn_add_banner.set_rect(95.0, 270.0, 170.0, 26.0);
+            // Canvas Page buttons (widened to 240px and realigned below top tabs)
+            self.btn_toggle_grid.set_rect(20.0, 110.0, 240.0, 26.0);
+            self.btn_clear_canvas.set_rect(20.0, 160.0, 240.0, 26.0);
+            self.btn_add_text.set_rect(20.0, 210.0, 240.0, 26.0);
+            self.btn_add_rect.set_rect(20.0, 260.0, 240.0, 26.0);
+            self.btn_add_banner.set_rect(20.0, 310.0, 240.0, 26.0);
  
             self.rebuild_text_items();
             self.needs_rebuild = false;
@@ -681,7 +674,7 @@ impl Application for LayoutApp {
         // 2. Render Page Content
         if self.paginator.selected_page() == 0 {
             // Render Page 0: Presets Dropdown
-            quads.push((95.0, 70.0, 170.0, 26.0, self.dropdown_presets.color()));
+            quads.push((20.0, 110.0, 240.0, 26.0, self.dropdown_presets.color()));
             quads.extend(self.dropdown_presets.extra_quads());
         } else if self.paginator.selected_page() == 1 {
             // Render Page 1: Layout Properties
@@ -705,19 +698,19 @@ impl Application for LayoutApp {
             quads.extend(self.slider_b.extra_quads());
         } else {
             // Render Page 2: Canvas settings
-            quads.push((95.0, 70.0, 170.0, 26.0, self.btn_toggle_grid.color()));
+            quads.push((20.0, 110.0, 240.0, 26.0, self.btn_toggle_grid.color()));
             quads.extend(self.btn_toggle_grid.extra_quads());
             
-            quads.push((95.0, 120.0, 170.0, 26.0, self.btn_clear_canvas.color()));
+            quads.push((20.0, 160.0, 240.0, 26.0, self.btn_clear_canvas.color()));
             quads.extend(self.btn_clear_canvas.extra_quads());
             
-            quads.push((95.0, 170.0, 170.0, 26.0, self.btn_add_text.color()));
+            quads.push((20.0, 210.0, 240.0, 26.0, self.btn_add_text.color()));
             quads.extend(self.btn_add_text.extra_quads());
             
-            quads.push((95.0, 220.0, 170.0, 26.0, self.btn_add_rect.color()));
+            quads.push((20.0, 260.0, 240.0, 26.0, self.btn_add_rect.color()));
             quads.extend(self.btn_add_rect.extra_quads());
             
-            quads.push((95.0, 270.0, 170.0, 26.0, self.btn_add_banner.color()));
+            quads.push((20.0, 310.0, 240.0, 26.0, self.btn_add_banner.color()));
             quads.extend(self.btn_add_banner.extra_quads());
         }
 
