@@ -3,7 +3,7 @@ use glyphon::{FontSystem, Buffer, Metrics, Attrs};
 use clear_ui::engine::{Application, EngineState, LogicalPosition, LogicalSize, WindowSettings};
 use clear_ui::widget::{
     MouseButton, ElementState, MouseScrollDelta, KeyEvent, TextItem, Widget,
-    MenuBar, TextBox, Slider, TextLabel
+    MenuBar, TextBox, Slider, TextLabel, Paginator, Button
 };
 
 #[derive(Debug, Clone)]
@@ -45,6 +45,7 @@ enum Element {
 
 struct LayoutApp {
     menu_bar: MenuBar,
+    paginator: Paginator,
     elements: Vec<Element>,
     selected_idx: Option<usize>,
     dragging: Option<(usize, f32, f32)>, // Index, offset_x, offset_y
@@ -56,7 +57,7 @@ struct LayoutApp {
     font_system: FontSystem,
     needs_rebuild: bool,
 
-    // Sidebar property controls
+    // Page 0: Layout properties controls
     sidebar_x: TextBox,
     sidebar_y: TextBox,
     sidebar_w: TextBox,
@@ -64,11 +65,17 @@ struct LayoutApp {
     sidebar_text: TextBox,
     sidebar_size: TextBox,
     
-    // Sliders for RGB colors
     slider_r: Slider,
     slider_g: Slider,
     slider_b: Slider,
     
+    // Page 1: Canvas settings controls
+    btn_toggle_grid: Button,
+    btn_clear_canvas: Button,
+    btn_add_text: Button,
+    btn_add_rect: Button,
+    btn_add_banner: Button,
+
     last_selected: Option<usize>,
 }
 
@@ -81,101 +88,103 @@ impl LayoutApp {
         // 1. MenuBar text labels
         labels.extend(self.menu_bar.text_labels());
         
-        // 2. Sidebar text boxes
-        labels.extend(self.sidebar_x.text_labels());
-        labels.extend(self.sidebar_y.text_labels());
-        labels.extend(self.sidebar_w.text_labels());
-        labels.extend(self.sidebar_h.text_labels());
-        labels.extend(self.sidebar_text.text_labels());
-        labels.extend(self.sidebar_size.text_labels());
+        // 2. Paginator sidebar tabs
+        labels.extend(self.paginator.text_labels());
         
-        // 3. Slider Labels
-        labels.push(TextLabel {
-            text: format!("Red Color: {:.2}", self.slider_r.value()),
-            x: 20.0,
-            y: 320.0,
-            font_size: 11.0,
-            color: [0x83, 0x83, 0x8a],
-        });
-        labels.push(TextLabel {
-            text: format!("Green Color: {:.2}", self.slider_g.value()),
-            x: 20.0,
-            y: 360.0,
-            font_size: 11.0,
-            color: [0x83, 0x83, 0x8a],
-        });
-        labels.push(TextLabel {
-            text: format!("Blue Color: {:.2}", self.slider_b.value()),
-            x: 20.0,
-            y: 400.0,
-            font_size: 11.0,
-            color: [0x83, 0x83, 0x8a],
-        });
-        
-        // 4. Section headers
-        labels.push(TextLabel {
-            text: "LAYOUT PROPERTIES".to_string(),
-            x: 20.0,
-            y: 42.0,
-            font_size: 13.0,
-            color: [0xee, 0xee, 0xf5],
-        });
-        
-        // Selection feedback
-        if let Some(idx) = self.selected_idx {
+        // 3. Conditional Page rendering
+        if self.paginator.selected_page() == 0 {
+            // Layout Properties Page
+            labels.extend(self.sidebar_x.text_labels());
+            labels.extend(self.sidebar_y.text_labels());
+            labels.extend(self.sidebar_w.text_labels());
+            labels.extend(self.sidebar_h.text_labels());
+            labels.extend(self.sidebar_text.text_labels());
+            labels.extend(self.sidebar_size.text_labels());
+            
             labels.push(TextLabel {
-                text: format!("Selected Element #{}", idx + 1),
-                x: 20.0,
-                y: 450.0,
-                font_size: 12.0,
-                color: [0x3b, 0x82, 0xf6],
-            });
-        } else {
-            labels.push(TextLabel {
-                text: "No Selection".to_string(),
-                x: 20.0,
-                y: 450.0,
-                font_size: 12.0,
+                text: format!("Red Color: {:.2}", self.slider_r.value()),
+                x: 95.0,
+                y: 320.0,
+                font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
             labels.push(TextLabel {
-                text: "Click canvas elements to edit properties.".to_string(),
-                x: 20.0,
-                y: 472.0,
+                text: format!("Green Color: {:.2}", self.slider_g.value()),
+                x: 95.0,
+                y: 360.0,
                 font_size: 11.0,
-                color: [0x60, 0x60, 0x68],
+                color: [0x83, 0x83, 0x8a],
+            });
+            labels.push(TextLabel {
+                text: format!("Blue Color: {:.2}", self.slider_b.value()),
+                x: 95.0,
+                y: 400.0,
+                font_size: 11.0,
+                color: [0x83, 0x83, 0x8a],
+            });
+            
+            if let Some(idx) = self.selected_idx {
+                labels.push(TextLabel {
+                    text: format!("Selected Element #{}", idx + 1),
+                    x: 95.0,
+                    y: 450.0,
+                    font_size: 11.0,
+                    color: [0x3b, 0x82, 0xf6],
+                });
+            } else {
+                labels.push(TextLabel {
+                    text: "No Selection".to_string(),
+                    x: 95.0,
+                    y: 450.0,
+                    font_size: 11.0,
+                    color: [0x83, 0x83, 0x8a],
+                });
+                labels.push(TextLabel {
+                    text: "Click canvas elements".to_string(),
+                    x: 95.0,
+                    y: 472.0,
+                    font_size: 10.0,
+                    color: [0x60, 0x60, 0x68],
+                });
+                labels.push(TextLabel {
+                    text: "to edit properties.".to_string(),
+                    x: 95.0,
+                    y: 488.0,
+                    font_size: 10.0,
+                    color: [0x60, 0x60, 0x68],
+                });
+            }
+        } else {
+            // Canvas Options Page
+            labels.push(TextLabel {
+                text: "CANVAS OPTIONS".to_string(),
+                x: 95.0,
+                y: 42.0,
+                font_size: 13.0,
+                color: [0xee, 0xee, 0xf5],
+            });
+
+            labels.extend(self.btn_toggle_grid.text_labels());
+            labels.extend(self.btn_clear_canvas.text_labels());
+            labels.extend(self.btn_add_text.text_labels());
+            labels.extend(self.btn_add_rect.text_labels());
+            labels.extend(self.btn_add_banner.text_labels());
+            
+            labels.push(TextLabel {
+                text: format!("Grid Snapping: {}", if self.grid_enabled { "ON (20px)" } else { "OFF" }),
+                x: 95.0,
+                y: 330.0,
+                font_size: 11.0,
+                color: [0x83, 0x83, 0x8a],
+            });
+            labels.push(TextLabel {
+                text: format!("Total Elements: {}", self.elements.len()),
+                x: 95.0,
+                y: 355.0,
+                font_size: 11.0,
+                color: [0x83, 0x83, 0x8a],
             });
         }
-
-        // Help Instructions at the bottom of the sidebar
-        labels.push(TextLabel {
-            text: "INSTRUCTIONS:".to_string(),
-            x: 20.0,
-            y: 530.0,
-            font_size: 11.0,
-            color: [0xaa, 0xaa, 0xbb],
-        });
-        labels.push(TextLabel {
-            text: "- Click & Drag canvas elements to move".to_string(),
-            x: 20.0,
-            y: 550.0,
-            font_size: 10.0,
-            color: [0x83, 0x83, 0x8a],
-        });
-        labels.push(TextLabel {
-            text: "- Use Menu Bar to add elements".to_string(),
-            x: 20.0,
-            y: 568.0,
-            font_size: 10.0,
-            color: [0x83, 0x83, 0x8a],
-        });
-        labels.push(TextLabel {
-            text: "- Edit fields or drag Sliders to customize".to_string(),
-            x: 20.0,
-            y: 586.0,
-            font_size: 10.0,
-            color: [0x83, 0x83, 0x8a],
-        });
 
         // 5. Canvas Element Labels
         for (idx, element) in self.elements.iter().enumerate() {
@@ -226,7 +235,6 @@ impl LayoutApp {
     fn sync_sidebar_fields(&mut self) {
         if let Some(idx) = self.selected_idx {
             if self.last_selected != Some(idx) {
-                // Focus reset on selection swap
                 self.sidebar_text.unfocus();
                 self.sidebar_x.unfocus();
                 self.sidebar_y.unfocus();
@@ -312,6 +320,9 @@ impl Application for LayoutApp {
             .with_item("Insert", &["Add Text Box", "Add Rectangle", "Add Banner"])
             .with_item("View", &["Toggle Grid"]);
 
+        // Build the sidebar Paginator
+        let paginator = Paginator::new(80.0, vec!["Layout".to_string(), "Canvas".to_string()]);
+
         // Initialize elements with a basic greeting layout
         let elements = vec![
             Element::Text {
@@ -359,7 +370,7 @@ impl Application for LayoutApp {
             },
         ];
 
-        // Create sidebar textbox inputs
+        // Create sidebar textbox inputs (offset to fit inside active paginator area)
         let sidebar_x = TextBox::new(String::new()).with_label("X Position");
         let sidebar_y = TextBox::new(String::new()).with_label("Y Position");
         let sidebar_w = TextBox::new(String::new()).with_label("Width");
@@ -372,8 +383,16 @@ impl Application for LayoutApp {
         let slider_g = Slider::new().with_range(0.0, 1.0).with_value(0.5);
         let slider_b = Slider::new().with_range(0.0, 1.0).with_value(0.5);
 
+        // Page 1 Buttons
+        let btn_toggle_grid = Button::new(0.0, 0.0, 0.0, 0.0).with_label("Toggle Grid");
+        let btn_clear_canvas = Button::new(0.0, 0.0, 0.0, 0.0).with_label("Clear Canvas");
+        let btn_add_text = Button::new(0.0, 0.0, 0.0, 0.0).with_label("Add Text Box");
+        let btn_add_rect = Button::new(0.0, 0.0, 0.0, 0.0).with_label("Add Rectangle");
+        let btn_add_banner = Button::new(0.0, 0.0, 0.0, 0.0).with_label("Add Banner");
+
         let mut app = Self {
             menu_bar,
+            paginator,
             elements,
             selected_idx: None,
             dragging: None,
@@ -395,6 +414,12 @@ impl Application for LayoutApp {
             slider_r,
             slider_g,
             slider_b,
+
+            btn_toggle_grid,
+            btn_clear_canvas,
+            btn_add_text,
+            btn_add_rect,
+            btn_add_banner,
             
             last_selected: None,
         };
@@ -482,7 +507,12 @@ impl Application for LayoutApp {
         }
     }
 
-    fn tick(&mut self, _dt: f32, _needs_rebuild: &mut bool) {}
+    fn tick(&mut self, dt: f32, needs_rebuild: &mut bool) {
+        if self.paginator.tick(dt) {
+            *needs_rebuild = true;
+            self.needs_rebuild = true;
+        }
+    }
 
     fn view(&mut self, quads: &mut Vec<(f32, f32, f32, f32, [f32; 4])>, size: LogicalSize, scale: f64) {
         let size_changed = self.width != size.width as u32 || self.height != size.height as u32 || self.scale_factor != scale;
@@ -494,27 +524,76 @@ impl Application for LayoutApp {
             // Layout MenuBar at the top
             self.menu_bar.set_rect(0.0, 0.0, size.width, 26.0);
             
-            // Position sidebar controls
-            self.sidebar_x.set_rect(20.0, 70.0, 110.0, 26.0);
-            self.sidebar_y.set_rect(150.0, 70.0, 110.0, 26.0);
-            self.sidebar_w.set_rect(20.0, 130.0, 110.0, 26.0);
-            self.sidebar_h.set_rect(150.0, 130.0, 110.0, 26.0);
-            self.sidebar_text.set_rect(20.0, 190.0, 240.0, 26.0);
-            self.sidebar_size.set_rect(20.0, 250.0, 240.0, 26.0);
+            // Set paginator bounds in the sidebar region
+            self.paginator.set_rect(0.0, 26.0, 280.0, size.height - 26.0);
             
-            self.slider_r.set_rect(20.0, 330.0, 240.0, 18.0);
-            self.slider_g.set_rect(20.0, 370.0, 240.0, 18.0);
-            self.slider_b.set_rect(20.0, 410.0, 240.0, 18.0);
+            // Position child widgets inside the active area of the paginator (x starts at 80.0)
+            self.sidebar_x.set_rect(95.0, 70.0, 80.0, 26.0);
+            self.sidebar_y.set_rect(185.0, 70.0, 80.0, 26.0);
+            self.sidebar_w.set_rect(95.0, 130.0, 80.0, 26.0);
+            self.sidebar_h.set_rect(185.0, 130.0, 80.0, 26.0);
+            self.sidebar_text.set_rect(95.0, 190.0, 170.0, 26.0);
+            self.sidebar_size.set_rect(95.0, 250.0, 170.0, 26.0);
+            
+            self.slider_r.set_rect(95.0, 330.0, 170.0, 18.0);
+            self.slider_g.set_rect(95.0, 370.0, 170.0, 18.0);
+            self.slider_b.set_rect(95.0, 410.0, 170.0, 18.0);
+
+            // Canvas Page buttons
+            self.btn_toggle_grid.set_rect(95.0, 70.0, 170.0, 26.0);
+            self.btn_clear_canvas.set_rect(95.0, 120.0, 170.0, 26.0);
+            self.btn_add_text.set_rect(95.0, 170.0, 170.0, 26.0);
+            self.btn_add_rect.set_rect(95.0, 220.0, 170.0, 26.0);
+            self.btn_add_banner.set_rect(95.0, 270.0, 170.0, 26.0);
 
             self.rebuild_text_items();
             self.needs_rebuild = false;
         }
 
-        // 1. Sidebar Background Panel
-        quads.push((0.0, 26.0, 280.0, self.height as f32 - 26.0, [0.08, 0.08, 0.10, 1.0]));
+        // 1. Render Paginator Sidebar (includes backgrounds and active tab sliding container)
+        quads.extend(self.paginator.extra_quads());
+        if let Some(hq) = self.paginator.highlight_quad() {
+            quads.push(hq);
+        }
 
-        // 2. Canvas Background
-        quads.push((280.0, 26.0, self.width as f32 - 280.0, self.height as f32 - 26.0, [0.12, 0.12, 0.15, 1.0]));
+        // 2. Render Page Content
+        if self.paginator.selected_page() == 0 {
+            // Render Page 0 Widgets (Layout properties)
+            quads.extend(self.sidebar_x.extra_quads());
+            quads.extend(self.sidebar_y.extra_quads());
+            quads.extend(self.sidebar_w.extra_quads());
+            quads.extend(self.sidebar_h.extra_quads());
+            quads.extend(self.sidebar_text.extra_quads());
+            quads.extend(self.sidebar_size.extra_quads());
+
+            let (rx, ry, rw, rh) = self.slider_r.rect();
+            quads.push((rx, ry, rw, rh, self.slider_r.color()));
+            quads.extend(self.slider_r.extra_quads());
+
+            let (gx, gy, gw, gh) = self.slider_g.rect();
+            quads.push((gx, gy, gw, gh, self.slider_g.color()));
+            quads.extend(self.slider_g.extra_quads());
+
+            let (bx, by, bw, bh) = self.slider_b.rect();
+            quads.push((bx, by, bw, bh, self.slider_b.color()));
+            quads.extend(self.slider_b.extra_quads());
+        } else {
+            // Render Page 1 Widgets (Canvas settings)
+            quads.push((95.0, 70.0, 170.0, 26.0, self.btn_toggle_grid.color()));
+            quads.extend(self.btn_toggle_grid.extra_quads());
+            
+            quads.push((95.0, 120.0, 170.0, 26.0, self.btn_clear_canvas.color()));
+            quads.extend(self.btn_clear_canvas.extra_quads());
+            
+            quads.push((95.0, 170.0, 170.0, 26.0, self.btn_add_text.color()));
+            quads.extend(self.btn_add_text.extra_quads());
+            
+            quads.push((95.0, 220.0, 170.0, 26.0, self.btn_add_rect.color()));
+            quads.extend(self.btn_add_rect.extra_quads());
+            
+            quads.push((95.0, 270.0, 170.0, 26.0, self.btn_add_banner.color()));
+            quads.extend(self.btn_add_banner.extra_quads());
+        }
 
         // Divider between Sidebar and Canvas
         quads.push((280.0, 26.0, 1.0, self.height as f32 - 26.0, [0.20, 0.20, 0.25, 1.0]));
@@ -538,9 +617,7 @@ impl Application for LayoutApp {
         for (idx, element) in self.elements.iter().enumerate() {
             match element {
                 Element::Text { text: _, x, y, w, h, font_size: _, color: _ } => {
-                    // Translucent backing for text boundary
                     quads.push((*x, *y, *w, *h, [0.18, 0.18, 0.22, 0.25]));
-                    // Subtle text box border
                     let border_color = [0.25, 0.25, 0.30, 0.5];
                     quads.push((*x, *y, *w, 1.0, border_color));
                     quads.push((*x, *y + *h - 1.0, *w, 1.0, border_color));
@@ -553,11 +630,8 @@ impl Application for LayoutApp {
                             quads.push((*x, *y, *w, *h, *color));
                         }
                         ShapeType::Banner => {
-                            // Fancy drop shadow
                             quads.push((*x + 3.0, *y + 3.0, *w, *h, [0.05, 0.05, 0.08, 0.4]));
-                            // Main banner quad
                             quads.push((*x, *y, *w, *h, *color));
-                            // Inner outline
                             let inner_col = [1.0, 1.0, 1.0, 0.2];
                             quads.push((*x + 2.0, *y + 2.0, *w - 4.0, 1.0, inner_col));
                             quads.push((*x + 2.0, *y + *h - 3.0, *w - 4.0, 1.0, inner_col));
@@ -574,13 +648,12 @@ impl Application for LayoutApp {
                     Element::Text { x, y, w, h, .. } => (*x, *y, *w, *h),
                     Element::Shape { x, y, w, h, .. } => (*x, *y, *w, *h),
                 };
-                let sel_col = [0.23, 0.51, 0.96, 1.0]; // Bright neon blue
+                let sel_col = [0.23, 0.51, 0.96, 1.0];
                 quads.push((ex - 1.0, ey - 1.0, ew + 2.0, 1.0, sel_col));
                 quads.push((ex - 1.0, ey + eh, ew + 2.0, 1.0, sel_col));
                 quads.push((ex - 1.0, ey - 1.0, 1.0, eh + 2.0, sel_col));
                 quads.push((ex + ew, ey - 1.0, 1.0, eh + 2.0, sel_col));
 
-                // Corner handles
                 let hs = 5.0;
                 let hc = [1.0, 1.0, 1.0, 1.0];
                 let hborder = [0.23, 0.51, 0.96, 1.0];
@@ -596,26 +669,6 @@ impl Application for LayoutApp {
                 }
             }
         }
-
-        // 5. Sidebar Widget extra quads (backgrounds, highlights, values)
-        quads.extend(self.sidebar_x.extra_quads());
-        quads.extend(self.sidebar_y.extra_quads());
-        quads.extend(self.sidebar_w.extra_quads());
-        quads.extend(self.sidebar_h.extra_quads());
-        quads.extend(self.sidebar_text.extra_quads());
-        quads.extend(self.sidebar_size.extra_quads());
-
-        let (rx, ry, rw, rh) = self.slider_r.rect();
-        quads.push((rx, ry, rw, rh, self.slider_r.color()));
-        quads.extend(self.slider_r.extra_quads());
-
-        let (gx, gy, gw, gh) = self.slider_g.rect();
-        quads.push((gx, gy, gw, gh, self.slider_g.color()));
-        quads.extend(self.slider_g.extra_quads());
-
-        let (bx, by, bw, bh) = self.slider_b.rect();
-        quads.push((bx, by, bw, bh, self.slider_b.color()));
-        quads.extend(self.slider_b.extra_quads());
 
         // 6. MenuBar Background
         let mb_color = self.menu_bar.color();
@@ -647,27 +700,37 @@ impl Application for LayoutApp {
         } else {
             let sidebar_w = 280.0;
             if px < sidebar_w {
-                if self.sidebar_x.on_cursor_moved(px, py) { changed = true; }
-                if self.sidebar_y.on_cursor_moved(px, py) { changed = true; }
-                if self.sidebar_w.on_cursor_moved(px, py) { changed = true; }
-                if self.sidebar_h.on_cursor_moved(px, py) { changed = true; }
-                if self.sidebar_text.on_cursor_moved(px, py) { changed = true; }
-                if self.sidebar_size.on_cursor_moved(px, py) { changed = true; }
+                if self.paginator.on_cursor_moved(px, py) { changed = true; }
                 
-                if self.slider_r.is_dragging() {
-                    if self.slider_r.drag_update(px, py) { changed = true; }
-                } else if self.slider_r.on_cursor_moved(px, py) { changed = true; }
+                if self.paginator.selected_page() == 0 {
+                    if self.sidebar_x.on_cursor_moved(px, py) { changed = true; }
+                    if self.sidebar_y.on_cursor_moved(px, py) { changed = true; }
+                    if self.sidebar_w.on_cursor_moved(px, py) { changed = true; }
+                    if self.sidebar_h.on_cursor_moved(px, py) { changed = true; }
+                    if self.sidebar_text.on_cursor_moved(px, py) { changed = true; }
+                    if self.sidebar_size.on_cursor_moved(px, py) { changed = true; }
+                    
+                    if self.slider_r.is_dragging() {
+                        if self.slider_r.drag_update(px, py) { changed = true; }
+                    } else if self.slider_r.on_cursor_moved(px, py) { changed = true; }
 
-                if self.slider_g.is_dragging() {
-                    if self.slider_g.drag_update(px, py) { changed = true; }
-                } else if self.slider_g.on_cursor_moved(px, py) { changed = true; }
+                    if self.slider_g.is_dragging() {
+                        if self.slider_g.drag_update(px, py) { changed = true; }
+                    } else if self.slider_g.on_cursor_moved(px, py) { changed = true; }
 
-                if self.slider_b.is_dragging() {
-                    if self.slider_b.drag_update(px, py) { changed = true; }
-                } else if self.slider_b.on_cursor_moved(px, py) { changed = true; }
-                
-                if changed {
-                    self.apply_sidebar_changes();
+                    if self.slider_b.is_dragging() {
+                        if self.slider_b.drag_update(px, py) { changed = true; }
+                    } else if self.slider_b.on_cursor_moved(px, py) { changed = true; }
+                    
+                    if changed {
+                        self.apply_sidebar_changes();
+                    }
+                } else {
+                    if self.btn_toggle_grid.on_cursor_moved(px, py) { changed = true; }
+                    if self.btn_clear_canvas.on_cursor_moved(px, py) { changed = true; }
+                    if self.btn_add_text.on_cursor_moved(px, py) { changed = true; }
+                    if self.btn_add_rect.on_cursor_moved(px, py) { changed = true; }
+                    if self.btn_add_banner.on_cursor_moved(px, py) { changed = true; }
                 }
             } else {
                 if let Some((idx, ox, oy)) = self.dragging {
@@ -691,14 +754,6 @@ impl Application for LayoutApp {
                     }
                     self.sync_sidebar_fields();
                     changed = true;
-                } else {
-                    // Feed hovered states to buttons
-                    if self.sidebar_x.on_cursor_moved(px, py) { changed = true; }
-                    if self.sidebar_y.on_cursor_moved(px, py) { changed = true; }
-                    if self.sidebar_w.on_cursor_moved(px, py) { changed = true; }
-                    if self.sidebar_h.on_cursor_moved(px, py) { changed = true; }
-                    if self.sidebar_text.on_cursor_moved(px, py) { changed = true; }
-                    if self.sidebar_size.on_cursor_moved(px, py) { changed = true; }
                 }
             }
             if self.menu_bar.on_cursor_moved(px, py) {
@@ -740,36 +795,88 @@ impl Application for LayoutApp {
         } else {
             let sidebar_w = 280.0;
             if px < sidebar_w {
-                if state == ElementState::Pressed {
-                    let mut clicked = false;
-                    if self.sidebar_x.mouse_input(button, state, px, py) { clicked = true; }
-                    if self.sidebar_y.mouse_input(button, state, px, py) { clicked = true; }
-                    if self.sidebar_w.mouse_input(button, state, px, py) { clicked = true; }
-                    if self.sidebar_h.mouse_input(button, state, px, py) { clicked = true; }
-                    if self.sidebar_text.mouse_input(button, state, px, py) { clicked = true; }
-                    if self.sidebar_size.mouse_input(button, state, px, py) { clicked = true; }
-                    
-                    if self.slider_r.mouse_input(button, state, px, py) { clicked = true; }
-                    if self.slider_g.mouse_input(button, state, px, py) { clicked = true; }
-                    if self.slider_b.mouse_input(button, state, px, py) { clicked = true; }
+                if self.paginator.mouse_input(button, state, px, py) {
+                    changed = true;
+                    if self.paginator.take_click() {
+                        self.sidebar_x.unfocus();
+                        self.sidebar_y.unfocus();
+                        self.sidebar_w.unfocus();
+                        self.sidebar_h.unfocus();
+                        self.sidebar_text.unfocus();
+                        self.sidebar_size.unfocus();
+                    }
+                } else if self.paginator.selected_page() == 0 {
+                    if state == ElementState::Pressed {
+                        let mut clicked = false;
+                        if self.sidebar_x.mouse_input(button, state, px, py) { clicked = true; }
+                        if self.sidebar_y.mouse_input(button, state, px, py) { clicked = true; }
+                        if self.sidebar_w.mouse_input(button, state, px, py) { clicked = true; }
+                        if self.sidebar_h.mouse_input(button, state, px, py) { clicked = true; }
+                        if self.sidebar_text.mouse_input(button, state, px, py) { clicked = true; }
+                        if self.sidebar_size.mouse_input(button, state, px, py) { clicked = true; }
+                        
+                        if self.slider_r.mouse_input(button, state, px, py) { clicked = true; }
+                        if self.slider_g.mouse_input(button, state, px, py) { clicked = true; }
+                        if self.slider_b.mouse_input(button, state, px, py) { clicked = true; }
 
-                    if !self.sidebar_x.hit_test(px, py) { self.sidebar_x.unfocus(); }
-                    if !self.sidebar_y.hit_test(px, py) { self.sidebar_y.unfocus(); }
-                    if !self.sidebar_w.hit_test(px, py) { self.sidebar_w.unfocus(); }
-                    if !self.sidebar_h.hit_test(px, py) { self.sidebar_h.unfocus(); }
-                    if !self.sidebar_text.hit_test(px, py) { self.sidebar_text.unfocus(); }
-                    if !self.sidebar_size.hit_test(px, py) { self.sidebar_size.unfocus(); }
+                        if !self.sidebar_x.hit_test(px, py) { self.sidebar_x.unfocus(); }
+                        if !self.sidebar_y.hit_test(px, py) { self.sidebar_y.unfocus(); }
+                        if !self.sidebar_w.hit_test(px, py) { self.sidebar_w.unfocus(); }
+                        if !self.sidebar_h.hit_test(px, py) { self.sidebar_h.unfocus(); }
+                        if !self.sidebar_text.hit_test(px, py) { self.sidebar_text.unfocus(); }
+                        if !self.sidebar_size.hit_test(px, py) { self.sidebar_size.unfocus(); }
 
-                    if clicked {
+                        if clicked {
+                            self.apply_sidebar_changes();
+                            changed = true;
+                        }
+                    } else {
+                        self.slider_r.mouse_input(button, state, px, py);
+                        self.slider_g.mouse_input(button, state, px, py);
+                        self.slider_b.mouse_input(button, state, px, py);
                         self.apply_sidebar_changes();
                         changed = true;
                     }
                 } else {
-                    self.slider_r.mouse_input(button, state, px, py);
-                    self.slider_g.mouse_input(button, state, px, py);
-                    self.slider_b.mouse_input(button, state, px, py);
-                    self.apply_sidebar_changes();
-                    changed = true;
+                    // Canvas settings page input
+                    if state == ElementState::Pressed {
+                        if self.btn_toggle_grid.mouse_input(button, state, px, py) { changed = true; }
+                        if self.btn_clear_canvas.mouse_input(button, state, px, py) { changed = true; }
+                        if self.btn_add_text.mouse_input(button, state, px, py) { changed = true; }
+                        if self.btn_add_rect.mouse_input(button, state, px, py) { changed = true; }
+                        if self.btn_add_banner.mouse_input(button, state, px, py) { changed = true; }
+                    } else if state == ElementState::Released {
+                        if self.btn_toggle_grid.mouse_input(button, state, px, py) {
+                            if self.btn_toggle_grid.take_click() {
+                                msg_out = Some(AppMessage::ToggleGrid);
+                            }
+                            changed = true;
+                        }
+                        if self.btn_clear_canvas.mouse_input(button, state, px, py) {
+                            if self.btn_clear_canvas.take_click() {
+                                msg_out = Some(AppMessage::NewDocument);
+                            }
+                            changed = true;
+                        }
+                        if self.btn_add_text.mouse_input(button, state, px, py) {
+                            if self.btn_add_text.take_click() {
+                                msg_out = Some(AppMessage::AddText);
+                            }
+                            changed = true;
+                        }
+                        if self.btn_add_rect.mouse_input(button, state, px, py) {
+                            if self.btn_add_rect.take_click() {
+                                msg_out = Some(AppMessage::AddRectangle);
+                            }
+                            changed = true;
+                        }
+                        if self.btn_add_banner.mouse_input(button, state, px, py) {
+                            if self.btn_add_banner.take_click() {
+                                msg_out = Some(AppMessage::AddBanner);
+                            }
+                            changed = true;
+                        }
+                    }
                 }
             } else {
                 if state == ElementState::Pressed {
@@ -818,18 +925,20 @@ impl Application for LayoutApp {
     fn handle_key_input(&mut self, event: &KeyEvent, needs_rebuild: &mut bool) -> Option<Self::Message> {
         let mut handled = false;
         
-        if self.sidebar_x.editing {
-            if self.sidebar_x.keyboard_input(event) { handled = true; }
-        } else if self.sidebar_y.editing {
-            if self.sidebar_y.keyboard_input(event) { handled = true; }
-        } else if self.sidebar_w.editing {
-            if self.sidebar_w.keyboard_input(event) { handled = true; }
-        } else if self.sidebar_h.editing {
-            if self.sidebar_h.keyboard_input(event) { handled = true; }
-        } else if self.sidebar_text.editing {
-            if self.sidebar_text.keyboard_input(event) { handled = true; }
-        } else if self.sidebar_size.editing {
-            if self.sidebar_size.keyboard_input(event) { handled = true; }
+        if self.paginator.selected_page() == 0 {
+            if self.sidebar_x.editing {
+                if self.sidebar_x.keyboard_input(event) { handled = true; }
+            } else if self.sidebar_y.editing {
+                if self.sidebar_y.keyboard_input(event) { handled = true; }
+            } else if self.sidebar_w.editing {
+                if self.sidebar_w.keyboard_input(event) { handled = true; }
+            } else if self.sidebar_h.editing {
+                if self.sidebar_h.keyboard_input(event) { handled = true; }
+            } else if self.sidebar_text.editing {
+                if self.sidebar_text.keyboard_input(event) { handled = true; }
+            } else if self.sidebar_size.editing {
+                if self.sidebar_size.keyboard_input(event) { handled = true; }
+            }
         }
 
         if handled {
