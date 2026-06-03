@@ -256,10 +256,11 @@ impl LayoutApp {
 
             // Section Widget: "Rulers"
             let mut collector = clear_ui::layout::PopoverCollector::new();
-            let mut _sec = clear_ui::layout::Section::new(&mut collector, 15.0, 155.0, 250.0, "RULERS");
+            let mut sec = clear_ui::layout::Section::new(&mut collector, 15.0, 155.0, 250.0, "RULERS");
             if self.dropdown_units.open {
                 self.dropdown_units.render_popover(&mut collector);
             }
+            let _ = sec.finish(&mut collector);
 
             for (text, size, x, y, color, _font) in collector.texts {
                 labels.push(TextLabel {
@@ -754,6 +755,7 @@ impl Application for LayoutApp {
             let mut sec = clear_ui::layout::Section::new(&mut collector, 15.0, 155.0, 250.0, "RULERS");
             sec.widget(&mut collector, &mut self.toggle_rulers, 10.0, 230.0, 26.0);
             sec.widget(&mut collector, &mut self.dropdown_units, 10.0, 230.0, 26.0);
+            let _ = sec.finish(&mut collector);
  
             self.rebuild_text_items();
             self.needs_rebuild = false;
@@ -817,6 +819,7 @@ impl Application for LayoutApp {
             let mut sec = clear_ui::layout::Section::new(&mut collector, 15.0, 155.0, 250.0, "RULERS");
             sec.widget(&mut collector, &mut self.toggle_rulers, 10.0, 230.0, 26.0);
             sec.widget(&mut collector, &mut self.dropdown_units, 10.0, 230.0, 26.0);
+            let _ = sec.finish(&mut collector);
 
             for (color, x, y, w, h) in collector.rects {
                 quads.push((x, y, w, h, color));
