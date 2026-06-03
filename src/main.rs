@@ -3,7 +3,7 @@ use glyphon::{FontSystem, Buffer, Metrics, Attrs};
 use clear_ui::engine::{Application, EngineState, LogicalPosition, LogicalSize, WindowSettings};
 use clear_ui::widget::{
     MouseButton, ElementState, MouseScrollDelta, KeyEvent, TextItem, Widget,
-    MenuBar, TextBox, Slider, TextLabel, Paginator, Button, Dropdown
+    MenuBar, TextBox, Slider, TextLabel, Paginator, Button, Dropdown, Toggle
 };
 
 #[derive(Debug, Clone)]
@@ -93,8 +93,7 @@ struct LayoutApp {
     btn_add_banner: Button,
 
     // Page 3: View settings controls
-    btn_toggle_rulers: Button,
-    rulers_enabled: bool,
+    toggle_rulers: Toggle,
 
     last_selected: Option<usize>,
     page_w: f32,
@@ -254,18 +253,10 @@ impl LayoutApp {
                 color: [0x83, 0x83, 0x8a],
             });
 
-            labels.push(TextLabel {
-                text: format!("Rulers: {}", if self.rulers_enabled { "ON" } else { "OFF" }),
-                x: 20.0,
-                y: 160.0,
-                font_size: 11.0,
-                color: [0x83, 0x83, 0x8a],
-            });
-
-            labels.extend(self.btn_toggle_rulers.text_labels());
+            labels.extend(self.toggle_rulers.text_labels());
         }
 
-        if self.rulers_enabled {
+        if self.toggle_rulers.toggled() {
             // X Ruler Labels
             let mut val = 0.0;
             while val <= self.page_w {
@@ -545,7 +536,7 @@ impl Application for LayoutApp {
         let btn_add_banner = Button::new(0.0, 0.0, 0.0, 0.0).with_label("Add Banner");
 
         // Page 3 Buttons
-        let btn_toggle_rulers = Button::new(0.0, 0.0, 0.0, 0.0).with_label("Toggle Rulers");
+        let toggle_rulers = Toggle::new().with_label("Show Rulers");
 
         let mut app = Self {
             menu_bar,
@@ -579,8 +570,7 @@ impl Application for LayoutApp {
             btn_add_text,
             btn_add_rect,
             btn_add_banner,
-            btn_toggle_rulers,
-            rulers_enabled: false,
+            toggle_rulers,
             
             last_selected: None,
             page_w,
@@ -714,7 +704,7 @@ impl Application for LayoutApp {
             self.btn_add_banner.set_rect(20.0, 290.0, 240.0, 26.0);
 
             // View Page rulers button
-            self.btn_toggle_rulers.set_rect(20.0, 180.0, 240.0, 26.0);
+            self.toggle_rulers.set_rect(20.0, 180.0, 240.0, 26.0);
  
             self.rebuild_text_items();
             self.needs_rebuild = false;
@@ -773,8 +763,8 @@ impl Application for LayoutApp {
             quads.push((zx, zy, zw, zh, self.slider_zoom.color()));
             quads.extend(self.slider_zoom.extra_quads());
 
-            quads.push((20.0, 180.0, 240.0, 26.0, self.btn_toggle_rulers.color()));
-            quads.extend(self.btn_toggle_rulers.extra_quads());
+            quads.push((20.0, 180.0, 240.0, 26.0, self.toggle_rulers.color()));
+            quads.extend(self.toggle_rulers.extra_quads());
         }
 
         // Divider between Sidebar and Canvas
@@ -793,7 +783,7 @@ impl Application for LayoutApp {
         quads.push((280.0, 26.0, canvas_w, canvas_h, [0.12, 0.12, 0.15, 1.0]));
 
         // Axis Rulers
-        if self.rulers_enabled {
+        if self.toggle_rulers.toggled() {
             let ruler_bg = [0.18, 0.18, 0.22, 1.0];
             let tick_color = [0.45, 0.45, 0.50, 0.8];
             let border_col = [0.30, 0.30, 0.35, 1.0];
@@ -1008,7 +998,7 @@ impl Application for LayoutApp {
                     if self.slider_zoom.is_dragging() {
                         if self.slider_zoom.drag_update(px, py) { changed = true; }
                     } else if self.slider_zoom.on_cursor_moved(px, py) { changed = true; }
-                    if self.btn_toggle_rulers.on_cursor_moved(px, py) { changed = true; }
+                    if self.toggle_rulers.on_cursor_moved(px, py) { changed = true; }
                 }
             } else {
                 // Compute centering coordinates for canvas elements
@@ -1195,13 +1185,11 @@ impl Application for LayoutApp {
                 } else {
                     // View page input (zoom slider & rulers button)
                     if state == ElementState::Pressed {
-                        if self.btn_toggle_rulers.mouse_input(button, state, px, py) { changed = true; }
+                        if self.toggle_rulers.mouse_input(button, state, px, py) { changed = true; }
                         if self.slider_zoom.mouse_input(button, state, px, py) { changed = true; }
                     } else if state == ElementState::Released {
-                        if self.btn_toggle_rulers.mouse_input(button, state, px, py) {
-                            if self.btn_toggle_rulers.take_click() {
-                                self.rulers_enabled = !self.rulers_enabled;
-                            }
+                        if self.toggle_rulers.mouse_input(button, state, px, py) {
+                            let _ = self.toggle_rulers.take_click();
                             changed = true;
                         }
                         if self.slider_zoom.mouse_input(button, state, px, py) { changed = true; }
