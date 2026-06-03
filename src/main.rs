@@ -319,35 +319,7 @@ impl LayoutApp {
             }
         }
 
-        // Help Instructions at the bottom of the sidebar
-        labels.push(TextLabel {
-            text: "INSTRUCTIONS:".to_string(),
-            x: 20.0,
-            y: 550.0,
-            font_size: 11.0,
-            color: [0xaa, 0xaa, 0xbb],
-        });
-        labels.push(TextLabel {
-            text: "- Drag elements on canvas to move".to_string(),
-            x: 20.0,
-            y: 570.0,
-            font_size: 10.0,
-            color: [0x83, 0x83, 0x8a],
-        });
-        labels.push(TextLabel {
-            text: "- Edit fields or drag RGB Sliders".to_string(),
-            x: 20.0,
-            y: 588.0,
-            font_size: 10.0,
-            color: [0x83, 0x83, 0x8a],
-        });
-        labels.push(TextLabel {
-            text: "- Presets resize sheet centering".to_string(),
-            x: 20.0,
-            y: 606.0,
-            font_size: 10.0,
-            color: [0x83, 0x83, 0x8a],
-        });
+
 
         // 5. Canvas Element Labels (drawn relative to the paper sheet)
         if self.word_processor_enabled {
