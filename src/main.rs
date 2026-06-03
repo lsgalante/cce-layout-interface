@@ -255,35 +255,28 @@ impl LayoutApp {
             });
 
             // Section Widget: "Rulers"
-            labels.push(TextLabel {
-                text: "RULERS".to_string(),
-                x: 25.0,
-                y: 172.0,
-                font_size: 11.0,
-                color: [0xaa, 0xaa, 0xbb],
-            });
+            let mut collector = clear_ui::layout::PopoverCollector::new();
+            let mut _sec = clear_ui::layout::Section::new(&mut collector, 15.0, 155.0, 250.0, "RULERS");
+            if self.dropdown_units.open {
+                self.dropdown_units.render_popover(&mut collector);
+            }
+
+            for (text, size, x, y, color, _font) in collector.texts {
+                labels.push(TextLabel {
+                    text,
+                    x,
+                    y,
+                    font_size: size,
+                    color: [
+                        (color[0] * 255.0).clamp(0.0, 255.0) as u8,
+                        (color[1] * 255.0).clamp(0.0, 255.0) as u8,
+                        (color[2] * 255.0).clamp(0.0, 255.0) as u8,
+                    ],
+                });
+            }
 
             labels.extend(self.toggle_rulers.text_labels());
             labels.extend(self.dropdown_units.text_labels());
-
-            // Add drop down list labels dynamically if open
-            if self.dropdown_units.open {
-                let mut collector = clear_ui::layout::PopoverCollector::new();
-                self.dropdown_units.render_popover(&mut collector);
-                for (text, size, x, y, color, _font) in collector.texts {
-                    labels.push(TextLabel {
-                        text,
-                        x,
-                        y,
-                        font_size: size,
-                        color: [
-                            (color[0] * 255.0).clamp(0.0, 255.0) as u8,
-                            (color[1] * 255.0).clamp(0.0, 255.0) as u8,
-                            (color[2] * 255.0).clamp(0.0, 255.0) as u8,
-                        ],
-                    });
-                }
-            }
         }
 
         if self.toggle_rulers.toggled() {
@@ -757,8 +750,10 @@ impl Application for LayoutApp {
             self.btn_add_banner.set_rect(20.0, 290.0, 240.0, 26.0);
 
             // View Page Rulers Section
-            self.toggle_rulers.set_rect(25.0, 188.0, 230.0, 26.0);
-            self.dropdown_units.set_rect(25.0, 245.0, 230.0, 26.0);
+            let mut collector = clear_ui::layout::PopoverCollector::new();
+            let mut sec = clear_ui::layout::Section::new(&mut collector, 15.0, 155.0, 250.0, "RULERS");
+            sec.widget(&mut collector, &mut self.toggle_rulers, 10.0, 230.0, 26.0);
+            sec.widget(&mut collector, &mut self.dropdown_units, 10.0, 230.0, 26.0);
  
             self.rebuild_text_items();
             self.needs_rebuild = false;
@@ -817,17 +812,15 @@ impl Application for LayoutApp {
             quads.push((zx, zy, zw, zh, self.slider_zoom.color()));
             quads.extend(self.slider_zoom.extra_quads());
 
-            // "Rulers" Section Container
-            let border_col = [0.20, 0.20, 0.25, 0.8];
-            let frame_bg = [0.08, 0.08, 0.11, 0.5];
-            quads.push((15.0, 155.0, 250.0, 130.0, border_col));
-            quads.push((16.0, 156.0, 248.0, 128.0, frame_bg));
+            // "Rulers" Section Container using Section layout helper
+            let mut collector = clear_ui::layout::PopoverCollector::new();
+            let mut sec = clear_ui::layout::Section::new(&mut collector, 15.0, 155.0, 250.0, "RULERS");
+            sec.widget(&mut collector, &mut self.toggle_rulers, 10.0, 230.0, 26.0);
+            sec.widget(&mut collector, &mut self.dropdown_units, 10.0, 230.0, 26.0);
 
-            quads.push((25.0, 188.0, 230.0, 26.0, self.toggle_rulers.color()));
-            quads.extend(self.toggle_rulers.extra_quads());
-
-            quads.push((25.0, 245.0, 230.0, 26.0, self.dropdown_units.color()));
-            quads.extend(self.dropdown_units.extra_quads());
+            for (color, x, y, w, h) in collector.rects {
+                quads.push((x, y, w, h, color));
+            }
         }
 
         // Divider between Sidebar and Canvas
