@@ -3,7 +3,7 @@ use glyphon::{FontSystem, Buffer, Metrics, Attrs};
 use clear_ui::engine::{Application, EngineState, LogicalPosition, LogicalSize, WindowSettings};
 use clear_ui::widget::{
     MouseButton, ElementState, MouseScrollDelta, KeyEvent, TextItem, Widget,
-    MenuBar, TextBox, Slider, TextLabel, Paginator, Button
+    MenuBar, TextBox, Slider, TextLabel, Paginator, Button, Dropdown
 };
 
 #[derive(Debug, Clone)]
@@ -43,6 +43,20 @@ enum Element {
     },
 }
 
+struct PagePreset {
+    name: &'static str,
+    w: f32,
+    h: f32,
+}
+
+const PRESETS: &[PagePreset] = &[
+    PagePreset { name: "Letter (8.5\" x 11\")", w: 510.0, h: 660.0 },
+    PagePreset { name: "Tabloid (11\" x 17\")", w: 660.0, h: 1020.0 },
+    PagePreset { name: "A4 (210 x 297 mm)", w: 496.0, h: 701.0 },
+    PagePreset { name: "A5 (148 x 210 mm)", w: 350.0, h: 496.0 },
+    PagePreset { name: "Poster (8\" x 8\")", w: 480.0, h: 480.0 },
+];
+
 struct LayoutApp {
     menu_bar: MenuBar,
     paginator: Paginator,
@@ -58,6 +72,7 @@ struct LayoutApp {
     needs_rebuild: bool,
 
     // Page 0: Layout properties controls
+    dropdown_presets: Dropdown,
     sidebar_x: TextBox,
     sidebar_y: TextBox,
     sidebar_w: TextBox,
@@ -77,6 +92,8 @@ struct LayoutApp {
     btn_add_banner: Button,
 
     last_selected: Option<usize>,
+    page_w: f32,
+    page_h: f32,
 }
 
 impl LayoutApp {
@@ -94,6 +111,27 @@ impl LayoutApp {
         // 3. Conditional Page rendering
         if self.paginator.selected_page() == 0 {
             // Layout Properties Page
+            labels.extend(self.dropdown_presets.text_labels());
+
+            // Add drop down list labels dynamically if open
+            if self.dropdown_presets.open {
+                let mut collector = clear_ui::layout::PopoverCollector::new();
+                self.dropdown_presets.render_popover(&mut collector);
+                for (text, size, x, y, color, _font) in collector.texts {
+                    labels.push(TextLabel {
+                        text,
+                        x,
+                        y,
+                        font_size: size,
+                        color: [
+                            (color[0] * 255.0).clamp(0.0, 255.0) as u8,
+                            (color[1] * 255.0).clamp(0.0, 255.0) as u8,
+                            (color[2] * 255.0).clamp(0.0, 255.0) as u8,
+                        ],
+                    });
+                }
+            }
+
             labels.extend(self.sidebar_x.text_labels());
             labels.extend(self.sidebar_y.text_labels());
             labels.extend(self.sidebar_w.text_labels());
@@ -104,21 +142,21 @@ impl LayoutApp {
             labels.push(TextLabel {
                 text: format!("Red Color: {:.2}", self.slider_r.value()),
                 x: 95.0,
-                y: 320.0,
+                y: 354.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
             labels.push(TextLabel {
                 text: format!("Green Color: {:.2}", self.slider_g.value()),
                 x: 95.0,
-                y: 360.0,
+                y: 394.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
             labels.push(TextLabel {
                 text: format!("Blue Color: {:.2}", self.slider_b.value()),
                 x: 95.0,
-                y: 400.0,
+                y: 434.0,
                 font_size: 11.0,
                 color: [0x83, 0x83, 0x8a],
             });
@@ -127,29 +165,29 @@ impl LayoutApp {
                 labels.push(TextLabel {
                     text: format!("Selected Element #{}", idx + 1),
                     x: 95.0,
-                    y: 450.0,
-                    font_size: 11.0,
+                    y: 480.0,
+                    font_size: 12.0,
                     color: [0x3b, 0x82, 0xf6],
                 });
             } else {
                 labels.push(TextLabel {
                     text: "No Selection".to_string(),
                     x: 95.0,
-                    y: 450.0,
-                    font_size: 11.0,
+                    y: 480.0,
+                    font_size: 12.0,
                     color: [0x83, 0x83, 0x8a],
                 });
                 labels.push(TextLabel {
                     text: "Click canvas elements".to_string(),
                     x: 95.0,
-                    y: 472.0,
+                    y: 502.0,
                     font_size: 10.0,
                     color: [0x60, 0x60, 0x68],
                 });
                 labels.push(TextLabel {
                     text: "to edit properties.".to_string(),
                     x: 95.0,
-                    y: 488.0,
+                    y: 518.0,
                     font_size: 10.0,
                     color: [0x60, 0x60, 0x68],
                 });
@@ -186,14 +224,49 @@ impl LayoutApp {
             });
         }
 
-        // 5. Canvas Element Labels
+        // Help Instructions at the bottom of the sidebar
+        labels.push(TextLabel {
+            text: "INSTRUCTIONS:".to_string(),
+            x: 20.0,
+            y: 550.0,
+            font_size: 11.0,
+            color: [0xaa, 0xaa, 0xbb],
+        });
+        labels.push(TextLabel {
+            text: "- Drag elements on canvas to move".to_string(),
+            x: 20.0,
+            y: 570.0,
+            font_size: 10.0,
+            color: [0x83, 0x83, 0x8a],
+        });
+        labels.push(TextLabel {
+            text: "- Edit fields or drag RGB Sliders".to_string(),
+            x: 20.0,
+            y: 588.0,
+            font_size: 10.0,
+            color: [0x83, 0x83, 0x8a],
+        });
+        labels.push(TextLabel {
+            text: "- Presets resize sheet centering".to_string(),
+            x: 20.0,
+            y: 606.0,
+            font_size: 10.0,
+            color: [0x83, 0x83, 0x8a],
+        });
+
+        // 5. Canvas Element Labels (drawn relative to the paper sheet)
+        let canvas_w = self.width as f32 - 280.0;
+        let canvas_h = self.height as f32 - 26.0;
+        let page_x = 280.0 + (canvas_w - self.page_w) / 2.0;
+        let page_y = 26.0 + (canvas_h - self.page_h) / 2.0;
+
         for (idx, element) in self.elements.iter().enumerate() {
             match element {
                 Element::Text { text, x, y, w: _, h: _, font_size, color } => {
                     labels.push(TextLabel {
                         text: text.clone(),
-                        x: *x + 8.0,
-                        y: *y + 6.0,
+                        x: page_x + *x + 8.0,
+                        y: page_y + *y + 6.0,
                         font_size: *font_size,
                         color: [
                             (color[0] * 255.0).clamp(0.0, 255.0) as u8,
@@ -209,8 +282,8 @@ impl LayoutApp {
                     };
                     labels.push(TextLabel {
                         text: format!("{} #{}", type_str, idx + 1),
-                        x: *x + 8.0,
-                        y: *y + 6.0,
+                        x: page_x + *x + 8.0,
+                        y: page_y + *y + 6.0,
                         font_size: 11.0,
                         color: [0xee, 0xee, 0xf5],
                     });
@@ -323,12 +396,16 @@ impl Application for LayoutApp {
         // Build the sidebar Paginator
         let paginator = Paginator::new(80.0, vec!["Layout".to_string(), "Canvas".to_string()]);
 
-        // Initialize elements with a basic greeting layout
+        // Default paper sheet sizing (Letter)
+        let page_w = 510.0;
+        let page_h = 660.0;
+
+        // Initialize elements relative to the paper sheet top-left (0, 0)
         let elements = vec![
             Element::Text {
                 text: "Welcome to Clear Layout!".to_string(),
-                x: 320.0,
-                y: 80.0,
+                x: 40.0,
+                y: 50.0,
                 w: 400.0,
                 h: 40.0,
                 font_size: 20.0,
@@ -336,33 +413,33 @@ impl Application for LayoutApp {
             },
             Element::Shape {
                 shape_type: ShapeType::Rectangle,
-                x: 320.0,
-                y: 130.0,
-                w: 600.0,
+                x: 40.0,
+                y: 100.0,
+                w: 430.0,
                 h: 4.0,
                 color: [0.2, 0.5, 0.9, 1.0],
             },
             Element::Text {
                 text: "This is a word processor and layout editor layout.".to_string(),
-                x: 320.0,
-                y: 160.0,
-                w: 500.0,
+                x: 40.0,
+                y: 130.0,
+                w: 430.0,
                 h: 30.0,
                 font_size: 14.0,
                 color: [0.8, 0.8, 0.85, 1.0],
             },
             Element::Shape {
                 shape_type: ShapeType::Rectangle,
-                x: 320.0,
-                y: 220.0,
+                x: 40.0,
+                y: 190.0,
                 w: 120.0,
                 h: 80.0,
                 color: [0.15, 0.25, 0.4, 1.0],
             },
             Element::Text {
                 text: "Card Label".to_string(),
-                x: 330.0,
-                y: 235.0,
+                x: 50.0,
+                y: 205.0,
                 w: 100.0,
                 h: 20.0,
                 font_size: 11.0,
@@ -370,7 +447,13 @@ impl Application for LayoutApp {
             },
         ];
 
-        // Create sidebar textbox inputs (offset to fit inside active paginator area)
+        // Create sidebar dropdown for page size presets
+        let dropdown_presets = Dropdown::new(
+            PRESETS.iter().map(|p| p.name.to_string()).collect(),
+            0
+        ).with_label("Page Size Preset");
+
+        // Create sidebar textbox inputs
         let sidebar_x = TextBox::new(String::new()).with_label("X Position");
         let sidebar_y = TextBox::new(String::new()).with_label("Y Position");
         let sidebar_w = TextBox::new(String::new()).with_label("Width");
@@ -404,6 +487,7 @@ impl Application for LayoutApp {
             font_system: FontSystem::new(),
             needs_rebuild: true,
             
+            dropdown_presets,
             sidebar_x,
             sidebar_y,
             sidebar_w,
@@ -422,6 +506,8 @@ impl Application for LayoutApp {
             btn_add_banner,
             
             last_selected: None,
+            page_w,
+            page_h,
         };
 
         app.sync_sidebar_fields();
@@ -457,12 +543,12 @@ impl Application for LayoutApp {
                 let next_idx = self.elements.len();
                 self.elements.push(Element::Text {
                     text: "New Text Block".to_string(),
-                    x: 350.0,
-                    y: 200.0,
+                    x: 40.0,
+                    y: 100.0,
                     w: 200.0,
                     h: 30.0,
                     font_size: 14.0,
-                    color: [1.0, 1.0, 1.0, 1.0],
+                    color: [0.0, 0.0, 0.0, 1.0],
                 });
                 self.selected_idx = Some(next_idx);
                 self.sync_sidebar_fields();
@@ -473,8 +559,8 @@ impl Application for LayoutApp {
                 let next_idx = self.elements.len();
                 self.elements.push(Element::Shape {
                     shape_type: ShapeType::Rectangle,
-                    x: 350.0,
-                    y: 200.0,
+                    x: 40.0,
+                    y: 100.0,
                     w: 150.0,
                     h: 100.0,
                     color: [0.2, 0.6, 0.4, 1.0],
@@ -488,8 +574,8 @@ impl Application for LayoutApp {
                 let next_idx = self.elements.len();
                 self.elements.push(Element::Shape {
                     shape_type: ShapeType::Banner,
-                    x: 350.0,
-                    y: 200.0,
+                    x: 40.0,
+                    y: 100.0,
                     w: 300.0,
                     h: 50.0,
                     color: [0.8, 0.4, 0.2, 1.0],
@@ -527,17 +613,20 @@ impl Application for LayoutApp {
             // Set paginator bounds in the sidebar region
             self.paginator.set_rect(0.0, 26.0, 280.0, size.height - 26.0);
             
-            // Position child widgets inside the active area of the paginator (x starts at 80.0)
-            self.sidebar_x.set_rect(95.0, 70.0, 80.0, 26.0);
-            self.sidebar_y.set_rect(185.0, 70.0, 80.0, 26.0);
-            self.sidebar_w.set_rect(95.0, 130.0, 80.0, 26.0);
-            self.sidebar_h.set_rect(185.0, 130.0, 80.0, 26.0);
-            self.sidebar_text.set_rect(95.0, 190.0, 170.0, 26.0);
-            self.sidebar_size.set_rect(95.0, 250.0, 170.0, 26.0);
+            // Layout presets dropdown selector
+            self.dropdown_presets.set_rect(95.0, 70.0, 170.0, 26.0);
+
+            // Position Layout properties control widgets (shifted down by 56px to fit page presets)
+            self.sidebar_x.set_rect(95.0, 126.0, 80.0, 26.0);
+            self.sidebar_y.set_rect(185.0, 126.0, 80.0, 26.0);
+            self.sidebar_w.set_rect(95.0, 182.0, 80.0, 26.0);
+            self.sidebar_h.set_rect(185.0, 182.0, 80.0, 26.0);
+            self.sidebar_text.set_rect(95.0, 238.0, 170.0, 26.0);
+            self.sidebar_size.set_rect(95.0, 294.0, 170.0, 26.0);
             
-            self.slider_r.set_rect(95.0, 330.0, 170.0, 18.0);
-            self.slider_g.set_rect(95.0, 370.0, 170.0, 18.0);
-            self.slider_b.set_rect(95.0, 410.0, 170.0, 18.0);
+            self.slider_r.set_rect(95.0, 364.0, 170.0, 18.0);
+            self.slider_g.set_rect(95.0, 404.0, 170.0, 18.0);
+            self.slider_b.set_rect(95.0, 444.0, 170.0, 18.0);
 
             // Canvas Page buttons
             self.btn_toggle_grid.set_rect(95.0, 70.0, 170.0, 26.0);
@@ -558,6 +647,10 @@ impl Application for LayoutApp {
 
         // 2. Render Page Content
         if self.paginator.selected_page() == 0 {
+            // Render Page 0: Presets Dropdown
+            quads.push((95.0, 70.0, 170.0, 26.0, self.dropdown_presets.color()));
+            quads.extend(self.dropdown_presets.extra_quads());
+
             // Render Page 0 Widgets (Layout properties)
             quads.extend(self.sidebar_x.extra_quads());
             quads.extend(self.sidebar_y.extra_quads());
@@ -598,45 +691,74 @@ impl Application for LayoutApp {
         // Divider between Sidebar and Canvas
         quads.push((280.0, 26.0, 1.0, self.height as f32 - 26.0, [0.20, 0.20, 0.25, 1.0]));
 
-        // 3. Grid rendering
+        // 3. Render Canvas & centered paper sheet
+        let canvas_w = self.width as f32 - 280.0;
+        let canvas_h = self.height as f32 - 26.0;
+        
+        // Centered Paper Position
+        let page_x = 280.0 + (canvas_w - self.page_w) / 2.0;
+        let page_y = 26.0 + (canvas_h - self.page_h) / 2.0;
+
+        // Dark slate canvas backdrop
+        quads.push((280.0, 26.0, canvas_w, canvas_h, [0.12, 0.12, 0.15, 1.0]));
+
+        // Paper drop shadow
+        quads.push((page_x + 3.0, page_y + 3.0, self.page_w, self.page_h, [0.05, 0.05, 0.08, 0.35]));
+
+        // Paper sheet backing (Elegant Off-White)
+        quads.push((page_x, page_y, self.page_w, self.page_h, [0.96, 0.96, 0.98, 1.0]));
+        
+        // Thin paper border outline
+        let border_col = [0.75, 0.75, 0.80, 0.5];
+        quads.push((page_x, page_y, self.page_w, 1.0, border_col));
+        quads.push((page_x, page_y + self.page_h - 1.0, self.page_w, 1.0, border_col));
+        quads.push((page_x, page_y, 1.0, self.page_h, border_col));
+        quads.push((page_x + self.page_w - 1.0, page_y, 1.0, self.page_h, border_col));
+
+        // 4. Snapping Grid inside the paper bounds
         if self.grid_enabled {
             let spacing = 20.0;
-            let dot_color = [0.25, 0.25, 0.32, 0.35];
-            let mut cx = 280.0 + spacing;
-            while cx < self.width as f32 {
-                let mut cy = 26.0 + spacing;
-                while cy < self.height as f32 {
-                    quads.push((cx, cy, 1.5, 1.5, dot_color));
+            let dot_color = [0.20, 0.35, 0.60, 0.22];
+            let mut cx = spacing;
+            while cx < self.page_w {
+                let mut cy = spacing;
+                while cy < self.page_h {
+                    quads.push((page_x + cx, page_y + cy, 1.5, 1.5, dot_color));
                     cy += spacing;
                 }
                 cx += spacing;
             }
         }
 
-        // 4. Render Layout Elements
+        // 5. Render Layout Elements (drawn relative to the paper sheet)
         for (idx, element) in self.elements.iter().enumerate() {
             match element {
                 Element::Text { text: _, x, y, w, h, font_size: _, color: _ } => {
-                    quads.push((*x, *y, *w, *h, [0.18, 0.18, 0.22, 0.25]));
-                    let border_color = [0.25, 0.25, 0.30, 0.5];
-                    quads.push((*x, *y, *w, 1.0, border_color));
-                    quads.push((*x, *y + *h - 1.0, *w, 1.0, border_color));
-                    quads.push((*x, *y, 1.0, *h, border_color));
-                    quads.push((*x + *w - 1.0, *y, 1.0, *h, border_color));
+                    // Translucent text block container overlay
+                    quads.push((page_x + *x, page_y + *y, *w, *h, [0.20, 0.30, 0.70, 0.05]));
+                    
+                    let border_color = [0.45, 0.45, 0.55, 0.22];
+                    quads.push((page_x + *x, page_y + *y, *w, 1.0, border_color));
+                    quads.push((page_x + *x, page_y + *y + *h - 1.0, *w, 1.0, border_color));
+                    quads.push((page_x + *x, page_y + *y, 1.0, *h, border_color));
+                    quads.push((page_x + *x + *w - 1.0, page_y + *y, 1.0, *h, border_color));
                 }
                 Element::Shape { shape_type, x, y, w, h, color } => {
                     match shape_type {
                         ShapeType::Rectangle => {
-                            quads.push((*x, *y, *w, *h, *color));
+                            quads.push((page_x + *x, page_y + *y, *w, *h, *color));
                         }
                         ShapeType::Banner => {
-                            quads.push((*x + 3.0, *y + 3.0, *w, *h, [0.05, 0.05, 0.08, 0.4]));
-                            quads.push((*x, *y, *w, *h, *color));
+                            // Banner drop shadow
+                            quads.push((page_x + *x + 3.0, page_y + *y + 3.0, *w, *h, [0.05, 0.05, 0.08, 0.3]));
+                            
+                            quads.push((page_x + *x, page_y + *y, *w, *h, *color));
+                            
                             let inner_col = [1.0, 1.0, 1.0, 0.2];
-                            quads.push((*x + 2.0, *y + 2.0, *w - 4.0, 1.0, inner_col));
-                            quads.push((*x + 2.0, *y + *h - 3.0, *w - 4.0, 1.0, inner_col));
-                            quads.push((*x + 2.0, *y + 2.0, 1.0, *h - 4.0, inner_col));
-                            quads.push((*x + *w - 3.0, *y + 2.0, 1.0, *h - 4.0, inner_col));
+                            quads.push((page_x + *x + 2.0, page_y + *y + 2.0, *w - 4.0, 1.0, inner_col));
+                            quads.push((page_x + *x + 2.0, page_y + *y + *h - 3.0, *w - 4.0, 1.0, inner_col));
+                            quads.push((page_x + *x + 2.0, page_y + *y + 2.0, 1.0, *h - 4.0, inner_col));
+                            quads.push((page_x + *x + *w - 3.0, page_y + *y + 2.0, 1.0, *h - 4.0, inner_col));
                         }
                     }
                 }
@@ -648,25 +770,35 @@ impl Application for LayoutApp {
                     Element::Text { x, y, w, h, .. } => (*x, *y, *w, *h),
                     Element::Shape { x, y, w, h, .. } => (*x, *y, *w, *h),
                 };
-                let sel_col = [0.23, 0.51, 0.96, 1.0];
-                quads.push((ex - 1.0, ey - 1.0, ew + 2.0, 1.0, sel_col));
-                quads.push((ex - 1.0, ey + eh, ew + 2.0, 1.0, sel_col));
-                quads.push((ex - 1.0, ey - 1.0, 1.0, eh + 2.0, sel_col));
-                quads.push((ex + ew, ey - 1.0, 1.0, eh + 2.0, sel_col));
+                let sel_col = [0.15, 0.45, 0.90, 1.0]; // Bright neon blue
+                quads.push((page_x + ex - 1.0, page_y + ey - 1.0, ew + 2.0, 1.0, sel_col));
+                quads.push((page_x + ex - 1.0, page_y + ey + eh, ew + 2.0, 1.0, sel_col));
+                quads.push((page_x + ex - 1.0, page_y + ey - 1.0, 1.0, eh + 2.0, sel_col));
+                quads.push((page_x + ex + ew, page_y + ey - 1.0, 1.0, eh + 2.0, sel_col));
 
+                // Corner handles
                 let hs = 5.0;
                 let hc = [1.0, 1.0, 1.0, 1.0];
-                let hborder = [0.23, 0.51, 0.96, 1.0];
+                let hborder = [0.15, 0.45, 0.90, 1.0];
                 let handles = [
-                    (ex - 2.0, ey - 2.0),
-                    (ex + ew - 3.0, ey - 2.0),
-                    (ex - 2.0, ey + eh - 3.0),
-                    (ex + ew - 3.0, ey + eh - 3.0),
+                    (page_x + ex - 2.0, page_y + ey - 2.0),
+                    (page_x + ex + ew - 3.0, page_y + ey - 2.0),
+                    (page_x + ex - 2.0, page_y + ey + eh - 3.0),
+                    (page_x + ex + ew - 3.0, page_y + ey + eh - 3.0),
                 ];
                 for (hx, hy) in handles {
                     quads.push((hx, hy, hs, hs, hborder));
                     quads.push((hx + 1.0, hy + 1.0, hs - 2.0, hs - 2.0, hc));
                 }
+            }
+        }
+
+        // Render Page presets drop down popover box (if open, overlaps other sidebar elements)
+        if self.paginator.selected_page() == 0 && self.dropdown_presets.open {
+            let mut collector = clear_ui::layout::PopoverCollector::new();
+            self.dropdown_presets.render_popover(&mut collector);
+            for (color, x, y, w, h) in collector.rects {
+                quads.push((x, y, w, h, color));
             }
         }
 
@@ -703,27 +835,34 @@ impl Application for LayoutApp {
                 if self.paginator.on_cursor_moved(px, py) { changed = true; }
                 
                 if self.paginator.selected_page() == 0 {
-                    if self.sidebar_x.on_cursor_moved(px, py) { changed = true; }
-                    if self.sidebar_y.on_cursor_moved(px, py) { changed = true; }
-                    if self.sidebar_w.on_cursor_moved(px, py) { changed = true; }
-                    if self.sidebar_h.on_cursor_moved(px, py) { changed = true; }
-                    if self.sidebar_text.on_cursor_moved(px, py) { changed = true; }
-                    if self.sidebar_size.on_cursor_moved(px, py) { changed = true; }
-                    
-                    if self.slider_r.is_dragging() {
-                        if self.slider_r.drag_update(px, py) { changed = true; }
-                    } else if self.slider_r.on_cursor_moved(px, py) { changed = true; }
+                    // Check dropdown presets moves first
+                    if self.dropdown_presets.open || self.dropdown_presets.hit_test(px, py) {
+                        if self.dropdown_presets.on_cursor_moved(px, py) {
+                            changed = true;
+                        }
+                    } else {
+                        if self.sidebar_x.on_cursor_moved(px, py) { changed = true; }
+                        if self.sidebar_y.on_cursor_moved(px, py) { changed = true; }
+                        if self.sidebar_w.on_cursor_moved(px, py) { changed = true; }
+                        if self.sidebar_h.on_cursor_moved(px, py) { changed = true; }
+                        if self.sidebar_text.on_cursor_moved(px, py) { changed = true; }
+                        if self.sidebar_size.on_cursor_moved(px, py) { changed = true; }
+                        
+                        if self.slider_r.is_dragging() {
+                            if self.slider_r.drag_update(px, py) { changed = true; }
+                        } else if self.slider_r.on_cursor_moved(px, py) { changed = true; }
 
-                    if self.slider_g.is_dragging() {
-                        if self.slider_g.drag_update(px, py) { changed = true; }
-                    } else if self.slider_g.on_cursor_moved(px, py) { changed = true; }
+                        if self.slider_g.is_dragging() {
+                            if self.slider_g.drag_update(px, py) { changed = true; }
+                        } else if self.slider_g.on_cursor_moved(px, py) { changed = true; }
 
-                    if self.slider_b.is_dragging() {
-                        if self.slider_b.drag_update(px, py) { changed = true; }
-                    } else if self.slider_b.on_cursor_moved(px, py) { changed = true; }
-                    
-                    if changed {
-                        self.apply_sidebar_changes();
+                        if self.slider_b.is_dragging() {
+                            if self.slider_b.drag_update(px, py) { changed = true; }
+                        } else if self.slider_b.on_cursor_moved(px, py) { changed = true; }
+                        
+                        if changed {
+                            self.apply_sidebar_changes();
+                        }
                     }
                 } else {
                     if self.btn_toggle_grid.on_cursor_moved(px, py) { changed = true; }
@@ -733,9 +872,18 @@ impl Application for LayoutApp {
                     if self.btn_add_banner.on_cursor_moved(px, py) { changed = true; }
                 }
             } else {
+                // Compute centering coordinates for canvas elements
+                let canvas_w = self.width as f32 - 280.0;
+                let canvas_h = self.height as f32 - 26.0;
+                let page_x = 280.0 + (canvas_w - self.page_w) / 2.0;
+                let page_y = 26.0 + (canvas_h - self.page_h) / 2.0;
+                
+                let cx = px - page_x;
+                let cy = py - page_y;
+
                 if let Some((idx, ox, oy)) = self.dragging {
-                    let mut new_x = px - ox;
-                    let mut new_y = py - oy;
+                    let mut new_x = cx - ox;
+                    let mut new_y = cy - oy;
                     
                     if self.grid_enabled {
                         new_x = (new_x / 20.0).round() * 20.0;
@@ -798,6 +946,7 @@ impl Application for LayoutApp {
                 if self.paginator.mouse_input(button, state, px, py) {
                     changed = true;
                     if self.paginator.take_click() {
+                        self.dropdown_presets.unfocus();
                         self.sidebar_x.unfocus();
                         self.sidebar_y.unfocus();
                         self.sidebar_w.unfocus();
@@ -808,17 +957,33 @@ impl Application for LayoutApp {
                 } else if self.paginator.selected_page() == 0 {
                     if state == ElementState::Pressed {
                         let mut clicked = false;
-                        if self.sidebar_x.mouse_input(button, state, px, py) { clicked = true; }
-                        if self.sidebar_y.mouse_input(button, state, px, py) { clicked = true; }
-                        if self.sidebar_w.mouse_input(button, state, px, py) { clicked = true; }
-                        if self.sidebar_h.mouse_input(button, state, px, py) { clicked = true; }
-                        if self.sidebar_text.mouse_input(button, state, px, py) { clicked = true; }
-                        if self.sidebar_size.mouse_input(button, state, px, py) { clicked = true; }
                         
-                        if self.slider_r.mouse_input(button, state, px, py) { clicked = true; }
-                        if self.slider_g.mouse_input(button, state, px, py) { clicked = true; }
-                        if self.slider_b.mouse_input(button, state, px, py) { clicked = true; }
+                        // Check presets dropdown clicks first
+                        if self.dropdown_presets.open || self.dropdown_presets.hit_test(px, py) {
+                            if self.dropdown_presets.mouse_input(button, state, px, py) {
+                                clicked = true;
+                                if self.dropdown_presets.take_change() {
+                                    let sel = self.dropdown_presets.selected;
+                                    if sel < PRESETS.len() {
+                                        self.page_w = PRESETS[sel].w;
+                                        self.page_h = PRESETS[sel].h;
+                                    }
+                                }
+                            }
+                        } else {
+                            if self.sidebar_x.mouse_input(button, state, px, py) { clicked = true; }
+                            if self.sidebar_y.mouse_input(button, state, px, py) { clicked = true; }
+                            if self.sidebar_w.mouse_input(button, state, px, py) { clicked = true; }
+                            if self.sidebar_h.mouse_input(button, state, px, py) { clicked = true; }
+                            if self.sidebar_text.mouse_input(button, state, px, py) { clicked = true; }
+                            if self.sidebar_size.mouse_input(button, state, px, py) { clicked = true; }
+                            
+                            if self.slider_r.mouse_input(button, state, px, py) { clicked = true; }
+                            if self.slider_g.mouse_input(button, state, px, py) { clicked = true; }
+                            if self.slider_b.mouse_input(button, state, px, py) { clicked = true; }
+                        }
 
+                        if !self.dropdown_presets.hit_test(px, py) { self.dropdown_presets.unfocus(); }
                         if !self.sidebar_x.hit_test(px, py) { self.sidebar_x.unfocus(); }
                         if !self.sidebar_y.hit_test(px, py) { self.sidebar_y.unfocus(); }
                         if !self.sidebar_w.hit_test(px, py) { self.sidebar_w.unfocus(); }
@@ -879,6 +1044,15 @@ impl Application for LayoutApp {
                     }
                 }
             } else {
+                // Compute centering coordinates for canvas elements
+                let canvas_w = self.width as f32 - 280.0;
+                let canvas_h = self.height as f32 - 26.0;
+                let page_x = 280.0 + (canvas_w - self.page_w) / 2.0;
+                let page_y = 26.0 + (canvas_h - self.page_h) / 2.0;
+                
+                let cx = px - page_x;
+                let cy = py - page_y;
+
                 if state == ElementState::Pressed {
                     let mut found = None;
                     for (idx, element) in self.elements.iter().enumerate().rev() {
@@ -886,7 +1060,7 @@ impl Application for LayoutApp {
                             Element::Text { x, y, w, h, .. } => (*x, *y, *w, *h),
                             Element::Shape { x, y, w, h, .. } => (*x, *y, *w, *h),
                         };
-                        if px >= ex && px <= ex + ew && py >= ey && py <= ey + eh {
+                        if cx >= ex && cx <= ex + ew && cy >= ey && cy <= ey + eh {
                             found = Some(idx);
                             break;
                         }
@@ -898,7 +1072,7 @@ impl Application for LayoutApp {
                             Element::Text { x, y, .. } => (*x, *y),
                             Element::Shape { x, y, .. } => (*x, *y),
                         };
-                        self.dragging = Some((idx, px - ex, py - ey));
+                        self.dragging = Some((idx, cx - ex, cy - ey));
                         self.sync_sidebar_fields();
                         changed = true;
                     } else {
@@ -926,7 +1100,18 @@ impl Application for LayoutApp {
         let mut handled = false;
         
         if self.paginator.selected_page() == 0 {
-            if self.sidebar_x.editing {
+            if self.dropdown_presets.open {
+                if self.dropdown_presets.keyboard_input(event) {
+                    handled = true;
+                    if self.dropdown_presets.take_change() {
+                        let sel = self.dropdown_presets.selected;
+                        if sel < PRESETS.len() {
+                            self.page_w = PRESETS[sel].w;
+                            self.page_h = PRESETS[sel].h;
+                        }
+                    }
+                }
+            } else if self.sidebar_x.editing {
                 if self.sidebar_x.keyboard_input(event) { handled = true; }
             } else if self.sidebar_y.editing {
                 if self.sidebar_y.keyboard_input(event) { handled = true; }
