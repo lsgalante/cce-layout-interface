@@ -94,6 +94,7 @@ struct LayoutApp {
 
     // Page 3: View settings controls
     toggle_rulers: Toggle,
+    dropdown_units: Dropdown,
 
     last_selected: Option<usize>,
     page_w: f32,
@@ -253,38 +254,80 @@ impl LayoutApp {
                 color: [0x83, 0x83, 0x8a],
             });
 
+            // Section Widget: "Rulers"
+            labels.push(TextLabel {
+                text: "RULERS".to_string(),
+                x: 25.0,
+                y: 172.0,
+                font_size: 11.0,
+                color: [0xaa, 0xaa, 0xbb],
+            });
+
             labels.extend(self.toggle_rulers.text_labels());
+            labels.extend(self.dropdown_units.text_labels());
+
+            // Add drop down list labels dynamically if open
+            if self.dropdown_units.open {
+                let mut collector = clear_ui::layout::PopoverCollector::new();
+                self.dropdown_units.render_popover(&mut collector);
+                for (text, size, x, y, color, _font) in collector.texts {
+                    labels.push(TextLabel {
+                        text,
+                        x,
+                        y,
+                        font_size: size,
+                        color: [
+                            (color[0] * 255.0).clamp(0.0, 255.0) as u8,
+                            (color[1] * 255.0).clamp(0.0, 255.0) as u8,
+                            (color[2] * 255.0).clamp(0.0, 255.0) as u8,
+                        ],
+                    });
+                }
+            }
         }
 
         if self.toggle_rulers.toggled() {
+            let unit_idx = self.dropdown_units.selected;
+            let (px_per_unit, tick_step, label_step, precision) = match unit_idx {
+                0 => (1.0, 50.0, 100.0, 0),       // Pixels
+                1 => (96.0, 0.25, 1.0, 0),        // Inches
+                2 => (37.795275, 0.5, 1.0, 0),    // Centimeters
+                3 => (3.7795275, 5.0, 10.0, 0),   // Millimeters
+                _ => (1.0, 50.0, 100.0, 0),
+            };
+
             // X Ruler Labels
+            let max_unit_w = self.page_w / px_per_unit;
             let mut val = 0.0;
-            while val <= self.page_w {
-                if val as i32 % 100 == 0 {
+            while val <= max_unit_w + 0.001 {
+                let is_major = (val / label_step).round() * label_step;
+                if (val - is_major).abs() < 0.001 {
                     labels.push(TextLabel {
-                        text: format!("{}", val),
-                        x: page_x + val * zoom + 2.0,
+                        text: format!("{:.precision$}", val, precision = precision),
+                        x: page_x + val * px_per_unit * zoom + 2.0,
                         y: page_y - 16.0,
                         font_size: 8.0,
                         color: [0xaa, 0xaa, 0xbb],
                     });
                 }
-                val += 50.0;
+                val += tick_step;
             }
 
             // Y Ruler Labels
+            let max_unit_h = self.page_h / px_per_unit;
             let mut val = 0.0;
-            while val <= self.page_h {
-                if val as i32 % 100 == 0 {
+            while val <= max_unit_h + 0.001 {
+                let is_major = (val / label_step).round() * label_step;
+                if (val - is_major).abs() < 0.001 {
                     labels.push(TextLabel {
-                        text: format!("{}", val),
+                        text: format!("{:.precision$}", val, precision = precision),
                         x: page_x - 18.0,
-                        y: page_y + val * zoom + 2.0,
+                        y: page_y + val * px_per_unit * zoom + 2.0,
                         font_size: 8.0,
                         color: [0xaa, 0xaa, 0xbb],
                     });
                 }
-                val += 50.0;
+                val += tick_step;
             }
         }
 
@@ -537,6 +580,15 @@ impl Application for LayoutApp {
 
         // Page 3 Buttons
         let toggle_rulers = Toggle::new().with_label("Show Rulers");
+        let dropdown_units = Dropdown::new(
+            vec![
+                "Pixels (px)".to_string(),
+                "Inches (in)".to_string(),
+                "Centimeters (cm)".to_string(),
+                "Millimeters (mm)".to_string(),
+            ],
+            0,
+        ).with_label("Ruler Units");
 
         let mut app = Self {
             menu_bar,
@@ -571,6 +623,7 @@ impl Application for LayoutApp {
             btn_add_rect,
             btn_add_banner,
             toggle_rulers,
+            dropdown_units,
             
             last_selected: None,
             page_w,
@@ -703,8 +756,9 @@ impl Application for LayoutApp {
             self.btn_add_rect.set_rect(20.0, 240.0, 240.0, 26.0);
             self.btn_add_banner.set_rect(20.0, 290.0, 240.0, 26.0);
 
-            // View Page rulers button
-            self.toggle_rulers.set_rect(20.0, 180.0, 240.0, 26.0);
+            // View Page Rulers Section
+            self.toggle_rulers.set_rect(25.0, 188.0, 230.0, 26.0);
+            self.dropdown_units.set_rect(25.0, 245.0, 230.0, 26.0);
  
             self.rebuild_text_items();
             self.needs_rebuild = false;
@@ -763,8 +817,17 @@ impl Application for LayoutApp {
             quads.push((zx, zy, zw, zh, self.slider_zoom.color()));
             quads.extend(self.slider_zoom.extra_quads());
 
-            quads.push((20.0, 180.0, 240.0, 26.0, self.toggle_rulers.color()));
+            // "Rulers" Section Container
+            let border_col = [0.20, 0.20, 0.25, 0.8];
+            let frame_bg = [0.08, 0.08, 0.11, 0.5];
+            quads.push((15.0, 155.0, 250.0, 130.0, border_col));
+            quads.push((16.0, 156.0, 248.0, 128.0, frame_bg));
+
+            quads.push((25.0, 188.0, 230.0, 26.0, self.toggle_rulers.color()));
             quads.extend(self.toggle_rulers.extra_quads());
+
+            quads.push((25.0, 245.0, 230.0, 26.0, self.dropdown_units.color()));
+            quads.extend(self.dropdown_units.extra_quads());
         }
 
         // Divider between Sidebar and Canvas
@@ -796,28 +859,41 @@ impl Application for LayoutApp {
             quads.push((page_x - 20.0, page_y, self.page_w * zoom + 20.0, 1.0, border_col));
             quads.push((page_x, page_y - 20.0, 1.0, self.page_h * zoom + 20.0, border_col));
 
+            let unit_idx = self.dropdown_units.selected;
+            let (px_per_unit, tick_step, label_step, _) = match unit_idx {
+                0 => (1.0, 50.0, 100.0, 0),       // Pixels
+                1 => (96.0, 0.25, 1.0, 0),        // Inches
+                2 => (37.795275, 0.5, 1.0, 0),    // Centimeters
+                3 => (3.7795275, 5.0, 10.0, 0),   // Millimeters
+                _ => (1.0, 50.0, 100.0, 0),
+            };
+
             // X Axis Ticks
+            let max_unit_w = self.page_w / px_per_unit;
             let mut val = 0.0;
-            while val <= self.page_w {
-                let tx = page_x + val * zoom;
-                if val as i32 % 100 == 0 {
+            while val <= max_unit_w + 0.001 {
+                let tx = page_x + val * px_per_unit * zoom;
+                let is_major = (val / label_step).round() * label_step;
+                if (val - is_major).abs() < 0.001 {
                     quads.push((tx, page_y - 12.0, 1.0, 12.0, tick_color));
                 } else {
                     quads.push((tx, page_y - 6.0, 1.0, 6.0, tick_color));
                 }
-                val += 50.0;
+                val += tick_step;
             }
 
             // Y Axis Ticks
+            let max_unit_h = self.page_h / px_per_unit;
             let mut val = 0.0;
-            while val <= self.page_h {
-                let ty = page_y + val * zoom;
-                if val as i32 % 100 == 0 {
+            while val <= max_unit_h + 0.001 {
+                let ty = page_y + val * px_per_unit * zoom;
+                let is_major = (val / label_step).round() * label_step;
+                if (val - is_major).abs() < 0.001 {
                     quads.push((page_x - 12.0, ty, 12.0, 1.0, tick_color));
                 } else {
                     quads.push((page_x - 6.0, ty, 6.0, 1.0, tick_color));
                 }
-                val += 50.0;
+                val += tick_step;
             }
 
             // Corner block
@@ -926,6 +1002,15 @@ impl Application for LayoutApp {
             }
         }
 
+        // Render Page units drop down popover box (if open, overlaps other sidebar elements)
+        if self.paginator.selected_page() == 3 && self.dropdown_units.open {
+            let mut collector = clear_ui::layout::PopoverCollector::new();
+            self.dropdown_units.render_popover(&mut collector);
+            for (color, x, y, w, h) in collector.rects {
+                quads.push((x, y, w, h, color));
+            }
+        }
+
         // 6. MenuBar Background
         let mb_color = self.menu_bar.color();
         let (mb_x, mb_y, mb_w, mb_h) = self.menu_bar.rect();
@@ -995,6 +1080,9 @@ impl Application for LayoutApp {
                     if self.btn_add_rect.on_cursor_moved(px, py) { changed = true; }
                     if self.btn_add_banner.on_cursor_moved(px, py) { changed = true; }
                 } else {
+                    if self.dropdown_units.open || self.dropdown_units.hit_test(px, py) {
+                        if self.dropdown_units.on_cursor_moved(px, py) { changed = true; }
+                    }
                     if self.slider_zoom.is_dragging() {
                         if self.slider_zoom.drag_update(px, py) { changed = true; }
                     } else if self.slider_zoom.on_cursor_moved(px, py) { changed = true; }
@@ -1079,6 +1167,7 @@ impl Application for LayoutApp {
                     changed = true;
                     if self.paginator.take_click() {
                         self.dropdown_presets.unfocus();
+                        self.dropdown_units.unfocus();
                         self.sidebar_x.unfocus();
                         self.sidebar_y.unfocus();
                         self.sidebar_w.unfocus();
@@ -1183,10 +1272,25 @@ impl Application for LayoutApp {
                         }
                     }
                 } else {
-                    // View page input (zoom slider & rulers button)
+                    // View page input (zoom slider & rulers button & units dropdown)
                     if state == ElementState::Pressed {
-                        if self.toggle_rulers.mouse_input(button, state, px, py) { changed = true; }
-                        if self.slider_zoom.mouse_input(button, state, px, py) { changed = true; }
+                        let mut clicked = false;
+                        if self.dropdown_units.open || self.dropdown_units.hit_test(px, py) {
+                            if self.dropdown_units.mouse_input(button, state, px, py) {
+                                clicked = true;
+                                let _ = self.dropdown_units.take_change();
+                            }
+                        }
+                        if !self.dropdown_units.hit_test(px, py) {
+                            self.dropdown_units.unfocus();
+                        }
+
+                        if clicked {
+                            changed = true;
+                        } else {
+                            if self.toggle_rulers.mouse_input(button, state, px, py) { changed = true; }
+                            if self.slider_zoom.mouse_input(button, state, px, py) { changed = true; }
+                        }
                     } else if state == ElementState::Released {
                         if self.toggle_rulers.mouse_input(button, state, px, py) {
                             let _ = self.toggle_rulers.take_click();
@@ -1301,6 +1405,13 @@ impl Application for LayoutApp {
                 if self.sidebar_text.keyboard_input(event) { handled = true; }
             } else if self.sidebar_size.editing {
                 if self.sidebar_size.keyboard_input(event) { handled = true; }
+            }
+        } else if self.paginator.selected_page() == 3 {
+            if self.dropdown_units.open {
+                if self.dropdown_units.keyboard_input(event) {
+                    handled = true;
+                    let _ = self.dropdown_units.take_change();
+                }
             }
         }
 
