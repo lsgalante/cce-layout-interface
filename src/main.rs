@@ -101,7 +101,54 @@ struct LayoutApp {
     page_h: f32,
 }
 
+fn get_monitor_ppi() -> f32 {
+    let fallback_ppi = 96.0;
+    let Ok(entries) = std::fs::read_dir("/sys/class/drm") else {
+        return fallback_ppi;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            let status_path = path.join("status");
+            let edid_path = path.join("edid");
+            let modes_path = path.join("modes");
+            if status_path.exists() && edid_path.exists() && modes_path.exists() {
+                if let Ok(status) = std::fs::read_to_string(&status_path) {
+                    if status.trim() == "connected" {
+                        if let (Ok(edid_bytes), Ok(modes_str)) = (std::fs::read(&edid_path), std::fs::read_to_string(&modes_path)) {
+                            if edid_bytes.len() >= 23 {
+                                let w_cm = edid_bytes[21] as f32;
+                                if w_cm > 0.0 {
+                                    // Parse resolution from the first mode line (e.g., "3840x2400")
+                                    if let Some(first_mode) = modes_str.lines().next() {
+                                        if let Some(w_str) = first_mode.split('x').next() {
+                                            if let Ok(w_px) = w_str.parse::<f32>() {
+                                                let ppi = (w_px * 2.54) / w_cm;
+                                                if ppi > 30.0 && ppi < 600.0 {
+                                                    return ppi;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    fallback_ppi
+}
+
 impl LayoutApp {
+    fn render_zoom(&self) -> f32 {
+        let ppi = get_monitor_ppi();
+        let scale_factor = self.scale_factor as f32;
+        let zoom_multiplier = ppi / (60.0 * scale_factor);
+        self.slider_zoom.value() * zoom_multiplier
+    }
+
     fn rebuild_text_items(&mut self) {
         self.text_items.clear();
         
@@ -109,7 +156,7 @@ impl LayoutApp {
 
         let canvas_w = self.width as f32 - 280.0;
         let canvas_h = self.height as f32 - 26.0;
-        let zoom = self.slider_zoom.value();
+        let zoom = self.render_zoom();
         let page_w = self.page_w * zoom;
         let page_h = self.page_h * zoom;
         let page_x = 280.0 + (canvas_w - page_w) / 2.0;
@@ -284,9 +331,9 @@ impl LayoutApp {
             let unit_idx = self.dropdown_units.selected;
             let (px_per_unit, tick_step, label_step, precision) = match unit_idx {
                 0 => (1.0, 50.0, 100.0, 0),       // Pixels
-                1 => (96.0, 0.25, 1.0, 0),        // Inches
-                2 => (37.795275, 0.5, 1.0, 0),    // Centimeters
-                3 => (3.7795275, 5.0, 10.0, 0),   // Millimeters
+                1 => (60.0, 0.25, 1.0, 0),        // Inches
+                2 => (23.622047, 0.5, 1.0, 0),    // Centimeters
+                3 => (2.3622047, 5.0, 10.0, 0),   // Millimeters
                 _ => (1.0, 50.0, 100.0, 0),
             };
 
@@ -832,7 +879,7 @@ impl Application for LayoutApp {
         // 3. Render Canvas & centered paper sheet
         let canvas_w = self.width as f32 - 280.0;
         let canvas_h = self.height as f32 - 26.0;
-        let zoom = self.slider_zoom.value();
+        let zoom = self.render_zoom();
         
         // Centered Paper Position
         let page_x = 280.0 + (canvas_w - self.page_w * zoom) / 2.0;
@@ -858,9 +905,9 @@ impl Application for LayoutApp {
             let unit_idx = self.dropdown_units.selected;
             let (px_per_unit, tick_step, label_step, _) = match unit_idx {
                 0 => (1.0, 50.0, 100.0, 0),       // Pixels
-                1 => (96.0, 0.25, 1.0, 0),        // Inches
-                2 => (37.795275, 0.5, 1.0, 0),    // Centimeters
-                3 => (3.7795275, 5.0, 10.0, 0),   // Millimeters
+                1 => (60.0, 0.25, 1.0, 0),        // Inches
+                2 => (23.622047, 0.5, 1.0, 0),    // Centimeters
+                3 => (2.3622047, 5.0, 10.0, 0),   // Millimeters
                 _ => (1.0, 50.0, 100.0, 0),
             };
 
@@ -1088,7 +1135,7 @@ impl Application for LayoutApp {
                 // Compute centering coordinates for canvas elements
                 let canvas_w = self.width as f32 - 280.0;
                 let canvas_h = self.height as f32 - 26.0;
-                let zoom = self.slider_zoom.value();
+                let zoom = self.render_zoom();
                 let page_w = self.page_w * zoom;
                 let page_h = self.page_h * zoom;
                 let page_x = 280.0 + (canvas_w - page_w) / 2.0;
@@ -1299,7 +1346,7 @@ impl Application for LayoutApp {
                 // Compute centering coordinates for canvas elements
                 let canvas_w = self.width as f32 - 280.0;
                 let canvas_h = self.height as f32 - 26.0;
-                let zoom = self.slider_zoom.value();
+                let zoom = self.render_zoom();
                 let page_w = self.page_w * zoom;
                 let page_h = self.page_h * zoom;
                 let page_x = 280.0 + (canvas_w - page_w) / 2.0;
