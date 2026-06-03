@@ -116,8 +116,7 @@ struct LayoutApp {
     dropdown_units: Dropdown,
 
     section_rulers: SectionHeader,
-    label_width: Label,
-    label_height: Label,
+
     label_sel_status: Label,
     label_sel_desc1: Label,
     label_sel_desc2: Label,
@@ -217,8 +216,7 @@ impl LayoutApp {
 
     fn rebuild_text_items(&mut self) {
         // Sync labels with current state
-        self.label_width.set_text(&format!("Width: {} px", self.page_w));
-        self.label_height.set_text(&format!("Height: {} px", self.page_h));
+
 
         if let Some(idx) = self.selected_idx {
             self.label_sel_status.set_text(&format!("Selected Element #{}", idx + 1));
@@ -745,10 +743,7 @@ impl Application for LayoutApp {
         let mut section_rulers = SectionHeader::new("RULERS");
         section_rulers.set_rect(0.0, 0.0, 240.0, 26.0);
 
-        let mut label_width = Label::new("Width: 510 px");
-        label_width.set_rect(0.0, 0.0, 240.0, 18.0);
-        let mut label_height = Label::new("Height: 660 px");
-        label_height.set_rect(0.0, 0.0, 240.0, 18.0);
+
 
         let mut label_sel_status = Label::new("No Selection").with_color([0x83, 0x83, 0x8a]);
         label_sel_status.set_rect(0.0, 0.0, 240.0, 18.0);
@@ -817,8 +812,7 @@ impl Application for LayoutApp {
             dropdown_units,
 
             section_rulers,
-            label_width,
-            label_height,
+
             label_sel_status,
             label_sel_desc1,
             label_sel_desc2,
@@ -1075,8 +1069,7 @@ impl Application for LayoutApp {
                     (*self_ptr).paginator.add_widget_to_page(0, &mut (*self_ptr).toggle_word_processor as *mut (dyn Widget + 'static));
                     (*self_ptr).paginator.add_widget_to_page(0, &mut (*self_ptr).slider_margin_x as *mut (dyn Widget + 'static));
                     (*self_ptr).paginator.add_widget_to_page(0, &mut (*self_ptr).slider_margin_y as *mut (dyn Widget + 'static));
-                    (*self_ptr).paginator.add_widget_to_page(0, &mut (*self_ptr).label_width as *mut (dyn Widget + 'static));
-                    (*self_ptr).paginator.add_widget_to_page(0, &mut (*self_ptr).label_height as *mut (dyn Widget + 'static));
+
 
                     // Page 1 (Element) widgets are registered dynamically via rebuild_element_tab_widgets()
 
