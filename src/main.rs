@@ -3,7 +3,7 @@ use glyphon::{FontSystem, Buffer, Metrics, Attrs};
 use serde::{Serialize, Deserialize};
 use clear_ui::engine::{Application, EngineState, LogicalPosition, LogicalSize, WindowSettings, LineCap};
 use clear_ui::widget::{
-    MouseButton, ElementState, MouseScrollDelta, KeyEvent, TextItem, Widget,
+    MouseButton, ElementState, MouseScrollDelta, KeyEvent, TextItem, Element as UiElement,
     TextBox, Slider, TextLabel, Paginator, Button, Dropdown, Toggle, ColorSelector,
     Label, Spinbox, Key, NamedKey, ScrollingList, FontSelector
 };
@@ -1619,8 +1619,8 @@ impl LayoutApp {
         self.sync_sidebar_fields();
     }
 
-    fn active_page_widgets(&mut self) -> Vec<&mut dyn Widget> {
-        let mut list: Vec<&mut dyn Widget> = Vec::new();
+    fn active_page_widgets(&mut self) -> Vec<&mut dyn UiElement> {
+        let mut list: Vec<&mut dyn UiElement> = Vec::new();
         match self.paginator.selected_page() {
             0 => {
                 list.push(&mut self.btn_new_doc);
