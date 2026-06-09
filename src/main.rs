@@ -7,7 +7,7 @@ use clear_ui::widget::{
     TextBox, Slider, TextLabel, Paginator, Button, Dropdown, Toggle, ColorSelector,
     Label, Spinbox, Key, NamedKey, ScrollingList, FontSelector
 };
-use clear_ui::layout::{RenderTarget, render_widget, Section, UiFrame};
+use clear_ui::layout::{RenderTarget, Section, UiFrame};
 
 pub struct PageContent {
     pub rects: Vec<([f32; 4], f32, f32, f32, f32)>,
@@ -358,6 +358,7 @@ struct LayoutApp {
     pan_x: f32,
     pan_y: f32,
     sidebar_quads: Vec<(f32, f32, f32, f32, [f32; 4])>,
+    ui_context: clear_ui::context::UiContext,
 }
 
 fn get_monitor_ppi() -> f32 {
@@ -796,9 +797,9 @@ impl LayoutApp {
             0 => {
                 let mut sec = Section::new(&mut pc, cx, cy, cw, "File Operations");
                 let col_w = cw - 40.0;
-                sec.widget(&mut pc, &mut self.btn_new_doc, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.btn_new_doc, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.btn_open, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.btn_open, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
                 
                 sec.text(&mut pc, "Recent Files", 12.0, 0.0, 11.0, [0.83, 0.83, 0.83, 1.0]);
@@ -807,7 +808,7 @@ impl LayoutApp {
                 let list_h = 100.0;
                 let list_x = sec.ax(12.0);
                 let list_y = sec.ay();
-                sec.widget(&mut pc, &mut self.recent_files_list, 12.0, col_w, list_h);
+                sec.widget(&mut pc, &mut self.recent_files_list, 12.0, col_w, list_h, &mut self.ui_context);
 
                 self.recent_files_list.update_bounds(self.recent_files.len(), list_y, list_h);
 
@@ -817,7 +818,7 @@ impl LayoutApp {
 
                 for (idx, btn) in self.recent_files_buttons.iter_mut().enumerate() {
                     if let Some(draw_y) = self.recent_files_list.get_item_draw_y(idx, 0.0) {
-                        clear_ui::layout::render_widget(&mut pc, btn, inner_x, draw_y, inner_w, btn_h);
+                        clear_ui::layout::render_widget(&mut pc, btn, inner_x, draw_y, inner_w, btn_h, &mut self.ui_context);
                     } else {
                         btn.set_rect(-9999.0, -9999.0, 0.0, 0.0);
                     }
@@ -828,37 +829,37 @@ impl LayoutApp {
                 }
 
                 sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.btn_save, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.btn_save, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.btn_save_as, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.btn_save_as, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.btn_exit, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.btn_exit, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
                 sec.finish(&mut pc);
             }
             1 => {
                 let mut sec = Section::new(&mut pc, cx, cy, cw, "Document Size");
                 let col_w = cw - 40.0;
-                sec.widget(&mut pc, &mut self.dropdown_presets, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.dropdown_presets, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.slider_page_x, 12.0, col_w, 18.0);
+                sec.widget(&mut pc, &mut self.slider_page_x, 12.0, col_w, 18.0, &mut self.ui_context);
                 sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.slider_page_y, 12.0, col_w, 18.0);
+                sec.widget(&mut pc, &mut self.slider_page_y, 12.0, col_w, 18.0, &mut self.ui_context);
                 sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.page_color_selector, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.page_color_selector, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
                 let next_y = sec.finish(&mut pc);
 
                 let mut sec2 = Section::new(&mut pc, cx, next_y, cw, "Margins & Mode");
-                sec2.widget(&mut pc, &mut self.toggle_margin, 12.0, col_w, 26.0);
+                sec2.widget(&mut pc, &mut self.toggle_margin, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec2.spacing(12.0);
-                sec2.widget(&mut pc, &mut self.dropdown_margin_units, 12.0, col_w, 26.0);
+                sec2.widget(&mut pc, &mut self.dropdown_margin_units, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec2.spacing(12.0);
-                sec2.widget(&mut pc, &mut self.slider_margin_x, 12.0, col_w, 18.0);
+                sec2.widget(&mut pc, &mut self.slider_margin_x, 12.0, col_w, 18.0, &mut self.ui_context);
                 sec2.spacing(12.0);
-                sec2.widget(&mut pc, &mut self.slider_margin_y, 12.0, col_w, 18.0);
+                sec2.widget(&mut pc, &mut self.slider_margin_y, 12.0, col_w, 18.0, &mut self.ui_context);
                 sec2.spacing(12.0);
-                sec2.widget(&mut pc, &mut self.toggle_word_processor, 12.0, col_w, 26.0);
+                sec2.widget(&mut pc, &mut self.toggle_word_processor, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec2.spacing(12.0);
                 sec2.finish(&mut pc);
             }
@@ -866,15 +867,15 @@ impl LayoutApp {
                 let col_w = cw - 40.0;
                 if self.word_processor_enabled {
                     let mut sec = Section::new(&mut pc, cx, cy, cw, "Word Processor");
-                    sec.widget(&mut pc, &mut self.font_selector, 12.0, col_w, 26.0);
+                    sec.widget(&mut pc, &mut self.font_selector, 12.0, col_w, 26.0, &mut self.ui_context);
                     sec.spacing(12.0);
-                    sec.widget(&mut pc, &mut self.sidebar_size, 12.0, col_w, 26.0);
+                    sec.widget(&mut pc, &mut self.sidebar_size, 12.0, col_w, 26.0, &mut self.ui_context);
                     sec.spacing(12.0);
-                    sec.widget(&mut pc, &mut self.slider_r, 12.0, col_w, 18.0);
+                    sec.widget(&mut pc, &mut self.slider_r, 12.0, col_w, 18.0, &mut self.ui_context);
                     sec.spacing(12.0);
-                    sec.widget(&mut pc, &mut self.slider_g, 12.0, col_w, 18.0);
+                    sec.widget(&mut pc, &mut self.slider_g, 12.0, col_w, 18.0, &mut self.ui_context);
                     sec.spacing(12.0);
-                    sec.widget(&mut pc, &mut self.slider_b, 12.0, col_w, 18.0);
+                    sec.widget(&mut pc, &mut self.slider_b, 12.0, col_w, 18.0, &mut self.ui_context);
                     sec.spacing(12.0);
                     sec.finish(&mut pc);
                 } else if let Some(idx) = self.selected_idx {
@@ -885,75 +886,75 @@ impl LayoutApp {
                     };
 
                     let mut sec = Section::new(&mut pc, cx, cy, cw, "Geometry");
-                    sec.widget(&mut pc, &mut self.sidebar_x, 12.0, col_w, 26.0);
+                    sec.widget(&mut pc, &mut self.sidebar_x, 12.0, col_w, 26.0, &mut self.ui_context);
                     sec.spacing(16.0);
-                    sec.widget(&mut pc, &mut self.sidebar_y, 12.0, col_w, 26.0);
+                    sec.widget(&mut pc, &mut self.sidebar_y, 12.0, col_w, 26.0, &mut self.ui_context);
                     sec.spacing(16.0);
-                    sec.widget(&mut pc, &mut self.sidebar_w, 12.0, col_w, 26.0);
+                    sec.widget(&mut pc, &mut self.sidebar_w, 12.0, col_w, 26.0, &mut self.ui_context);
                     sec.spacing(16.0);
-                    sec.widget(&mut pc, &mut self.sidebar_h, 12.0, col_w, 26.0);
+                    sec.widget(&mut pc, &mut self.sidebar_h, 12.0, col_w, 26.0, &mut self.ui_context);
                     sec.spacing(12.0);
                     let next_y = sec.finish(&mut pc);
 
                     let mut sec_align = Section::new(&mut pc, cx, next_y, cw, "Alignment");
-                    sec_align.widget(&mut pc, &mut self.dropdown_align_h, 12.0, col_w, 26.0);
+                    sec_align.widget(&mut pc, &mut self.dropdown_align_h, 12.0, col_w, 26.0, &mut self.ui_context);
                     sec_align.spacing(12.0);
-                    sec_align.widget(&mut pc, &mut self.dropdown_align_v, 12.0, col_w, 26.0);
+                    sec_align.widget(&mut pc, &mut self.dropdown_align_v, 12.0, col_w, 26.0, &mut self.ui_context);
                     let next_y = sec_align.finish(&mut pc);
 
                     if is_text {
                         let mut sec2 = Section::new(&mut pc, cx, next_y, cw, "Text Properties");
-                        sec2.widget(&mut pc, &mut self.sidebar_text, 12.0, col_w, 26.0);
+                        sec2.widget(&mut pc, &mut self.sidebar_text, 12.0, col_w, 26.0, &mut self.ui_context);
                         sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.toggle_multiline, 12.0, col_w, 26.0);
+                        sec2.widget(&mut pc, &mut self.toggle_multiline, 12.0, col_w, 26.0, &mut self.ui_context);
                         sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.font_selector, 12.0, col_w, 26.0);
+                        sec2.widget(&mut pc, &mut self.font_selector, 12.0, col_w, 26.0, &mut self.ui_context);
                         sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.sidebar_size, 12.0, col_w, 26.0);
+                        sec2.widget(&mut pc, &mut self.sidebar_size, 12.0, col_w, 26.0, &mut self.ui_context);
                         sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_r, 12.0, col_w, 18.0);
+                        sec2.widget(&mut pc, &mut self.slider_r, 12.0, col_w, 18.0, &mut self.ui_context);
                         sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_g, 12.0, col_w, 18.0);
+                        sec2.widget(&mut pc, &mut self.slider_g, 12.0, col_w, 18.0, &mut self.ui_context);
                         sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_b, 12.0, col_w, 18.0);
+                        sec2.widget(&mut pc, &mut self.slider_b, 12.0, col_w, 18.0, &mut self.ui_context);
                         sec2.spacing(12.0);
                         let next_y_align = sec2.finish(&mut pc);
 
                         let mut sec_text_align = Section::new(&mut pc, cx, next_y_align, cw, "Text Alignment");
-                        sec_text_align.widget(&mut pc, &mut self.dropdown_text_align_h, 12.0, col_w, 26.0);
+                        sec_text_align.widget(&mut pc, &mut self.dropdown_text_align_h, 12.0, col_w, 26.0, &mut self.ui_context);
                         sec_text_align.spacing(12.0);
-                        sec_text_align.widget(&mut pc, &mut self.dropdown_text_align_v, 12.0, col_w, 26.0);
+                        sec_text_align.widget(&mut pc, &mut self.dropdown_text_align_v, 12.0, col_w, 26.0, &mut self.ui_context);
                         sec_text_align.finish(&mut pc);
                     } else if is_vector {
                         let mut sec2 = Section::new(&mut pc, cx, next_y, cw, "Line Properties");
-                        sec2.widget(&mut pc, &mut self.sidebar_size, 12.0, col_w, 26.0);
+                        sec2.widget(&mut pc, &mut self.sidebar_size, 12.0, col_w, 26.0, &mut self.ui_context);
                         sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.dropdown_line_cap, 12.0, col_w, 26.0);
+                        sec2.widget(&mut pc, &mut self.dropdown_line_cap, 12.0, col_w, 26.0, &mut self.ui_context);
                         sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_r, 12.0, col_w, 18.0);
+                        sec2.widget(&mut pc, &mut self.slider_r, 12.0, col_w, 18.0, &mut self.ui_context);
                         sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_g, 12.0, col_w, 18.0);
+                        sec2.widget(&mut pc, &mut self.slider_g, 12.0, col_w, 18.0, &mut self.ui_context);
                         sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_b, 12.0, col_w, 18.0);
+                        sec2.widget(&mut pc, &mut self.slider_b, 12.0, col_w, 18.0, &mut self.ui_context);
                         sec2.spacing(12.0);
                         sec2.finish(&mut pc);
                     } else {
                         let mut sec2 = Section::new(&mut pc, cx, next_y, cw, "Fill Color");
-                        sec2.widget(&mut pc, &mut self.slider_r, 12.0, col_w, 18.0);
+                        sec2.widget(&mut pc, &mut self.slider_r, 12.0, col_w, 18.0, &mut self.ui_context);
                         sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_g, 12.0, col_w, 18.0);
+                        sec2.widget(&mut pc, &mut self.slider_g, 12.0, col_w, 18.0, &mut self.ui_context);
                         sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_b, 12.0, col_w, 18.0);
+                        sec2.widget(&mut pc, &mut self.slider_b, 12.0, col_w, 18.0, &mut self.ui_context);
                         sec2.spacing(12.0);
                         sec2.finish(&mut pc);
                     }
                 } else {
                     let mut sec = Section::new(&mut pc, cx, cy, cw, "Properties");
-                    sec.widget(&mut pc, &mut self.label_sel_status, 12.0, col_w, 18.0);
+                    sec.widget(&mut pc, &mut self.label_sel_status, 12.0, col_w, 18.0, &mut self.ui_context);
                     sec.spacing(8.0);
-                    sec.widget(&mut pc, &mut self.label_sel_desc1, 12.0, col_w, 14.0);
+                    sec.widget(&mut pc, &mut self.label_sel_desc1, 12.0, col_w, 14.0, &mut self.ui_context);
                     sec.spacing(6.0);
-                    sec.widget(&mut pc, &mut self.label_sel_desc2, 12.0, col_w, 14.0);
+                    sec.widget(&mut pc, &mut self.label_sel_desc2, 12.0, col_w, 14.0, &mut self.ui_context);
                     sec.spacing(12.0);
                     sec.finish(&mut pc);
                 }
@@ -961,49 +962,49 @@ impl LayoutApp {
             3 => {
                 let mut sec = Section::new(&mut pc, cx, cy, cw, "Add Elements");
                 let col_w = cw - 40.0;
-                sec.widget(&mut pc, &mut self.btn_add_text, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.btn_add_text, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.btn_add_rect, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.btn_add_rect, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.btn_add_banner, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.btn_add_banner, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.btn_add_vector, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.btn_add_vector, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.label_total_elements, 12.0, col_w, 18.0);
+                sec.widget(&mut pc, &mut self.label_total_elements, 12.0, col_w, 18.0, &mut self.ui_context);
                 sec.spacing(12.0);
                 sec.finish(&mut pc);
             }
             4 => {
                 let mut sec = Section::new(&mut pc, cx, cy, cw, "Grid");
                 let col_w = cw - 40.0;
-                sec.widget(&mut pc, &mut self.toggle_grid, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.toggle_grid, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.grid_color_selector, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.grid_color_selector, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.spinbox_grid_size, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.spinbox_grid_size, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.label_grid_snap, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.label_grid_snap, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.dropdown_grid_units, 12.0, col_w, 26.0);
+                sec.widget(&mut pc, &mut self.dropdown_grid_units, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
                 let next_y = sec.finish(&mut pc);
 
                 let mut sec_zoom = Section::new(&mut pc, cx, next_y, cw, "Zoom");
-                sec_zoom.widget(&mut pc, &mut self.slider_zoom, 12.0, col_w, 18.0);
+                sec_zoom.widget(&mut pc, &mut self.slider_zoom, 12.0, col_w, 18.0, &mut self.ui_context);
                 sec_zoom.spacing(12.0);
                 let next_y = sec_zoom.finish(&mut pc);
 
                 let mut sec_margins = Section::new(&mut pc, cx, next_y, cw, "Margins");
-                sec_margins.widget(&mut pc, &mut self.margin_color_selector, 12.0, col_w, 26.0);
+                sec_margins.widget(&mut pc, &mut self.margin_color_selector, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec_margins.spacing(12.0);
-                sec_margins.widget(&mut pc, &mut self.spinbox_margin_thickness, 12.0, col_w, 26.0);
+                sec_margins.widget(&mut pc, &mut self.spinbox_margin_thickness, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec_margins.spacing(12.0);
                 let next_y = sec_margins.finish(&mut pc);
 
                 let mut sec2 = Section::new(&mut pc, cx, next_y, cw, "Rulers");
-                sec2.widget(&mut pc, &mut self.toggle_rulers, 12.0, col_w, 26.0);
+                sec2.widget(&mut pc, &mut self.toggle_rulers, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec2.spacing(12.0);
-                sec2.widget(&mut pc, &mut self.dropdown_units, 12.0, col_w, 26.0);
+                sec2.widget(&mut pc, &mut self.dropdown_units, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec2.spacing(12.0);
                 sec2.finish(&mut pc);
             }
@@ -1012,11 +1013,11 @@ impl LayoutApp {
                 let col_w = cw - 40.0;
                 if self.layer_buttons.is_empty() {
                     let mut label_no_layers = Label::new("No elements found").with_color([0x83, 0x83, 0x8a]);
-                    sec.widget(&mut pc, &mut label_no_layers, 12.0, col_w, 18.0);
+                    sec.widget(&mut pc, &mut label_no_layers, 12.0, col_w, 18.0, &mut self.ui_context);
                     sec.spacing(12.0);
                 } else {
                     for btn in &mut self.layer_buttons {
-                        sec.widget(&mut pc, &mut **btn, 12.0, col_w, 26.0);
+                        sec.widget(&mut pc, &mut **btn, 12.0, col_w, 26.0, &mut self.ui_context);
                         sec.spacing(8.0);
                     }
                 }
@@ -1143,7 +1144,7 @@ impl LayoutApp {
         // 5. Canvas Element Labels (drawn relative to the paper sheet)
         if self.word_processor_enabled {
             let font_family = self.wp_text_box.font_family.clone();
-            for (label, bounds) in self.wp_text_box.text_labels_with_bounds() {
+            for (label, bounds) in self.wp_text_box.text_labels_with_bounds(&self.ui_context) {
                 let metrics = Metrics::new(label.font_size, label.font_size * 1.4);
                 let mut buf = Buffer::new(&mut self.font_system, metrics);
                 let family_val = match font_family.as_str() {
@@ -1619,114 +1620,7 @@ impl LayoutApp {
         self.sync_sidebar_fields();
     }
 
-    fn active_page_widgets(&mut self) -> Vec<&mut dyn UiElement> {
-        let mut list: Vec<&mut dyn UiElement> = Vec::new();
-        match self.paginator.selected_page() {
-            0 => {
-                list.push(&mut self.btn_new_doc);
-                list.push(&mut self.btn_open);
-                list.push(&mut self.recent_files_list);
-                for btn in &mut self.recent_files_buttons {
-                    list.push(btn);
-                }
-                list.push(&mut self.btn_save);
-                list.push(&mut self.btn_save_as);
-                list.push(&mut self.btn_exit);
-            }
-            1 => {
-                list.push(&mut self.dropdown_margin_units);
-                list.push(&mut self.dropdown_presets);
-                list.push(&mut self.slider_page_x);
-                list.push(&mut self.slider_page_y);
-                list.push(&mut self.page_color_selector);
-                list.push(&mut self.toggle_margin);
-                list.push(&mut self.toggle_word_processor);
-                list.push(&mut self.slider_margin_x);
-                list.push(&mut self.slider_margin_y);
-            }
-            2 => {
-                if self.word_processor_enabled {
-                    list.push(&mut self.font_selector);
-                    list.push(&mut self.sidebar_size);
-                    list.push(&mut self.slider_r);
-                    list.push(&mut self.slider_g);
-                    list.push(&mut self.slider_b);
-                } else if self.selected_idx.is_some() {
-                    list.push(&mut self.dropdown_align_h);
-                    list.push(&mut self.dropdown_align_v);
 
-                    let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
-                        Some(Element::Text { .. }) => (true, false),
-                        Some(Element::Vector { .. }) => (false, true),
-                        _ => (false, false),
-                    };
-                    if is_text {
-                        list.push(&mut self.sidebar_x);
-                        list.push(&mut self.sidebar_y);
-                        list.push(&mut self.sidebar_w);
-                        list.push(&mut self.sidebar_h);
-                        list.push(&mut self.sidebar_text);
-                        list.push(&mut self.font_selector);
-                        list.push(&mut self.toggle_multiline);
-                        list.push(&mut self.dropdown_text_align_h);
-                        list.push(&mut self.dropdown_text_align_v);
-                        list.push(&mut self.sidebar_size);
-                        list.push(&mut self.slider_r);
-                        list.push(&mut self.slider_g);
-                        list.push(&mut self.slider_b);
-                    } else if is_vector {
-                        list.push(&mut self.sidebar_x);
-                        list.push(&mut self.sidebar_y);
-                        list.push(&mut self.sidebar_w);
-                        list.push(&mut self.sidebar_h);
-                        list.push(&mut self.sidebar_size);
-                        list.push(&mut self.dropdown_line_cap);
-                        list.push(&mut self.slider_r);
-                        list.push(&mut self.slider_g);
-                        list.push(&mut self.slider_b);
-                    } else {
-                        list.push(&mut self.sidebar_x);
-                        list.push(&mut self.sidebar_y);
-                        list.push(&mut self.sidebar_w);
-                        list.push(&mut self.sidebar_h);
-                        list.push(&mut self.slider_r);
-                        list.push(&mut self.slider_g);
-                        list.push(&mut self.slider_b);
-                    }
-                } else {
-                    list.push(&mut self.label_sel_status);
-                    list.push(&mut self.label_sel_desc1);
-                    list.push(&mut self.label_sel_desc2);
-                }
-            }
-            3 => {
-                list.push(&mut self.btn_add_text);
-                list.push(&mut self.btn_add_rect);
-                list.push(&mut self.btn_add_banner);
-                list.push(&mut self.btn_add_vector);
-                list.push(&mut self.label_total_elements);
-            }
-            4 => {
-                list.push(&mut self.toggle_grid);
-                list.push(&mut self.grid_color_selector);
-                list.push(&mut self.spinbox_grid_size);
-                list.push(&mut self.label_grid_snap);
-                list.push(&mut self.slider_zoom);
-                list.push(&mut self.toggle_rulers);
-                list.push(&mut self.dropdown_units);
-                list.push(&mut self.margin_color_selector);
-                list.push(&mut self.spinbox_margin_thickness);
-                list.push(&mut self.dropdown_grid_units);
-            }
-            5 => {
-                for btn in &mut self.layer_buttons {
-                    list.push(&mut **btn);
-                }
-            }
-            _ => {}
-        }
-        list
-    }
 
     pub fn get_current_document(&self) -> LayoutDocument {
         LayoutDocument {
@@ -1763,6 +1657,856 @@ impl LayoutApp {
             3 => 5.0 * 2.3622047,         // Millimeters
             _ => 20.0,
         }
+    }
+
+    fn active_page_widgets_unfocus(&mut self) {
+        let selected_page = self.paginator.selected_page();
+        match selected_page {
+            0 => {
+                self.btn_new_doc.unfocus();
+                self.btn_open.unfocus();
+                self.recent_files_list.unfocus();
+                for btn in &mut self.recent_files_buttons {
+                    btn.unfocus();
+                }
+                self.btn_save.unfocus();
+                self.btn_save_as.unfocus();
+                self.btn_exit.unfocus();
+            }
+            1 => {
+                self.dropdown_margin_units.unfocus();
+                self.dropdown_presets.unfocus();
+                self.slider_page_x.unfocus();
+                self.slider_page_y.unfocus();
+                self.page_color_selector.unfocus();
+                self.toggle_margin.unfocus();
+                self.toggle_word_processor.unfocus();
+                self.slider_margin_x.unfocus();
+                self.slider_margin_y.unfocus();
+            }
+            2 => {
+                self.font_selector.unfocus();
+                self.sidebar_size.unfocus();
+                self.slider_r.unfocus();
+                self.slider_g.unfocus();
+                self.slider_b.unfocus();
+                self.sidebar_x.unfocus();
+                self.sidebar_y.unfocus();
+                self.sidebar_w.unfocus();
+                self.sidebar_h.unfocus();
+                self.sidebar_text.unfocus();
+                self.toggle_multiline.unfocus();
+                self.dropdown_text_align_h.unfocus();
+                self.dropdown_text_align_v.unfocus();
+                self.dropdown_align_h.unfocus();
+                self.dropdown_align_v.unfocus();
+                self.dropdown_line_cap.unfocus();
+                self.label_sel_status.unfocus();
+                self.label_sel_desc1.unfocus();
+                self.label_sel_desc2.unfocus();
+            }
+            3 => {
+                self.btn_add_text.unfocus();
+                self.btn_add_rect.unfocus();
+                self.btn_add_banner.unfocus();
+                self.btn_add_vector.unfocus();
+                self.label_total_elements.unfocus();
+            }
+            4 => {
+                self.toggle_grid.unfocus();
+                self.grid_color_selector.unfocus();
+                self.spinbox_grid_size.unfocus();
+                self.label_grid_snap.unfocus();
+                self.slider_zoom.unfocus();
+                self.toggle_rulers.unfocus();
+                self.dropdown_units.unfocus();
+                self.margin_color_selector.unfocus();
+                self.spinbox_margin_thickness.unfocus();
+                self.dropdown_grid_units.unfocus();
+            }
+            5 => {
+                for btn in &mut self.layer_buttons {
+                    btn.unfocus();
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn active_page_widgets_focus_handle(&mut self, px: f32, py: f32) {
+        let ctx = &self.ui_context;
+        let selected_page = self.paginator.selected_page();
+        let mut hit_idx = None;
+        match selected_page {
+            0 => {
+                if self.btn_new_doc.hit_test(px, py, ctx) { hit_idx = Some(0); }
+                else if self.btn_open.hit_test(px, py, ctx) { hit_idx = Some(1); }
+                else if self.recent_files_list.hit_test(px, py, ctx) { hit_idx = Some(2); }
+                else {
+                    for (i, btn) in self.recent_files_buttons.iter().enumerate() {
+                        if btn.hit_test(px, py, ctx) {
+                            hit_idx = Some(3 + i);
+                            break;
+                        }
+                    }
+                    if hit_idx.is_none() {
+                        let offset = 3 + self.recent_files_buttons.len();
+                        if self.btn_save.hit_test(px, py, ctx) { hit_idx = Some(offset); }
+                        else if self.btn_save_as.hit_test(px, py, ctx) { hit_idx = Some(offset + 1); }
+                        else if self.btn_exit.hit_test(px, py, ctx) { hit_idx = Some(offset + 2); }
+                    }
+                }
+            }
+            1 => {
+                if self.dropdown_margin_units.hit_test(px, py, ctx) { hit_idx = Some(0); }
+                else if self.dropdown_presets.hit_test(px, py, ctx) { hit_idx = Some(1); }
+                else if self.slider_page_x.hit_test(px, py, ctx) { hit_idx = Some(2); }
+                else if self.slider_page_y.hit_test(px, py, ctx) { hit_idx = Some(3); }
+                else if self.page_color_selector.hit_test(px, py, ctx) { hit_idx = Some(4); }
+                else if self.toggle_margin.hit_test(px, py, ctx) { hit_idx = Some(5); }
+                else if self.toggle_word_processor.hit_test(px, py, ctx) { hit_idx = Some(6); }
+                else if self.slider_margin_x.hit_test(px, py, ctx) { hit_idx = Some(7); }
+                else if self.slider_margin_y.hit_test(px, py, ctx) { hit_idx = Some(8); }
+            }
+            2 => {
+                if self.word_processor_enabled {
+                    if self.font_selector.hit_test(px, py, ctx) { hit_idx = Some(0); }
+                    else if self.sidebar_size.hit_test(px, py, ctx) { hit_idx = Some(1); }
+                    else if self.slider_r.hit_test(px, py, ctx) { hit_idx = Some(2); }
+                    else if self.slider_g.hit_test(px, py, ctx) { hit_idx = Some(3); }
+                    else if self.slider_b.hit_test(px, py, ctx) { hit_idx = Some(4); }
+                } else if self.selected_idx.is_some() {
+                    let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
+                        Some(Element::Text { .. }) => (true, false),
+                        Some(Element::Vector { .. }) => (false, true),
+                        _ => (false, false),
+                    };
+                    if is_text {
+                        if self.sidebar_x.hit_test(px, py, ctx) { hit_idx = Some(0); }
+                        else if self.sidebar_y.hit_test(px, py, ctx) { hit_idx = Some(1); }
+                        else if self.sidebar_w.hit_test(px, py, ctx) { hit_idx = Some(2); }
+                        else if self.sidebar_h.hit_test(px, py, ctx) { hit_idx = Some(3); }
+                        else if self.sidebar_text.hit_test(px, py, ctx) { hit_idx = Some(4); }
+                        else if self.font_selector.hit_test(px, py, ctx) { hit_idx = Some(5); }
+                        else if self.toggle_multiline.hit_test(px, py, ctx) { hit_idx = Some(6); }
+                        else if self.dropdown_text_align_h.hit_test(px, py, ctx) { hit_idx = Some(7); }
+                        else if self.dropdown_text_align_v.hit_test(px, py, ctx) { hit_idx = Some(8); }
+                        else if self.sidebar_size.hit_test(px, py, ctx) { hit_idx = Some(9); }
+                        else if self.slider_r.hit_test(px, py, ctx) { hit_idx = Some(10); }
+                        else if self.slider_g.hit_test(px, py, ctx) { hit_idx = Some(11); }
+                        else if self.slider_b.hit_test(px, py, ctx) { hit_idx = Some(12); }
+                    } else if is_vector {
+                        if self.sidebar_x.hit_test(px, py, ctx) { hit_idx = Some(0); }
+                        else if self.sidebar_y.hit_test(px, py, ctx) { hit_idx = Some(1); }
+                        else if self.sidebar_w.hit_test(px, py, ctx) { hit_idx = Some(2); }
+                        else if self.sidebar_h.hit_test(px, py, ctx) { hit_idx = Some(3); }
+                        else if self.sidebar_size.hit_test(px, py, ctx) { hit_idx = Some(4); }
+                        else if self.dropdown_line_cap.hit_test(px, py, ctx) { hit_idx = Some(5); }
+                        else if self.slider_r.hit_test(px, py, ctx) { hit_idx = Some(6); }
+                        else if self.slider_g.hit_test(px, py, ctx) { hit_idx = Some(7); }
+                        else if self.slider_b.hit_test(px, py, ctx) { hit_idx = Some(8); }
+                    } else {
+                        if self.sidebar_x.hit_test(px, py, ctx) { hit_idx = Some(0); }
+                        else if self.sidebar_y.hit_test(px, py, ctx) { hit_idx = Some(1); }
+                        else if self.sidebar_w.hit_test(px, py, ctx) { hit_idx = Some(2); }
+                        else if self.sidebar_h.hit_test(px, py, ctx) { hit_idx = Some(3); }
+                        else if self.slider_r.hit_test(px, py, ctx) { hit_idx = Some(4); }
+                        else if self.slider_g.hit_test(px, py, ctx) { hit_idx = Some(5); }
+                        else if self.slider_b.hit_test(px, py, ctx) { hit_idx = Some(6); }
+                    }
+                } else {
+                    if self.label_sel_status.hit_test(px, py, ctx) { hit_idx = Some(0); }
+                    else if self.label_sel_desc1.hit_test(px, py, ctx) { hit_idx = Some(1); }
+                    else if self.label_sel_desc2.hit_test(px, py, ctx) { hit_idx = Some(2); }
+                }
+            }
+            3 => {
+                if self.btn_add_text.hit_test(px, py, ctx) { hit_idx = Some(0); }
+                else if self.btn_add_rect.hit_test(px, py, ctx) { hit_idx = Some(1); }
+                else if self.btn_add_banner.hit_test(px, py, ctx) { hit_idx = Some(2); }
+                else if self.btn_add_vector.hit_test(px, py, ctx) { hit_idx = Some(3); }
+                else if self.label_total_elements.hit_test(px, py, ctx) { hit_idx = Some(4); }
+            }
+            4 => {
+                if self.toggle_grid.hit_test(px, py, ctx) { hit_idx = Some(0); }
+                else if self.grid_color_selector.hit_test(px, py, ctx) { hit_idx = Some(1); }
+                else if self.spinbox_grid_size.hit_test(px, py, ctx) { hit_idx = Some(2); }
+                else if self.label_grid_snap.hit_test(px, py, ctx) { hit_idx = Some(3); }
+                else if self.slider_zoom.hit_test(px, py, ctx) { hit_idx = Some(4); }
+                else if self.toggle_rulers.hit_test(px, py, ctx) { hit_idx = Some(5); }
+                else if self.dropdown_units.hit_test(px, py, ctx) { hit_idx = Some(6); }
+                else if self.margin_color_selector.hit_test(px, py, ctx) { hit_idx = Some(7); }
+                else if self.spinbox_margin_thickness.hit_test(px, py, ctx) { hit_idx = Some(8); }
+                else if self.dropdown_grid_units.hit_test(px, py, ctx) { hit_idx = Some(9); }
+            }
+            5 => {
+                for (i, btn) in self.layer_buttons.iter().enumerate() {
+                    if btn.hit_test(px, py, ctx) {
+                        hit_idx = Some(i);
+                        break;
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        match selected_page {
+            0 => {
+                if hit_idx == Some(0) { self.btn_new_doc.focus(); } else { self.btn_new_doc.unfocus(); }
+                if hit_idx == Some(1) { self.btn_open.focus(); } else { self.btn_open.unfocus(); }
+                if hit_idx == Some(2) { self.recent_files_list.focus(); } else { self.recent_files_list.unfocus(); }
+                for (i, btn) in self.recent_files_buttons.iter_mut().enumerate() {
+                    if hit_idx == Some(3 + i) { btn.focus(); } else { btn.unfocus(); }
+                }
+                let offset = 3 + self.recent_files_buttons.len();
+                if hit_idx == Some(offset) { self.btn_save.focus(); } else { self.btn_save.unfocus(); }
+                if hit_idx == Some(offset + 1) { self.btn_save_as.focus(); } else { self.btn_save_as.unfocus(); }
+                if hit_idx == Some(offset + 2) { self.btn_exit.focus(); } else { self.btn_exit.unfocus(); }
+            }
+            1 => {
+                if hit_idx == Some(0) { self.dropdown_margin_units.focus(); } else { self.dropdown_margin_units.unfocus(); }
+                if hit_idx == Some(1) { self.dropdown_presets.focus(); } else { self.dropdown_presets.unfocus(); }
+                if hit_idx == Some(2) { self.slider_page_x.focus(); } else { self.slider_page_x.unfocus(); }
+                if hit_idx == Some(3) { self.slider_page_y.focus(); } else { self.slider_page_y.unfocus(); }
+                if hit_idx == Some(4) { self.page_color_selector.focus(); } else { self.page_color_selector.unfocus(); }
+                if hit_idx == Some(5) { self.toggle_margin.focus(); } else { self.toggle_margin.unfocus(); }
+                if hit_idx == Some(6) { self.toggle_word_processor.focus(); } else { self.toggle_word_processor.unfocus(); }
+                if hit_idx == Some(7) { self.slider_margin_x.focus(); } else { self.slider_margin_x.unfocus(); }
+                if hit_idx == Some(8) { self.slider_margin_y.focus(); } else { self.slider_margin_y.unfocus(); }
+            }
+            2 => {
+                if self.word_processor_enabled {
+                    if hit_idx == Some(0) { self.font_selector.focus(); } else { self.font_selector.unfocus(); }
+                    if hit_idx == Some(1) { self.sidebar_size.focus(); } else { self.sidebar_size.unfocus(); }
+                    if hit_idx == Some(2) { self.slider_r.focus(); } else { self.slider_r.unfocus(); }
+                    if hit_idx == Some(3) { self.slider_g.focus(); } else { self.slider_g.unfocus(); }
+                    if hit_idx == Some(4) { self.slider_b.focus(); } else { self.slider_b.unfocus(); }
+                } else if self.selected_idx.is_some() {
+                    let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
+                        Some(Element::Text { .. }) => (true, false),
+                        Some(Element::Vector { .. }) => (false, true),
+                        _ => (false, false),
+                    };
+                    if is_text {
+                        if hit_idx == Some(0) { self.sidebar_x.focus(); } else { self.sidebar_x.unfocus(); }
+                        if hit_idx == Some(1) { self.sidebar_y.focus(); } else { self.sidebar_y.unfocus(); }
+                        if hit_idx == Some(2) { self.sidebar_w.focus(); } else { self.sidebar_w.unfocus(); }
+                        if hit_idx == Some(3) { self.sidebar_h.focus(); } else { self.sidebar_h.unfocus(); }
+                        if hit_idx == Some(4) { self.sidebar_text.focus(); } else { self.sidebar_text.unfocus(); }
+                        if hit_idx == Some(5) { self.font_selector.focus(); } else { self.font_selector.unfocus(); }
+                        if hit_idx == Some(6) { self.toggle_multiline.focus(); } else { self.toggle_multiline.unfocus(); }
+                        if hit_idx == Some(7) { self.dropdown_text_align_h.focus(); } else { self.dropdown_text_align_h.unfocus(); }
+                        if hit_idx == Some(8) { self.dropdown_text_align_v.focus(); } else { self.dropdown_text_align_v.unfocus(); }
+                        if hit_idx == Some(9) { self.sidebar_size.focus(); } else { self.sidebar_size.unfocus(); }
+                        if hit_idx == Some(10) { self.slider_r.focus(); } else { self.slider_r.unfocus(); }
+                        if hit_idx == Some(11) { self.slider_g.focus(); } else { self.slider_g.unfocus(); }
+                        if hit_idx == Some(12) { self.slider_b.focus(); } else { self.slider_b.unfocus(); }
+                    } else if is_vector {
+                        if hit_idx == Some(0) { self.sidebar_x.focus(); } else { self.sidebar_x.unfocus(); }
+                        if hit_idx == Some(1) { self.sidebar_y.focus(); } else { self.sidebar_y.unfocus(); }
+                        if hit_idx == Some(2) { self.sidebar_w.focus(); } else { self.sidebar_w.unfocus(); }
+                        if hit_idx == Some(3) { self.sidebar_h.focus(); } else { self.sidebar_h.unfocus(); }
+                        if hit_idx == Some(4) { self.sidebar_size.focus(); } else { self.sidebar_size.unfocus(); }
+                        if hit_idx == Some(5) { self.dropdown_line_cap.focus(); } else { self.dropdown_line_cap.unfocus(); }
+                        if hit_idx == Some(6) { self.slider_r.focus(); } else { self.slider_r.unfocus(); }
+                        if hit_idx == Some(7) { self.slider_g.focus(); } else { self.slider_g.unfocus(); }
+                        if hit_idx == Some(8) { self.slider_b.focus(); } else { self.slider_b.unfocus(); }
+                    } else {
+                        if hit_idx == Some(0) { self.sidebar_x.focus(); } else { self.sidebar_x.unfocus(); }
+                        if hit_idx == Some(1) { self.sidebar_y.focus(); } else { self.sidebar_y.unfocus(); }
+                        if hit_idx == Some(2) { self.sidebar_w.focus(); } else { self.sidebar_w.unfocus(); }
+                        if hit_idx == Some(3) { self.sidebar_h.focus(); } else { self.sidebar_h.unfocus(); }
+                        if hit_idx == Some(4) { self.slider_r.focus(); } else { self.slider_r.unfocus(); }
+                        if hit_idx == Some(5) { self.slider_g.focus(); } else { self.slider_g.unfocus(); }
+                        if hit_idx == Some(6) { self.slider_b.focus(); } else { self.slider_b.unfocus(); }
+                    }
+                } else {
+                    if hit_idx == Some(0) { self.label_sel_status.focus(); } else { self.label_sel_status.unfocus(); }
+                    if hit_idx == Some(1) { self.label_sel_desc1.focus(); } else { self.label_sel_desc1.unfocus(); }
+                    if hit_idx == Some(2) { self.label_sel_desc2.focus(); } else { self.label_sel_desc2.unfocus(); }
+                }
+            }
+            3 => {
+                if hit_idx == Some(0) { self.btn_add_text.focus(); } else { self.btn_add_text.unfocus(); }
+                if hit_idx == Some(1) { self.btn_add_rect.focus(); } else { self.btn_add_rect.unfocus(); }
+                if hit_idx == Some(2) { self.btn_add_banner.focus(); } else { self.btn_add_banner.unfocus(); }
+                if hit_idx == Some(3) { self.btn_add_vector.focus(); } else { self.btn_add_vector.unfocus(); }
+                if hit_idx == Some(4) { self.label_total_elements.focus(); } else { self.label_total_elements.unfocus(); }
+            }
+            4 => {
+                if hit_idx == Some(0) { self.toggle_grid.focus(); } else { self.toggle_grid.unfocus(); }
+                if hit_idx == Some(1) { self.grid_color_selector.focus(); } else { self.grid_color_selector.unfocus(); }
+                if hit_idx == Some(2) { self.spinbox_grid_size.focus(); } else { self.spinbox_grid_size.unfocus(); }
+                if hit_idx == Some(3) { self.label_grid_snap.focus(); } else { self.label_grid_snap.unfocus(); }
+                if hit_idx == Some(4) { self.slider_zoom.focus(); } else { self.slider_zoom.unfocus(); }
+                if hit_idx == Some(5) { self.toggle_rulers.focus(); } else { self.toggle_rulers.unfocus(); }
+                if hit_idx == Some(6) { self.dropdown_units.focus(); } else { self.dropdown_units.unfocus(); }
+                if hit_idx == Some(7) { self.margin_color_selector.focus(); } else { self.margin_color_selector.unfocus(); }
+                if hit_idx == Some(8) { self.spinbox_margin_thickness.focus(); } else { self.spinbox_margin_thickness.unfocus(); }
+                if hit_idx == Some(9) { self.dropdown_grid_units.focus(); } else { self.dropdown_grid_units.unfocus(); }
+            }
+            5 => {
+                for (i, btn) in self.layer_buttons.iter_mut().enumerate() {
+                    if hit_idx == Some(i) { btn.focus(); } else { btn.unfocus(); }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn active_page_widgets_cursor_moved(&mut self, px: f32, py: f32) -> bool {
+        let mut changed = false;
+        let ctx = &mut self.ui_context;
+        let selected_page = self.paginator.selected_page();
+        match selected_page {
+            0 => {
+                if self.btn_new_doc.cursor_moved(px, py, ctx) { changed = true; }
+                if self.btn_open.cursor_moved(px, py, ctx) { changed = true; }
+                if self.recent_files_list.cursor_moved(px, py, ctx) { changed = true; }
+                for btn in &mut self.recent_files_buttons {
+                    if btn.cursor_moved(px, py, ctx) { changed = true; }
+                }
+                if self.btn_save.cursor_moved(px, py, ctx) { changed = true; }
+                if self.btn_save_as.cursor_moved(px, py, ctx) { changed = true; }
+                if self.btn_exit.cursor_moved(px, py, ctx) { changed = true; }
+            }
+            1 => {
+                if self.dropdown_margin_units.cursor_moved(px, py, ctx) { changed = true; }
+                if self.dropdown_presets.cursor_moved(px, py, ctx) { changed = true; }
+                if self.slider_page_x.cursor_moved(px, py, ctx) { changed = true; }
+                if self.slider_page_y.cursor_moved(px, py, ctx) { changed = true; }
+                if self.page_color_selector.cursor_moved(px, py, ctx) { changed = true; }
+                if self.toggle_margin.cursor_moved(px, py, ctx) { changed = true; }
+                if self.toggle_word_processor.cursor_moved(px, py, ctx) { changed = true; }
+                if self.slider_margin_x.cursor_moved(px, py, ctx) { changed = true; }
+                if self.slider_margin_y.cursor_moved(px, py, ctx) { changed = true; }
+            }
+            2 => {
+                if self.word_processor_enabled {
+                    if self.font_selector.cursor_moved(px, py, ctx) { changed = true; }
+                    if self.sidebar_size.cursor_moved(px, py, ctx) { changed = true; }
+                    if self.slider_r.cursor_moved(px, py, ctx) { changed = true; }
+                    if self.slider_g.cursor_moved(px, py, ctx) { changed = true; }
+                    if self.slider_b.cursor_moved(px, py, ctx) { changed = true; }
+                } else if self.selected_idx.is_some() {
+                    if self.dropdown_align_h.cursor_moved(px, py, ctx) { changed = true; }
+                    if self.dropdown_align_v.cursor_moved(px, py, ctx) { changed = true; }
+
+                    let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
+                        Some(Element::Text { .. }) => (true, false),
+                        Some(Element::Vector { .. }) => (false, true),
+                        _ => (false, false),
+                    };
+                    if is_text {
+                        if self.sidebar_x.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.sidebar_y.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.sidebar_w.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.sidebar_h.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.sidebar_text.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.font_selector.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.toggle_multiline.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.dropdown_text_align_h.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.dropdown_text_align_v.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.sidebar_size.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.slider_r.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.slider_g.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.slider_b.cursor_moved(px, py, ctx) { changed = true; }
+                    } else if is_vector {
+                        if self.sidebar_x.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.sidebar_y.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.sidebar_w.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.sidebar_h.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.sidebar_size.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.dropdown_line_cap.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.slider_r.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.slider_g.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.slider_b.cursor_moved(px, py, ctx) { changed = true; }
+                    } else {
+                        if self.sidebar_x.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.sidebar_y.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.sidebar_w.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.sidebar_h.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.slider_r.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.slider_g.cursor_moved(px, py, ctx) { changed = true; }
+                        if self.slider_b.cursor_moved(px, py, ctx) { changed = true; }
+                    }
+                } else {
+                    if self.label_sel_status.cursor_moved(px, py, ctx) { changed = true; }
+                    if self.label_sel_desc1.cursor_moved(px, py, ctx) { changed = true; }
+                    if self.label_sel_desc2.cursor_moved(px, py, ctx) { changed = true; }
+                }
+            }
+            3 => {
+                if self.btn_add_text.cursor_moved(px, py, ctx) { changed = true; }
+                if self.btn_add_rect.cursor_moved(px, py, ctx) { changed = true; }
+                if self.btn_add_banner.cursor_moved(px, py, ctx) { changed = true; }
+                if self.btn_add_vector.cursor_moved(px, py, ctx) { changed = true; }
+                if self.label_total_elements.cursor_moved(px, py, ctx) { changed = true; }
+            }
+            4 => {
+                if self.toggle_grid.cursor_moved(px, py, ctx) { changed = true; }
+                if self.grid_color_selector.cursor_moved(px, py, ctx) { changed = true; }
+                if self.spinbox_grid_size.cursor_moved(px, py, ctx) { changed = true; }
+                if self.label_grid_snap.cursor_moved(px, py, ctx) { changed = true; }
+                if self.slider_zoom.cursor_moved(px, py, ctx) { changed = true; }
+                if self.toggle_rulers.cursor_moved(px, py, ctx) { changed = true; }
+                if self.dropdown_units.cursor_moved(px, py, ctx) { changed = true; }
+                if self.margin_color_selector.cursor_moved(px, py, ctx) { changed = true; }
+                if self.spinbox_margin_thickness.cursor_moved(px, py, ctx) { changed = true; }
+                if self.dropdown_grid_units.cursor_moved(px, py, ctx) { changed = true; }
+            }
+            5 => {
+                for btn in &mut self.layer_buttons {
+                    if btn.cursor_moved(px, py, ctx) { changed = true; }
+                }
+            }
+            _ => {}
+        }
+        changed
+    }
+
+    fn active_page_widgets_mouse_input(&mut self, button: MouseButton, state: ElementState, px: f32, py: f32) -> bool {
+        let mut changed = false;
+        let ctx = &mut self.ui_context;
+        let selected_page = self.paginator.selected_page();
+        match selected_page {
+            0 => {
+                if self.btn_new_doc.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.btn_open.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.recent_files_list.mouse_input(button, state, px, py, ctx) { changed = true; }
+                for btn in &mut self.recent_files_buttons {
+                    if btn.mouse_input(button, state, px, py, ctx) { changed = true; }
+                }
+                if self.btn_save.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.btn_save_as.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.btn_exit.mouse_input(button, state, px, py, ctx) { changed = true; }
+            }
+            1 => {
+                if self.dropdown_margin_units.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.dropdown_presets.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.slider_page_x.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.slider_page_y.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.page_color_selector.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.toggle_margin.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.toggle_word_processor.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.slider_margin_x.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.slider_margin_y.mouse_input(button, state, px, py, ctx) { changed = true; }
+            }
+            2 => {
+                if self.word_processor_enabled {
+                    if self.font_selector.mouse_input(button, state, px, py, ctx) { changed = true; }
+                    if self.sidebar_size.mouse_input(button, state, px, py, ctx) { changed = true; }
+                    if self.slider_r.mouse_input(button, state, px, py, ctx) { changed = true; }
+                    if self.slider_g.mouse_input(button, state, px, py, ctx) { changed = true; }
+                    if self.slider_b.mouse_input(button, state, px, py, ctx) { changed = true; }
+                } else if self.selected_idx.is_some() {
+                    if self.dropdown_align_h.mouse_input(button, state, px, py, ctx) { changed = true; }
+                    if self.dropdown_align_v.mouse_input(button, state, px, py, ctx) { changed = true; }
+
+                    let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
+                        Some(Element::Text { .. }) => (true, false),
+                        Some(Element::Vector { .. }) => (false, true),
+                        _ => (false, false),
+                    };
+                    if is_text {
+                        if self.sidebar_x.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.sidebar_y.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.sidebar_w.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.sidebar_h.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.sidebar_text.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.font_selector.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.toggle_multiline.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.dropdown_text_align_h.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.dropdown_text_align_v.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.sidebar_size.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.slider_r.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.slider_g.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.slider_b.mouse_input(button, state, px, py, ctx) { changed = true; }
+                    } else if is_vector {
+                        if self.sidebar_x.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.sidebar_y.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.sidebar_w.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.sidebar_h.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.sidebar_size.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.dropdown_line_cap.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.slider_r.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.slider_g.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.slider_b.mouse_input(button, state, px, py, ctx) { changed = true; }
+                    } else {
+                        if self.sidebar_x.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.sidebar_y.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.sidebar_w.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.sidebar_h.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.slider_r.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.slider_g.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if self.slider_b.mouse_input(button, state, px, py, ctx) { changed = true; }
+                    }
+                } else {
+                    if self.label_sel_status.mouse_input(button, state, px, py, ctx) { changed = true; }
+                    if self.label_sel_desc1.mouse_input(button, state, px, py, ctx) { changed = true; }
+                    if self.label_sel_desc2.mouse_input(button, state, px, py, ctx) { changed = true; }
+                }
+            }
+            3 => {
+                if self.btn_add_text.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.btn_add_rect.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.btn_add_banner.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.btn_add_vector.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.label_total_elements.mouse_input(button, state, px, py, ctx) { changed = true; }
+            }
+            4 => {
+                if self.toggle_grid.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.grid_color_selector.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.spinbox_grid_size.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.label_grid_snap.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.slider_zoom.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.toggle_rulers.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.dropdown_units.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.margin_color_selector.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.spinbox_margin_thickness.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if self.dropdown_grid_units.mouse_input(button, state, px, py, ctx) { changed = true; }
+            }
+            5 => {
+                for btn in &mut self.layer_buttons {
+                    if btn.mouse_input(button, state, px, py, ctx) { changed = true; }
+                }
+            }
+            _ => {}
+        }
+        changed
+    }
+
+    fn active_page_widgets_mouse_wheel(&mut self, delta: &MouseScrollDelta, px: f32, py: f32) -> bool {
+        let mut changed = false;
+        let ctx = &mut self.ui_context;
+        let selected_page = self.paginator.selected_page();
+        match selected_page {
+            0 => {
+                if self.btn_new_doc.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.btn_open.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.recent_files_list.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                for btn in &mut self.recent_files_buttons {
+                    if btn.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                }
+                if self.btn_save.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.btn_save_as.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.btn_exit.mouse_wheel(delta, px, py, ctx) { changed = true; }
+            }
+            1 => {
+                if self.dropdown_margin_units.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.dropdown_presets.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.slider_page_x.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.slider_page_y.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.page_color_selector.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.toggle_margin.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.toggle_word_processor.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.slider_margin_x.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.slider_margin_y.mouse_wheel(delta, px, py, ctx) { changed = true; }
+            }
+            2 => {
+                if self.word_processor_enabled {
+                    if self.font_selector.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                    if self.sidebar_size.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                    if self.slider_r.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                    if self.slider_g.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                    if self.slider_b.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                } else if self.selected_idx.is_some() {
+                    if self.dropdown_align_h.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                    if self.dropdown_align_v.mouse_wheel(delta, px, py, ctx) { changed = true; }
+
+                    let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
+                        Some(Element::Text { .. }) => (true, false),
+                        Some(Element::Vector { .. }) => (false, true),
+                        _ => (false, false),
+                    };
+                    if is_text {
+                        if self.sidebar_x.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.sidebar_y.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.sidebar_w.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.sidebar_h.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.sidebar_text.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.font_selector.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.toggle_multiline.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.dropdown_text_align_h.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.dropdown_text_align_v.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.sidebar_size.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.slider_r.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.slider_g.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.slider_b.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                    } else if is_vector {
+                        if self.sidebar_x.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.sidebar_y.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.sidebar_w.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.sidebar_h.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.sidebar_size.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.dropdown_line_cap.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.slider_r.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.slider_g.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.slider_b.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                    } else {
+                        if self.sidebar_x.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.sidebar_y.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.sidebar_w.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.sidebar_h.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.slider_r.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.slider_g.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if self.slider_b.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                    }
+                } else {
+                    if self.label_sel_status.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                    if self.label_sel_desc1.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                    if self.label_sel_desc2.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                }
+            }
+            3 => {
+                if self.btn_add_text.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.btn_add_rect.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.btn_add_banner.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.btn_add_vector.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.label_total_elements.mouse_wheel(delta, px, py, ctx) { changed = true; }
+            }
+            4 => {
+                if self.toggle_grid.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.grid_color_selector.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.spinbox_grid_size.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.label_grid_snap.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.slider_zoom.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.toggle_rulers.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.dropdown_units.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.margin_color_selector.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.spinbox_margin_thickness.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.dropdown_grid_units.mouse_wheel(delta, px, py, ctx) { changed = true; }
+            }
+            5 => {
+                for btn in &mut self.layer_buttons {
+                    if btn.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                }
+            }
+            _ => {}
+        }
+        changed
+    }
+
+    fn active_page_widgets_keyboard_input(&mut self, event: &KeyEvent) -> bool {
+        let mut changed = false;
+        let ctx = &mut self.ui_context;
+        let selected_page = self.paginator.selected_page();
+        match selected_page {
+            0 => {
+                if self.btn_new_doc.focused(ctx) { if self.btn_new_doc.keyboard_input(event, ctx) { changed = true; } }
+                if self.btn_open.focused(ctx) { if self.btn_open.keyboard_input(event, ctx) { changed = true; } }
+                if self.recent_files_list.focused(ctx) { if self.recent_files_list.keyboard_input(event, ctx) { changed = true; } }
+                for btn in &mut self.recent_files_buttons {
+                    if btn.focused(ctx) { if btn.keyboard_input(event, ctx) { changed = true; } }
+                }
+                if self.btn_save.focused(ctx) { if self.btn_save.keyboard_input(event, ctx) { changed = true; } }
+                if self.btn_save_as.focused(ctx) { if self.btn_save_as.keyboard_input(event, ctx) { changed = true; } }
+                if self.btn_exit.focused(ctx) { if self.btn_exit.keyboard_input(event, ctx) { changed = true; } }
+            }
+            1 => {
+                if self.dropdown_margin_units.focused(ctx) { if self.dropdown_margin_units.keyboard_input(event, ctx) { changed = true; } }
+                if self.dropdown_presets.focused(ctx) { if self.dropdown_presets.keyboard_input(event, ctx) { changed = true; } }
+                if self.slider_page_x.focused(ctx) { if self.slider_page_x.keyboard_input(event, ctx) { changed = true; } }
+                if self.slider_page_y.focused(ctx) { if self.slider_page_y.keyboard_input(event, ctx) { changed = true; } }
+                if self.page_color_selector.focused(ctx) { if self.page_color_selector.keyboard_input(event, ctx) { changed = true; } }
+                if self.toggle_margin.focused(ctx) { if self.toggle_margin.keyboard_input(event, ctx) { changed = true; } }
+                if self.toggle_word_processor.focused(ctx) { if self.toggle_word_processor.keyboard_input(event, ctx) { changed = true; } }
+                if self.slider_margin_x.focused(ctx) { if self.slider_margin_x.keyboard_input(event, ctx) { changed = true; } }
+                if self.slider_margin_y.focused(ctx) { if self.slider_margin_y.keyboard_input(event, ctx) { changed = true; } }
+            }
+            2 => {
+                if self.word_processor_enabled {
+                    if self.font_selector.focused(ctx) { if self.font_selector.keyboard_input(event, ctx) { changed = true; } }
+                    if self.sidebar_size.focused(ctx) { if self.sidebar_size.keyboard_input(event, ctx) { changed = true; } }
+                    if self.slider_r.focused(ctx) { if self.slider_r.keyboard_input(event, ctx) { changed = true; } }
+                    if self.slider_g.focused(ctx) { if self.slider_g.keyboard_input(event, ctx) { changed = true; } }
+                    if self.slider_b.focused(ctx) { if self.slider_b.keyboard_input(event, ctx) { changed = true; } }
+                } else if self.selected_idx.is_some() {
+                    if self.dropdown_align_h.focused(ctx) { if self.dropdown_align_h.keyboard_input(event, ctx) { changed = true; } }
+                    if self.dropdown_align_v.focused(ctx) { if self.dropdown_align_v.keyboard_input(event, ctx) { changed = true; } }
+
+                    let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
+                        Some(Element::Text { .. }) => (true, false),
+                        Some(Element::Vector { .. }) => (false, true),
+                        _ => (false, false),
+                    };
+                    if is_text {
+                        if self.sidebar_x.focused(ctx) { if self.sidebar_x.keyboard_input(event, ctx) { changed = true; } }
+                        if self.sidebar_y.focused(ctx) { if self.sidebar_y.keyboard_input(event, ctx) { changed = true; } }
+                        if self.sidebar_w.focused(ctx) { if self.sidebar_w.keyboard_input(event, ctx) { changed = true; } }
+                        if self.sidebar_h.focused(ctx) { if self.sidebar_h.keyboard_input(event, ctx) { changed = true; } }
+                        if self.sidebar_text.focused(ctx) { if self.sidebar_text.keyboard_input(event, ctx) { changed = true; } }
+                        if self.font_selector.focused(ctx) { if self.font_selector.keyboard_input(event, ctx) { changed = true; } }
+                        if self.toggle_multiline.focused(ctx) { if self.toggle_multiline.keyboard_input(event, ctx) { changed = true; } }
+                        if self.dropdown_text_align_h.focused(ctx) { if self.dropdown_text_align_h.keyboard_input(event, ctx) { changed = true; } }
+                        if self.dropdown_text_align_v.focused(ctx) { if self.dropdown_text_align_v.keyboard_input(event, ctx) { changed = true; } }
+                        if self.sidebar_size.focused(ctx) { if self.sidebar_size.keyboard_input(event, ctx) { changed = true; } }
+                        if self.slider_r.focused(ctx) { if self.slider_r.keyboard_input(event, ctx) { changed = true; } }
+                        if self.slider_g.focused(ctx) { if self.slider_g.keyboard_input(event, ctx) { changed = true; } }
+                        if self.slider_b.focused(ctx) { if self.slider_b.keyboard_input(event, ctx) { changed = true; } }
+                    } else if is_vector {
+                        if self.sidebar_x.focused(ctx) { if self.sidebar_x.keyboard_input(event, ctx) { changed = true; } }
+                        if self.sidebar_y.focused(ctx) { if self.sidebar_y.keyboard_input(event, ctx) { changed = true; } }
+                        if self.sidebar_w.focused(ctx) { if self.sidebar_w.keyboard_input(event, ctx) { changed = true; } }
+                        if self.sidebar_h.focused(ctx) { if self.sidebar_h.keyboard_input(event, ctx) { changed = true; } }
+                        if self.sidebar_size.focused(ctx) { if self.sidebar_size.keyboard_input(event, ctx) { changed = true; } }
+                        if self.dropdown_line_cap.focused(ctx) { if self.dropdown_line_cap.keyboard_input(event, ctx) { changed = true; } }
+                        if self.slider_r.focused(ctx) { if self.slider_r.keyboard_input(event, ctx) { changed = true; } }
+                        if self.slider_g.focused(ctx) { if self.slider_g.keyboard_input(event, ctx) { changed = true; } }
+                        if self.slider_b.focused(ctx) { if self.slider_b.keyboard_input(event, ctx) { changed = true; } }
+                    } else {
+                        if self.sidebar_x.focused(ctx) { if self.sidebar_x.keyboard_input(event, ctx) { changed = true; } }
+                        if self.sidebar_y.focused(ctx) { if self.sidebar_y.keyboard_input(event, ctx) { changed = true; } }
+                        if self.sidebar_w.focused(ctx) { if self.sidebar_w.keyboard_input(event, ctx) { changed = true; } }
+                        if self.sidebar_h.focused(ctx) { if self.sidebar_h.keyboard_input(event, ctx) { changed = true; } }
+                        if self.slider_r.focused(ctx) { if self.slider_r.keyboard_input(event, ctx) { changed = true; } }
+                        if self.slider_g.focused(ctx) { if self.slider_g.keyboard_input(event, ctx) { changed = true; } }
+                        if self.slider_b.focused(ctx) { if self.slider_b.keyboard_input(event, ctx) { changed = true; } }
+                    }
+                } else {
+                    if self.label_sel_status.focused(ctx) { if self.label_sel_status.keyboard_input(event, ctx) { changed = true; } }
+                    if self.label_sel_desc1.focused(ctx) { if self.label_sel_desc1.keyboard_input(event, ctx) { changed = true; } }
+                    if self.label_sel_desc2.focused(ctx) { if self.label_sel_desc2.keyboard_input(event, ctx) { changed = true; } }
+                }
+            }
+            3 => {
+                if self.btn_add_text.focused(ctx) { if self.btn_add_text.keyboard_input(event, ctx) { changed = true; } }
+                if self.btn_add_rect.focused(ctx) { if self.btn_add_rect.keyboard_input(event, ctx) { changed = true; } }
+                if self.btn_add_banner.focused(ctx) { if self.btn_add_banner.keyboard_input(event, ctx) { changed = true; } }
+                if self.btn_add_vector.focused(ctx) { if self.btn_add_vector.keyboard_input(event, ctx) { changed = true; } }
+                if self.label_total_elements.focused(ctx) { if self.label_total_elements.keyboard_input(event, ctx) { changed = true; } }
+            }
+            4 => {
+                if self.toggle_grid.focused(ctx) { if self.toggle_grid.keyboard_input(event, ctx) { changed = true; } }
+                if self.grid_color_selector.focused(ctx) { if self.grid_color_selector.keyboard_input(event, ctx) { changed = true; } }
+                if self.spinbox_grid_size.focused(ctx) { if self.spinbox_grid_size.keyboard_input(event, ctx) { changed = true; } }
+                if self.label_grid_snap.focused(ctx) { if self.label_grid_snap.keyboard_input(event, ctx) { changed = true; } }
+                if self.slider_zoom.focused(ctx) { if self.slider_zoom.keyboard_input(event, ctx) { changed = true; } }
+                if self.toggle_rulers.focused(ctx) { if self.toggle_rulers.keyboard_input(event, ctx) { changed = true; } }
+                if self.dropdown_units.focused(ctx) { if self.dropdown_units.keyboard_input(event, ctx) { changed = true; } }
+                if self.margin_color_selector.focused(ctx) { if self.margin_color_selector.keyboard_input(event, ctx) { changed = true; } }
+                if self.spinbox_margin_thickness.focused(ctx) { if self.spinbox_margin_thickness.keyboard_input(event, ctx) { changed = true; } }
+                if self.dropdown_grid_units.focused(ctx) { if self.dropdown_grid_units.keyboard_input(event, ctx) { changed = true; } }
+            }
+            5 => {
+                for btn in &mut self.layer_buttons {
+                    if btn.focused(ctx) { if btn.keyboard_input(event, ctx) { changed = true; } }
+                }
+            }
+            _ => {}
+        }
+        changed
+    }
+
+    fn active_page_widgets_tick(&mut self, dt: f32) -> bool {
+        let mut changed = false;
+        let ctx = &mut self.ui_context;
+        let selected_page = self.paginator.selected_page();
+        match selected_page {
+            0 => {
+                if self.btn_new_doc.tick(dt, ctx) { changed = true; }
+                if self.btn_open.tick(dt, ctx) { changed = true; }
+                if self.recent_files_list.tick(dt, ctx) { changed = true; }
+                for btn in &mut self.recent_files_buttons {
+                    if btn.tick(dt, ctx) { changed = true; }
+                }
+                if self.btn_save.tick(dt, ctx) { changed = true; }
+                if self.btn_save_as.tick(dt, ctx) { changed = true; }
+                if self.btn_exit.tick(dt, ctx) { changed = true; }
+            }
+            1 => {
+                if self.dropdown_margin_units.tick(dt, ctx) { changed = true; }
+                if self.dropdown_presets.tick(dt, ctx) { changed = true; }
+                if self.slider_page_x.tick(dt, ctx) { changed = true; }
+                if self.slider_page_y.tick(dt, ctx) { changed = true; }
+                if self.page_color_selector.tick(dt, ctx) { changed = true; }
+                if self.toggle_margin.tick(dt, ctx) { changed = true; }
+                if self.toggle_word_processor.tick(dt, ctx) { changed = true; }
+                if self.slider_margin_x.tick(dt, ctx) { changed = true; }
+                if self.slider_margin_y.tick(dt, ctx) { changed = true; }
+            }
+            2 => {
+                if self.word_processor_enabled {
+                    if self.font_selector.tick(dt, ctx) { changed = true; }
+                    if self.sidebar_size.tick(dt, ctx) { changed = true; }
+                    if self.slider_r.tick(dt, ctx) { changed = true; }
+                    if self.slider_g.tick(dt, ctx) { changed = true; }
+                    if self.slider_b.tick(dt, ctx) { changed = true; }
+                } else if self.selected_idx.is_some() {
+                    if self.dropdown_align_h.tick(dt, ctx) { changed = true; }
+                    if self.dropdown_align_v.tick(dt, ctx) { changed = true; }
+
+                    let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
+                        Some(Element::Text { .. }) => (true, false),
+                        Some(Element::Vector { .. }) => (false, true),
+                        _ => (false, false),
+                    };
+                    if is_text {
+                        if self.sidebar_x.tick(dt, ctx) { changed = true; }
+                        if self.sidebar_y.tick(dt, ctx) { changed = true; }
+                        if self.sidebar_w.tick(dt, ctx) { changed = true; }
+                        if self.sidebar_h.tick(dt, ctx) { changed = true; }
+                        if self.sidebar_text.tick(dt, ctx) { changed = true; }
+                        if self.font_selector.tick(dt, ctx) { changed = true; }
+                        if self.toggle_multiline.tick(dt, ctx) { changed = true; }
+                        if self.dropdown_text_align_h.tick(dt, ctx) { changed = true; }
+                        if self.dropdown_text_align_v.tick(dt, ctx) { changed = true; }
+                        if self.sidebar_size.tick(dt, ctx) { changed = true; }
+                        if self.slider_r.tick(dt, ctx) { changed = true; }
+                        if self.slider_g.tick(dt, ctx) { changed = true; }
+                        if self.slider_b.tick(dt, ctx) { changed = true; }
+                    } else if is_vector {
+                        if self.sidebar_x.tick(dt, ctx) { changed = true; }
+                        if self.sidebar_y.tick(dt, ctx) { changed = true; }
+                        if self.sidebar_w.tick(dt, ctx) { changed = true; }
+                        if self.sidebar_h.tick(dt, ctx) { changed = true; }
+                        if self.sidebar_size.tick(dt, ctx) { changed = true; }
+                        if self.dropdown_line_cap.tick(dt, ctx) { changed = true; }
+                        if self.slider_r.tick(dt, ctx) { changed = true; }
+                        if self.slider_g.tick(dt, ctx) { changed = true; }
+                        if self.slider_b.tick(dt, ctx) { changed = true; }
+                    } else {
+                        if self.sidebar_x.tick(dt, ctx) { changed = true; }
+                        if self.sidebar_y.tick(dt, ctx) { changed = true; }
+                        if self.sidebar_w.tick(dt, ctx) { changed = true; }
+                        if self.sidebar_h.tick(dt, ctx) { changed = true; }
+                        if self.slider_r.tick(dt, ctx) { changed = true; }
+                        if self.slider_g.tick(dt, ctx) { changed = true; }
+                        if self.slider_b.tick(dt, ctx) { changed = true; }
+                    }
+                } else {
+                    if self.label_sel_status.tick(dt, ctx) { changed = true; }
+                    if self.label_sel_desc1.tick(dt, ctx) { changed = true; }
+                    if self.label_sel_desc2.tick(dt, ctx) { changed = true; }
+                }
+            }
+            3 => {
+                if self.btn_add_text.tick(dt, ctx) { changed = true; }
+                if self.btn_add_rect.tick(dt, ctx) { changed = true; }
+                if self.btn_add_banner.tick(dt, ctx) { changed = true; }
+                if self.btn_add_vector.tick(dt, ctx) { changed = true; }
+                if self.label_total_elements.tick(dt, ctx) { changed = true; }
+            }
+            4 => {
+                if self.toggle_grid.tick(dt, ctx) { changed = true; }
+                if self.grid_color_selector.tick(dt, ctx) { changed = true; }
+                if self.spinbox_grid_size.tick(dt, ctx) { changed = true; }
+                if self.label_grid_snap.tick(dt, ctx) { changed = true; }
+                if self.slider_zoom.tick(dt, ctx) { changed = true; }
+                if self.toggle_rulers.tick(dt, ctx) { changed = true; }
+                if self.dropdown_units.tick(dt, ctx) { changed = true; }
+                if self.margin_color_selector.tick(dt, ctx) { changed = true; }
+                if self.spinbox_margin_thickness.tick(dt, ctx) { changed = true; }
+                if self.dropdown_grid_units.tick(dt, ctx) { changed = true; }
+            }
+            5 => {
+                for btn in &mut self.layer_buttons {
+                    if btn.tick(dt, ctx) { changed = true; }
+                }
+            }
+            _ => {}
+        }
+        changed
     }
 }
 
@@ -2092,6 +2836,7 @@ impl Application for LayoutApp {
             sidebar_quads: Vec::new(),
             current_file_path: None,
             layer_buttons: Vec::new(),
+            ui_context: clear_ui::context::UiContext::new(),
             last_saved_document: LayoutDocument {
                 page_w,
                 page_h,
@@ -2295,21 +3040,15 @@ impl Application for LayoutApp {
     }
 
     fn tick(&mut self, dt: f32, needs_rebuild: &mut bool) {
-        if self.paginator.tick(dt) {
+        if self.paginator.tick(dt, &mut self.ui_context) {
             *needs_rebuild = true;
             self.needs_rebuild = true;
         }
-        let mut widget_rebuild = false;
-        for w in self.active_page_widgets() {
-            if w.tick(dt) {
-                widget_rebuild = true;
-            }
-        }
-        if widget_rebuild {
+        if self.active_page_widgets_tick(dt) {
             *needs_rebuild = true;
             self.needs_rebuild = true;
         }
-        let _ = self.page_color_selector.tick(dt);
+        let _ = self.page_color_selector.tick(dt, &mut self.ui_context);
         let r = self.page_color_selector.color[0] as f32 / 255.0;
         let g = self.page_color_selector.color[1] as f32 / 255.0;
         let b = self.page_color_selector.color[2] as f32 / 255.0;
@@ -2336,7 +3075,7 @@ impl Application for LayoutApp {
             self.needs_rebuild = true;
         }
 
-        let _ = self.grid_color_selector.tick(dt);
+        let _ = self.grid_color_selector.tick(dt, &mut self.ui_context);
         let gr = self.grid_color_selector.color[0] as f32 / 255.0;
         let gg = self.grid_color_selector.color[1] as f32 / 255.0;
         let gb = self.grid_color_selector.color[2] as f32 / 255.0;
@@ -2358,7 +3097,7 @@ impl Application for LayoutApp {
             self.needs_rebuild = true;
         }
 
-        let _ = self.margin_color_selector.tick(dt);
+        let _ = self.margin_color_selector.tick(dt, &mut self.ui_context);
         let mr = self.margin_color_selector.color[0] as f32 / 255.0;
         let mg = self.margin_color_selector.color[1] as f32 / 255.0;
         let mb = self.margin_color_selector.color[2] as f32 / 255.0;
@@ -2701,7 +3440,7 @@ impl Application for LayoutApp {
 
         // Render Paginator Sidebar (includes backgrounds and active tab sliding container)
         quads.extend(self.paginator.extra_quads());
-        if let Some(hq) = self.paginator.highlight_quad() {
+        if let Some(hq) = self.paginator.highlight_quad(&self.ui_context) {
             quads.push(hq);
         }
         quads.extend(self.sidebar_quads.iter().cloned());
@@ -2743,19 +3482,15 @@ impl Application for LayoutApp {
 
         let sidebar_w = 280.0;
         if px < sidebar_w {
-            if self.paginator.cursor_moved(px, py) { changed = true; }
-            for w in self.active_page_widgets() {
-                if w.cursor_moved(px, py) { changed = true; }
-            }
+            if self.paginator.cursor_moved(px, py, &mut self.ui_context) { changed = true; }
+            if self.active_page_widgets_cursor_moved(px, py) { changed = true; }
             if self.paginator.selected_page() == 2 && changed {
                 self.apply_sidebar_changes();
             }
         } else {
             // Clear hover state on sidebar widgets if mouse moves to canvas
-            if self.paginator.cursor_moved(px, py) { changed = true; }
-            for w in self.active_page_widgets() {
-                if w.cursor_moved(px, py) { changed = true; }
-            }
+            if self.paginator.cursor_moved(px, py, &mut self.ui_context) { changed = true; }
+            if self.active_page_widgets_cursor_moved(px, py) { changed = true; }
 
             // Compute centering coordinates for canvas elements
             let canvas_w = self.width as f32 - 280.0;
@@ -2770,7 +3505,7 @@ impl Application for LayoutApp {
             let cy = (py - page_y) / zoom;
 
             if self.word_processor_enabled {
-                if self.wp_text_box.on_cursor_moved(px, py) {
+                if self.wp_text_box.on_cursor_moved(px, py, &mut self.ui_context) {
                     changed = true;
                 }
             } else if let Some((idx, ox, oy)) = self.dragging {
@@ -2821,49 +3556,23 @@ impl Application for LayoutApp {
         let sidebar_w = 280.0;
         if px < sidebar_w {
             let old_page = self.paginator.selected_page();
-            let pag_mouse = self.paginator.mouse_input(button, state, px, py);
+            let pag_mouse = self.paginator.mouse_input(button, state, px, py, &mut self.ui_context);
             if pag_mouse {
                 changed = true;
                 if self.paginator.take_click() {
                     let new_page = self.paginator.selected_page();
                     self.paginator.set_selected_page(old_page);
-                    for w in self.active_page_widgets() {
-                        w.unfocus();
-                    }
+                    self.active_page_widgets_unfocus();
                     self.apply_sidebar_changes();
                     self.paginator.set_selected_page(new_page);
                 }
             } else {
                 if state == ElementState::Pressed {
-                    let mut hit_any = false;
-                    let mut widgets = self.active_page_widgets();
-                    let mut focus_idx = None;
-                    for (idx, w) in widgets.iter().enumerate() {
-                        if w.hit_test(px, py) {
-                            focus_idx = Some(idx);
-                            hit_any = true;
-                            break;
-                        }
-                    }
-                    if hit_any {
-                        for (idx, w) in widgets.iter_mut().enumerate() {
-                            if Some(idx) == focus_idx {
-                                w.focus();
-                            } else {
-                                w.unfocus();
-                            }
-                        }
-                    } else {
-                        for w in widgets.iter_mut() {
-                            w.unfocus();
-                        }
-                    }
+                    self.active_page_widgets_focus_handle(px, py);
                 }
 
-                for w in self.active_page_widgets() {
-                    if w.mouse_input(button, state, px, py) {
-                        changed = true;
-                    }
+                if self.active_page_widgets_mouse_input(button, state, px, py) {
+                    changed = true;
                 }
 
                 if self.paginator.selected_page() == 2 {
@@ -2965,7 +3674,7 @@ impl Application for LayoutApp {
             let cy = (py - page_y) / zoom;
 
             if self.word_processor_enabled {
-                if self.wp_text_box.mouse_input(button, state, px, py) {
+                if self.wp_text_box.mouse_input(button, state, px, py, &mut self.ui_context) {
                     changed = true;
                 } else if state == ElementState::Pressed {
                     self.wp_text_box.unfocus();
@@ -3034,12 +3743,10 @@ impl Application for LayoutApp {
         let py = pos.y as f32;
         if px < 280.0 {
             let mut wheel_handled = false;
-            for w in self.active_page_widgets() {
-                if w.mouse_wheel(delta, px, py) {
-                    wheel_handled = true;
-                }
+            if self.active_page_widgets_mouse_wheel(delta, px, py) {
+                wheel_handled = true;
             }
-            if self.paginator.mouse_wheel(delta, px, py) {
+            if self.paginator.mouse_wheel(delta, px, py, &mut self.ui_context) {
                 wheel_handled = true;
             }
             if wheel_handled {
@@ -3075,20 +3782,16 @@ impl Application for LayoutApp {
         let mut handled = false;
         
         if self.word_processor_enabled {
-            if self.wp_text_box.keyboard_input(event) {
+            if self.wp_text_box.keyboard_input(event, &mut self.ui_context) {
                 handled = true;
             }
         }
 
-        for w in self.active_page_widgets() {
-            if w.focused() {
-                if w.keyboard_input(event) {
-                    handled = true;
-                }
-            }
+        if self.active_page_widgets_keyboard_input(event) {
+            handled = true;
         }
 
-        if self.paginator.keyboard_input(event) {
+        if self.paginator.keyboard_input(event, &mut self.ui_context) {
             handled = true;
             let active_page = self.paginator.selected_page();
             if active_page == 2 {
