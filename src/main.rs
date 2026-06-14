@@ -51,12 +51,14 @@ fn make_text_buffer_with_font(
     size: f32,
     font: Option<&str>,
 ) -> Buffer {
-    let metrics = Metrics::new(size, size * 1.4);
+    let scale = clear_ui::scale::scale_factor();
+    let physical_size = size * scale;
+    let metrics = Metrics::new(physical_size, physical_size * 1.4);
     let mut buf = Buffer::new(fs, metrics);
     let mut attrs = Attrs::new();
     if let Some(font_name) = font {
         let family = match font_name {
-            "monospace" => glyphon::Family::Monospace,
+            "monospace" => glyphon::Family::Name(clear_ui::layout::get_system_monospace_font()),
             "sans-serif" => glyphon::Family::SansSerif,
             "serif" => glyphon::Family::Serif,
             _ => glyphon::Family::Name(font_name),
@@ -492,11 +494,11 @@ impl LayoutApp {
     }
 
     fn perform_save_as(&mut self) {
-        let path_opt = std::process::Command::new("/home/lsgalante/.local/bin/clear-filesystem-interface")
+        let path_opt = std::process::Command::new("/home/lsgalante/.local/bin/cce-filesystem-interface")
             .arg("--save")
             .output()
             .or_else(|_| {
-                std::process::Command::new("clear-filesystem-interface")
+                std::process::Command::new("cce-filesystem-interface")
                     .arg("--save")
                     .output()
             })
@@ -594,11 +596,11 @@ impl LayoutApp {
     }
 
     fn perform_open(&mut self) {
-        let path_opt = std::process::Command::new("/home/lsgalante/.local/bin/clear-filesystem-interface")
+        let path_opt = std::process::Command::new("/home/lsgalante/.local/bin/cce-filesystem-interface")
             .arg("--select")
             .output()
             .or_else(|_| {
-                std::process::Command::new("clear-filesystem-interface")
+                std::process::Command::new("cce-filesystem-interface")
                     .arg("--select")
                     .output()
             })
@@ -679,6 +681,7 @@ impl LayoutApp {
         let font_system = &mut self.font_system;
         let selected_page = self.paginator.selected_page();
         let word_processor_enabled = self.word_processor_enabled;
+        let scale = clear_ui::scale::scale_factor();
         
         match selected_page {
             0 => {
@@ -1145,10 +1148,11 @@ impl LayoutApp {
         if self.word_processor_enabled {
             let font_family = self.wp_text_box.font_family.clone();
             for (label, bounds) in self.wp_text_box.text_labels_with_bounds(&self.ui_context) {
-                let metrics = Metrics::new(label.font_size, label.font_size * 1.4);
+                let physical_size = label.font_size * scale;
+                let metrics = Metrics::new(physical_size, physical_size * 1.4);
                 let mut buf = Buffer::new(&mut self.font_system, metrics);
                 let family_val = match font_family.as_str() {
-                    "monospace" => glyphon::Family::Monospace,
+                    "monospace" => glyphon::Family::Name(clear_ui::layout::get_system_monospace_font()),
                     "sans-serif" => glyphon::Family::SansSerif,
                     "serif" => glyphon::Family::Serif,
                     _ => glyphon::Family::Name(&font_family),
@@ -1175,10 +1179,11 @@ impl LayoutApp {
                             (color[2] * 255.0).clamp(0.0, 255.0) as u8,
                         ];
 
-                        let metrics = Metrics::new(label_font_size, label_font_size * 1.4);
+                        let physical_size = label_font_size * scale;
+                        let metrics = Metrics::new(physical_size, physical_size * 1.4);
                         let mut buf = Buffer::new(&mut self.font_system, metrics);
                         let family_val = match font_family.as_str() {
-                            "monospace" => glyphon::Family::Monospace,
+                            "monospace" => glyphon::Family::Name(clear_ui::layout::get_system_monospace_font()),
                             "sans-serif" => glyphon::Family::SansSerif,
                             "serif" => glyphon::Family::Serif,
                             _ => glyphon::Family::Name(font_family),
@@ -1253,7 +1258,8 @@ impl LayoutApp {
         }
         
         for label in labels {
-            let metrics = Metrics::new(label.font_size, label.font_size * 1.4);
+            let physical_size = label.font_size * scale;
+            let metrics = Metrics::new(physical_size, physical_size * 1.4);
             let mut buf = Buffer::new(&mut self.font_system, metrics);
             buf.set_text(&mut self.font_system, &label.text, Attrs::new(), glyphon::Shaping::Advanced);
             buf.shape_until_scroll(&mut self.font_system, true);
