@@ -1,13 +1,13 @@
 use wayland_client::QueueHandle;
 use glyphon::{FontSystem, Buffer, Metrics, Attrs};
 use serde::{Serialize, Deserialize};
-use clear_ui::engine::{Application, EngineState, LogicalPosition, LogicalSize, WindowSettings, LineCap};
-use clear_ui::widget::{
+use cce_ui::engine::{Application, EngineState, LogicalPosition, LogicalSize, WindowSettings, LineCap};
+use cce_ui::widget::{
     MouseButton, ElementState, MouseScrollDelta, KeyEvent, TextItem, Element as UiElement,
     TextBox, Slider, TextLabel, Paginator, Button, Dropdown, Toggle, ColorSelector,
     Label, Spinbox, Key, NamedKey, ScrollingList, FontSelector
 };
-use clear_ui::layout::{RenderTarget, Section, UiFrame};
+use cce_ui::layout::{RenderTarget, Section, UiFrame};
 
 pub struct PageContent {
     pub rects: Vec<([f32; 4], f32, f32, f32, f32)>,
@@ -51,14 +51,14 @@ fn make_text_buffer_with_font(
     size: f32,
     font: Option<&str>,
 ) -> Buffer {
-    let scale = clear_ui::scale::scale_factor();
+    let scale = cce_ui::scale::scale_factor();
     let physical_size = size * scale;
     let metrics = Metrics::new(physical_size, physical_size * 1.4);
     let mut buf = Buffer::new(fs, metrics);
     let mut attrs = Attrs::new();
     if let Some(font_name) = font {
         let family = match font_name {
-            "monospace" => glyphon::Family::Name(clear_ui::layout::get_system_monospace_font()),
+            "monospace" => glyphon::Family::Name(cce_ui::layout::get_system_monospace_font()),
             "sans-serif" => glyphon::Family::SansSerif,
             "serif" => glyphon::Family::Serif,
             _ => glyphon::Family::Name(font_name),
@@ -360,7 +360,7 @@ struct LayoutApp {
     pan_x: f32,
     pan_y: f32,
     sidebar_quads: Vec<(f32, f32, f32, f32, [f32; 4])>,
-    ui_context: clear_ui::context::UiContext,
+    ui_context: cce_ui::context::UiContext,
 }
 
 fn get_monitor_ppi() -> f32 {
@@ -681,7 +681,7 @@ impl LayoutApp {
         let font_system = &mut self.font_system;
         let selected_page = self.paginator.selected_page();
         let word_processor_enabled = self.word_processor_enabled;
-        let scale = clear_ui::scale::scale_factor();
+        let scale = cce_ui::scale::scale_factor();
         
         match selected_page {
             0 => {
@@ -821,7 +821,7 @@ impl LayoutApp {
 
                 for (idx, btn) in self.recent_files_buttons.iter_mut().enumerate() {
                     if let Some(draw_y) = self.recent_files_list.get_item_draw_y(idx, 0.0) {
-                        clear_ui::layout::render_widget(&mut pc, btn, inner_x, draw_y, inner_w, btn_h, &mut self.ui_context);
+                        cce_ui::layout::render_widget(&mut pc, btn, inner_x, draw_y, inner_w, btn_h, &mut self.ui_context);
                     } else {
                         btn.set_rect(-9999.0, -9999.0, 0.0, 0.0);
                     }
@@ -1152,7 +1152,7 @@ impl LayoutApp {
                 let metrics = Metrics::new(physical_size, physical_size * 1.4);
                 let mut buf = Buffer::new(&mut self.font_system, metrics);
                 let family_val = match font_family.as_str() {
-                    "monospace" => glyphon::Family::Name(clear_ui::layout::get_system_monospace_font()),
+                    "monospace" => glyphon::Family::Name(cce_ui::layout::get_system_monospace_font()),
                     "sans-serif" => glyphon::Family::SansSerif,
                     "serif" => glyphon::Family::Serif,
                     _ => glyphon::Family::Name(&font_family),
@@ -1183,7 +1183,7 @@ impl LayoutApp {
                         let metrics = Metrics::new(physical_size, physical_size * 1.4);
                         let mut buf = Buffer::new(&mut self.font_system, metrics);
                         let family_val = match font_family.as_str() {
-                            "monospace" => glyphon::Family::Name(clear_ui::layout::get_system_monospace_font()),
+                            "monospace" => glyphon::Family::Name(cce_ui::layout::get_system_monospace_font()),
                             "sans-serif" => glyphon::Family::SansSerif,
                             "serif" => glyphon::Family::Serif,
                             _ => glyphon::Family::Name(font_family),
@@ -2520,7 +2520,7 @@ impl Application for LayoutApp {
     type Message = AppMessage;
 
     fn new(_qh: &QueueHandle<EngineState<Self>>, _sender: calloop::channel::Sender<Self::Message>) -> Self {
-        clear_ui::scale::set_scale_factor(1.0);
+        cce_ui::scale::set_scale_factor(1.0);
         let btn_new_doc = Button::new(0.0, 0.0, 240.0, 26.0).with_label("New Document");
         let btn_open = Button::new(0.0, 0.0, 240.0, 26.0).with_label("Open");
         let btn_save = Button::new(0.0, 0.0, 240.0, 26.0).with_label("Save");
@@ -2842,7 +2842,7 @@ impl Application for LayoutApp {
             sidebar_quads: Vec::new(),
             current_file_path: None,
             layer_buttons: Vec::new(),
-            ui_context: clear_ui::context::UiContext::new(),
+            ui_context: cce_ui::context::UiContext::new(),
             last_saved_document: LayoutDocument {
                 page_w,
                 page_h,
@@ -3234,7 +3234,7 @@ impl Application for LayoutApp {
             self.scale_factor = scale;
             
             // Set paginator bounds in the sidebar region
-            clear_ui::scale::set_scale_factor(scale as f32);
+            cce_ui::scale::set_scale_factor(scale as f32);
             self.paginator.set_rect(0.0, 0.0, 280.0, size.height as f32);
             
             self.rebuild_layers_tab_widgets();
@@ -3255,7 +3255,7 @@ impl Application for LayoutApp {
 
         // Dark slate canvas backdrop
         let mut canvas_bg = [0.12, 0.12, 0.15, 1.0];
-        if let Some(opacity) = clear_ui::color::read_opacity_if_configured() {
+        if let Some(opacity) = cce_ui::color::read_opacity_if_configured() {
             canvas_bg[3] = opacity;
         }
         quads.push((280.0, 0.0, canvas_w, canvas_h, canvas_bg));
@@ -3833,5 +3833,5 @@ fn main() {
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
     let _guard = rt.enter();
     
-    clear_ui::engine::run::<LayoutApp>();
+    cce_ui::engine::run::<LayoutApp>();
 }
