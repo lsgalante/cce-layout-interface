@@ -403,6 +403,7 @@ fn get_monitor_ppi() -> f32 {
     fallback_ppi
 }
 
+#[allow(dead_code)]
 fn get_system_fonts() -> Vec<String> {
     let mut fonts = Vec::new();
     if let Ok(output) = std::process::Command::new("fc-list")
