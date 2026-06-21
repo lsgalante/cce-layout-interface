@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 use cce_ui::engine::{Application, EngineState, LogicalPosition, LogicalSize, WindowSettings, LineCap};
 use cce_ui::widget::{
     MouseButton, ElementState, MouseScrollDelta, KeyEvent, TextItem, Element as UiElement,
-    TextBox, Slider, TextLabel, MenuBar, Button, Dropdown, Toggle, ColorSelector,
+    TextBox, Slider, TextLabel, Paginator, Button, Dropdown, Toggle, ColorSelector,
     Label, Spinbox, Key, NamedKey, ScrollingList, FontSelector, PageSelector, MenuController
 };
 use cce_ui::layout::{RenderTarget, Section, UiFrame};
@@ -278,7 +278,7 @@ struct LayoutApp {
     btn_exit: Button,
     btn_save: Button,
     btn_save_as: Button,
-    paginator: MenuBar,
+    paginator: Paginator,
     layer_buttons: Vec<Box<Button>>,
     elements: Vec<Element>,
     selected_idx: Option<usize>,
@@ -2528,17 +2528,14 @@ impl Application for LayoutApp {
         let btn_save_as = Button::new(0.0, 0.0, 240.0, 26.0).with_label("Save As");
         let btn_exit = Button::new(0.0, 0.0, 240.0, 26.0).with_label("Exit Application");
 
-        let mut paginator = MenuBar::new(0.0, 0.0, 56.0, 0.0)
-            .with_vertical(true)
-            .with_title("LAYOUT");
-        paginator.set_pages(vec![
+        let paginator = Paginator::new(56.0, vec![
             "File".to_string(),
             "Page".to_string(),
             "Element".to_string(),
             "Canvas".to_string(),
             "Guides".to_string(),
             "Layers".to_string(),
-        ]);
+        ]).with_title("LAYOUT");
 
         // Default paper sheet sizing (Letter)
         let page_w = 510.0;
