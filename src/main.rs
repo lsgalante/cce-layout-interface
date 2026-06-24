@@ -2520,6 +2520,10 @@ impl LayoutApp {
 impl Application for LayoutApp {
     type Message = AppMessage;
 
+    fn ui_context(&self) -> Option<&cce_ui::context::UiContext> {
+        Some(&self.ui_context)
+    }
+
     fn new(_qh: &QueueHandle<EngineState<Self>>, _sender: calloop::channel::Sender<Self::Message>) -> Self {
         cce_ui::scale::set_scale_factor(1.0);
         let btn_new_doc = Button::new(0.0, 0.0, 240.0, 26.0).with_label("New Document");
@@ -2528,7 +2532,7 @@ impl Application for LayoutApp {
         let btn_save_as = Button::new(0.0, 0.0, 240.0, 26.0).with_label("Save As");
         let btn_exit = Button::new(0.0, 0.0, 240.0, 26.0).with_label("Exit Application");
 
-        let paginator = Paginator::new(56.0, vec![
+        let paginator = Paginator::new(vec![
             "File".to_string(),
             "Page".to_string(),
             "Element".to_string(),
