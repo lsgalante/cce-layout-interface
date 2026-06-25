@@ -520,9 +520,9 @@ impl LayoutApp {
 
         if let Some(path) = path_opt {
             if let Err(e) = self.save_document(&path) {
-                eprintln!("ERROR: Failed to save document: {}", e);
+                log::error!("Failed to save document: {}", e);
             } else {
-                println!("DEBUG: Successfully saved layout to {:?}", path);
+                log::info!("Successfully saved layout to {:?}", path);
                 self.current_file_path = Some(path.clone());
                 self.last_saved_document = self.get_current_document();
                 self.add_recent_file(path);
@@ -626,9 +626,9 @@ impl LayoutApp {
             self.pan_x = 0.0;
             self.pan_y = 0.0;
             if let Err(e) = self.load_document(&path) {
-                eprintln!("ERROR: Failed to load document: {}", e);
+                log::error!("Failed to load document: {}", e);
             } else {
-                println!("DEBUG: Successfully loaded layout from {:?}", path);
+                log::info!("Successfully loaded layout from {:?}", path);
                 self.current_file_path = Some(path.clone());
                 self.last_saved_document = self.get_current_document();
                 self.add_recent_file(path);
@@ -2903,9 +2903,9 @@ impl Application for LayoutApp {
             AppMessage::Save => {
                 if let Some(ref path) = self.current_file_path {
                     if let Err(e) = self.save_document(path) {
-                        eprintln!("ERROR: Failed to save document: {}", e);
+                        log::error!("Failed to save document: {}", e);
                     } else {
-                        println!("DEBUG: Successfully saved layout to {:?}", path);
+                        log::info!("Successfully saved layout to {:?}", path);
                         self.last_saved_document = self.get_current_document();
                         self.add_recent_file(path.clone());
                     }
@@ -3604,9 +3604,9 @@ impl Application for LayoutApp {
                             self.pan_x = 0.0;
                             self.pan_y = 0.0;
                             if let Err(e) = self.load_document(&path) {
-                                eprintln!("ERROR: Failed to load document: {}", e);
+                                log::error!("Failed to load document: {}", e);
                             } else {
-                                println!("DEBUG: Successfully loaded layout from {:?}", path);
+                                log::info!("Successfully loaded layout from {:?}", path);
                                 self.current_file_path = Some(path.clone());
                                 self.last_saved_document = self.get_current_document();
                                 self.add_recent_file(path);
@@ -3828,6 +3828,10 @@ impl Application for LayoutApp {
 }
 
 fn main() {
+    env_logger::Builder::from_default_env()
+        .filter_level(log::LevelFilter::Info)
+        .init();
+
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
     let _guard = rt.enter();
     
