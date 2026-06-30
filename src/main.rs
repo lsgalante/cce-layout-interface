@@ -439,7 +439,8 @@ impl LayoutApp {
         std::env::var("HOME").ok().map(|h| {
             let mut path = std::path::PathBuf::from(h);
             path.push(".config");
-            path.push("clear-layout-interface");
+            path.push("cce");
+            path.push("cce-layout-interface");
             path.push("recent_files.json");
             path
         })
@@ -495,11 +496,11 @@ impl LayoutApp {
     }
 
     fn perform_save_as(&mut self) {
-        let path_opt = std::process::Command::new("/home/lsgalante/.local/bin/cce-filesystem-interface")
+        let path_opt = std::process::Command::new("/home/lsgalante/.local/bin/cce-files")
             .arg("--save")
             .output()
             .or_else(|_| {
-                std::process::Command::new("cce-filesystem-interface")
+                std::process::Command::new("cce-files")
                     .arg("--save")
                     .output()
             })
@@ -597,11 +598,11 @@ impl LayoutApp {
     }
 
     fn perform_open(&mut self) {
-        let path_opt = std::process::Command::new("/home/lsgalante/.local/bin/cce-filesystem-interface")
+        let path_opt = std::process::Command::new("/home/lsgalante/.local/bin/cce-files")
             .arg("--select")
             .output()
             .or_else(|_| {
-                std::process::Command::new("cce-filesystem-interface")
+                std::process::Command::new("cce-files")
                     .arg("--select")
                     .output()
             })
@@ -2887,7 +2888,7 @@ impl Application for LayoutApp {
         };
         WindowSettings {
             title: format!("Clear Layout Interface - {}{}", filename, unsaved_suffix),
-            app_id: "clear-layout-interface".to_string(),
+            app_id: "cce-layout-interface".to_string(),
             width: 1024,
             height: 768,
             fullscreen: false,

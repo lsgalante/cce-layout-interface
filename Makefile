@@ -5,7 +5,7 @@ build:
 
 install: build
 	mkdir -p ~/.local/bin
-	install -m 755 ../target/release/clear-layout-interface ~/.local/bin/clear-layout-interface
+	install -m 755 ../target/release/cce-layout-interface ~/.local/bin/cce-layout-interface
 
 run:
 	cargo run
