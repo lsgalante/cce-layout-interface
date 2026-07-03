@@ -5,7 +5,7 @@ use cce_ui::engine::{Application, EngineState, LogicalPosition, LogicalSize, Win
 use cce_ui::widget::{
     MouseButton, ElementState, MouseScrollDelta, KeyEvent, TextItem, Element as UiElement,
     TextBox, Slider, TextLabel, Paginator, Button, Dropdown, Toggle, ColorSelector,
-    Label, Spinbox, Key, NamedKey, ScrollingList, FontSelector, PageSelector, MenuController
+    Label, Spinbox, Key, NamedKey, List, FontSelector, PageSelector, MenuController
 };
 use cce_ui::layout::{RenderTarget, Section, UiFrame};
 
@@ -273,7 +273,7 @@ struct LayoutApp {
     btn_new_doc: Button,
     btn_open: Button,
     recent_files: Vec<std::path::PathBuf>,
-    recent_files_list: ScrollingList,
+    recent_files_list: List,
     recent_files_buttons: Vec<Button>,
     btn_exit: Button,
     btn_save: Button,
@@ -2747,7 +2747,7 @@ impl Application for LayoutApp {
         label_total_elements.set_rect(0.0, 0.0, 240.0, 18.0);
 
         let recent_files = Self::load_recent_files();
-        let recent_files_list = ScrollingList::new(22.0, 2.0);
+        let recent_files_list = List::new(22.0, 2.0);
         let mut recent_files_buttons = Vec::new();
         for file in &recent_files {
             let label = file.file_name()
