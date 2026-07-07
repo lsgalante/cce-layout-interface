@@ -2753,7 +2753,7 @@ impl Application for LayoutApp {
             height: 768,
             scale_factor: 1.0,
             text_items: Vec::new(),
-            font_system: FontSystem::new(),
+            font_system: cce_ui::create_font_system_with_system_fonts(),
             needs_rebuild: true,
             
             dropdown_presets,
