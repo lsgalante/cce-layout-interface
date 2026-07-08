@@ -295,14 +295,14 @@ struct LayoutApp {
 
     // Page 0: Layout properties controls
     dropdown_presets: Dropdown,
-    slider_page_x: Slider,
-    slider_page_y: Slider,
+    slider_page_x: cce_ui::widget::Adapted<cce_ui::widget::Slider>,
+    slider_page_y: cce_ui::widget::Adapted<cce_ui::widget::Slider>,
     page_color_selector: ColorSelector,
     page_color: [f32; 4],
     toggle_margin: cce_ui::widget::Adapted<Toggle>,
     dropdown_margin_units: Dropdown,
-    slider_margin_x: Slider,
-    slider_margin_y: Slider,
+    slider_margin_x: cce_ui::widget::Adapted<cce_ui::widget::Slider>,
+    slider_margin_y: cce_ui::widget::Adapted<cce_ui::widget::Slider>,
     margin_enabled: bool,
     margin_x: f32,
     margin_y: f32,
@@ -324,10 +324,10 @@ struct LayoutApp {
     dropdown_line_cap: Dropdown,
     wp_base_font_size: f32,
     
-    slider_r: Slider,
-    slider_g: Slider,
-    slider_b: Slider,
-    slider_zoom: Slider,
+    slider_r: cce_ui::widget::Adapted<cce_ui::widget::Slider>,
+    slider_g: cce_ui::widget::Adapted<cce_ui::widget::Slider>,
+    slider_b: cce_ui::widget::Adapted<cce_ui::widget::Slider>,
+    slider_zoom: cce_ui::widget::Adapted<cce_ui::widget::Slider>,
     
     // Page 1: Canvas settings controls
     toggle_grid: cce_ui::widget::Adapted<Toggle>,
@@ -1436,9 +1436,9 @@ impl LayoutApp {
             };
             self.wp_base_font_size = size_val;
 
-            let r = (self.slider_r.value() * 255.0).clamp(0.0, 255.0) as u8;
-            let g = (self.slider_g.value() * 255.0).clamp(0.0, 255.0) as u8;
-            let b = (self.slider_b.value() * 255.0).clamp(0.0, 255.0) as u8;
+            let r = (self.slider_r.inner().value() * 255.0).clamp(0.0, 255.0) as u8;
+            let g = (self.slider_g.inner().value() * 255.0).clamp(0.0, 255.0) as u8;
+            let b = (self.slider_b.inner().value() * 255.0).clamp(0.0, 255.0) as u8;
             self.wp_text_box.text_color = Some([r, g, b]);
         } else if let Some(idx) = self.selected_idx {
             let text_val = if self.sidebar_text.editing { self.sidebar_text.edit_buffer.clone() } else { self.sidebar_text.text.clone() };
@@ -1490,9 +1490,9 @@ impl LayoutApp {
                 self.sidebar_size.value as f32
             };
             
-            let r_val = self.slider_r.value();
-            let g_val = self.slider_g.value();
-            let b_val = self.slider_b.value();
+            let r_val = self.slider_r.inner().value();
+            let g_val = self.slider_g.inner().value();
+            let b_val = self.slider_b.inner().value();
 
             let mut family_str = String::new();
             if let Some(Element::Text { font_family, .. }) = self.elements.get(idx) {
@@ -1625,7 +1625,7 @@ impl LayoutApp {
             margin_thickness: self.margin_thickness,
             grid_enabled: self.grid_enabled,
             grid_units: self.dropdown_grid_units.selected,
-            zoom: self.slider_zoom.value(),
+            zoom: self.slider_zoom.inner().value(),
             rulers_enabled: self.toggle_rulers.toggled(),
             ruler_units: self.dropdown_units.selected,
         }
