@@ -348,11 +348,11 @@ struct LayoutApp {
     toggle_rulers: cce_ui::widget::Adapted<Toggle>,
     dropdown_units: Dropdown,
 
-    label_sel_status: Label,
-    label_sel_desc1: Label,
-    label_sel_desc2: Label,
+    label_sel_status: cce_ui::widget::Adapted<cce_ui::widget::Label>,
+    label_sel_desc1: cce_ui::widget::Adapted<cce_ui::widget::Label>,
+    label_sel_desc2: cce_ui::widget::Adapted<cce_ui::widget::Label>,
     label_grid_snap: cce_ui::widget::Adapted<Toggle>,
-    label_total_elements: Label,
+    label_total_elements: cce_ui::widget::Adapted<cce_ui::widget::Label>,
 
     last_selected: Option<usize>,
     page_w: f32,
