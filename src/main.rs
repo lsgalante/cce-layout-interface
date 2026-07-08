@@ -270,16 +270,16 @@ const PRESETS: &[PagePreset] = &[
 ];
 
 struct LayoutApp {
-    btn_new_doc: Button,
-    btn_open: Button,
+    btn_new_doc: cce_ui::widget::Adapted<cce_ui::widget::Button>,
+    btn_open: cce_ui::widget::Adapted<cce_ui::widget::Button>,
     recent_files: Vec<std::path::PathBuf>,
     recent_files_list: List,
-    recent_files_buttons: Vec<Button>,
-    btn_exit: Button,
-    btn_save: Button,
-    btn_save_as: Button,
+    recent_files_buttons: Vec<cce_ui::widget::Adapted<cce_ui::widget::Button>>,
+    btn_exit: cce_ui::widget::Adapted<cce_ui::widget::Button>,
+    btn_save: cce_ui::widget::Adapted<cce_ui::widget::Button>,
+    btn_save_as: cce_ui::widget::Adapted<cce_ui::widget::Button>,
     paginator: Paginator,
-    layer_buttons: Vec<Box<Button>>,
+    layer_buttons: Vec<Box<cce_ui::widget::Adapted<cce_ui::widget::Button>>>,
     elements: Vec<Element>,
     selected_idx: Option<usize>,
     dragging: Option<(usize, f32, f32)>, // Index, offset_x, offset_y
@@ -340,10 +340,10 @@ struct LayoutApp {
     margin_color: [f32; 4],
     spinbox_margin_thickness: Spinbox,
     margin_thickness: f32,
-    btn_add_text: Button,
-    btn_add_rect: Button,
-    btn_add_banner: Button,
-    btn_add_vector: Button,
+    btn_add_text: cce_ui::widget::Adapted<cce_ui::widget::Button>,
+    btn_add_rect: cce_ui::widget::Adapted<cce_ui::widget::Button>,
+    btn_add_banner: cce_ui::widget::Adapted<cce_ui::widget::Button>,
+    btn_add_vector: cce_ui::widget::Adapted<cce_ui::widget::Button>,
 
     toggle_rulers: cce_ui::widget::Adapted<Toggle>,
     dropdown_units: Dropdown,
