@@ -278,7 +278,7 @@ struct LayoutApp {
     btn_exit: cce_ui::widget::Adapted<cce_ui::widget::Button>,
     btn_save: cce_ui::widget::Adapted<cce_ui::widget::Button>,
     btn_save_as: cce_ui::widget::Adapted<cce_ui::widget::Button>,
-    paginator: Paginator,
+    paginator: cce_ui::widget::Adapted<Paginator>,
     layer_buttons: Vec<Box<cce_ui::widget::Adapted<cce_ui::widget::Button>>>,
     elements: Vec<Element>,
     selected_idx: Option<usize>,
