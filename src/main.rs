@@ -1,9 +1,9 @@
 use wayland_client::QueueHandle;
-use glyphon::{FontSystem, Buffer, Metrics, Attrs};
+use glyphon::FontSystem;
 use serde::{Serialize, Deserialize};
 use cce_ui::engine::{Application, EngineState, LogicalPosition, LogicalSize, WindowSettings, LineCap};
 use cce_ui::widget::{
-    MouseButton, ElementState, MouseScrollDelta, KeyEvent, TextItem, Element as UiElement,
+    MouseButton, ElementState, MouseScrollDelta, KeyEvent, Element as UiElement,
     TextBox, Slider, TextLabel, Paginator, Button, Dropdown, Toggle, ColorSelector,
     Label, Spinbox, Key, NamedKey, List, FontSelector, PageSelector, MenuController
 };
@@ -45,30 +45,6 @@ impl RenderTarget for PageContent {
     }
 }
 
-fn make_text_buffer_with_font(
-    fs: &mut FontSystem,
-    text: &str,
-    size: f32,
-    font: Option<&str>,
-) -> Buffer {
-    let scale = cce_ui::scale::scale_factor();
-    let physical_size = size * scale;
-    let metrics = Metrics::new(physical_size, physical_size * 1.4);
-    let mut buf = Buffer::new(fs, metrics);
-    let mut attrs = Attrs::new();
-    if let Some(font_name) = font {
-        let family = match font_name {
-            "monospace" => glyphon::Family::Name(cce_ui::layout::get_system_monospace_font()),
-            "sans-serif" => glyphon::Family::SansSerif,
-            "serif" => glyphon::Family::Serif,
-            _ => glyphon::Family::Name(font_name),
-        };
-        attrs = attrs.family(family);
-    }
-    buf.set_text(fs, text, attrs, glyphon::Shaping::Advanced);
-    buf.shape_until_scroll(fs, true);
-    buf
-}
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -289,7 +265,8 @@ struct LayoutApp {
     last_saved_document: LayoutDocument,
     height: u32,
     scale_factor: f64,
-    text_items: Vec<TextItem>,
+    // (text, size, x, y, color_u8, font, bounds, layout) — the frame's text as prim data.
+    text_prims: Vec<(String, f32, f32, f32, [u8; 3], Option<String>, Option<[f32; 4]>, Option<cce_ui::scene::paint::TextLayout>)>,
     font_system: FontSystem,
     needs_rebuild: bool,
 
@@ -323,12 +300,12 @@ struct LayoutApp {
     dropdown_align_v: cce_ui::widget::Adapted<Dropdown>,
     dropdown_line_cap: cce_ui::widget::Adapted<Dropdown>,
     wp_base_font_size: f32,
-    
+
     slider_r: cce_ui::widget::Adapted<cce_ui::widget::Slider>,
     slider_g: cce_ui::widget::Adapted<cce_ui::widget::Slider>,
     slider_b: cce_ui::widget::Adapted<cce_ui::widget::Slider>,
     slider_zoom: cce_ui::widget::Adapted<cce_ui::widget::Slider>,
-    
+
     // Page 1: Canvas settings controls
     toggle_grid: cce_ui::widget::Adapted<Toggle>,
     grid_color_selector: ColorSelector,
@@ -512,7 +489,7 @@ impl LayoutApp {
     fn load_document(&mut self, path: &std::path::Path) -> std::io::Result<()> {
         let file = std::fs::File::open(path)?;
         let doc: LayoutDocument = serde_json::from_reader(file)?;
-        
+
         self.page_w = doc.page_w;
         self.page_h = doc.page_h;
         self.page_color = doc.page_color;
@@ -526,7 +503,7 @@ impl LayoutApp {
 
         self.toggle_margin.set_toggled(self.margin_enabled);
         self.toggle_word_processor.set_toggled(self.word_processor_enabled);
-        
+
         let r = (self.page_color[0] * 255.0).clamp(0.0, 255.0) as u8;
         let g = (self.page_color[1] * 255.0).clamp(0.0, 255.0) as u8;
         let b = (self.page_color[2] * 255.0).clamp(0.0, 255.0) as u8;
@@ -661,8 +638,8 @@ impl LayoutApp {
         let font_system = &mut self.font_system;
         let selected_page = self.paginator.selected_page();
         let word_processor_enabled = self.word_processor_enabled;
-        let scale = cce_ui::scale::scale_factor();
-        
+        let _ = cce_ui::scale::scale_factor();
+
         match selected_page {
             0 => {
                 self.btn_new_doc.prepare_text(font_system);
@@ -761,11 +738,11 @@ impl LayoutApp {
             }
             _ => {}
         }
-        
+
         self.wp_text_box.prepare_text(font_system);
 
         self.sidebar_quads.clear();
-        self.text_items.clear();
+        self.text_prims.clear();
 
         // 1. Populate sidebar page views into PageContent
         let mut pc = PageContent::new();
@@ -784,7 +761,7 @@ impl LayoutApp {
                 sec.spacing(12.0);
                 sec.widget(&mut pc, &mut self.btn_open, 12.0, col_w, 26.0, &mut self.ui_context);
                 sec.spacing(12.0);
-                
+
                 sec.text(&mut pc, "Recent Files", 12.0, 0.0, 11.0, [0.83, 0.83, 0.83, 1.0]);
                 sec.spacing(16.0);
 
@@ -1016,19 +993,14 @@ impl LayoutApp {
             self.sidebar_quads.push((x, y, w, h, c));
         }
 
-        // Convert pc.texts to glyphon text items
+        // Sidebar widget text as prims (shaped by the engine at render).
         for (text, size, x, y, color, font, bounds) in pc.texts {
-            self.text_items.push(TextItem {
-                buffer: make_text_buffer_with_font(&mut self.font_system, &text, size, font.as_deref()),
-                x,
-                y,
-                color: glyphon::Color::rgb(
-                    (color[0] * 255.0).clamp(0.0, 255.0) as u8,
-                    (color[1] * 255.0).clamp(0.0, 255.0) as u8,
-                    (color[2] * 255.0).clamp(0.0, 255.0) as u8,
-                ),
-                bounds,
-            });
+            let c = [
+                (color[0] * 255.0).clamp(0.0, 255.0) as u8,
+                (color[1] * 255.0).clamp(0.0, 255.0) as u8,
+                (color[2] * 255.0).clamp(0.0, 255.0) as u8,
+            ];
+            self.text_prims.push((text, size, x, y, c, font, bounds, None));
         }
 
         if let Some(idx) = self.selected_idx {
@@ -1069,14 +1041,10 @@ impl LayoutApp {
         let page_h = self.page_h * zoom;
         let page_x = 280.0 + (canvas_w - page_w) / 2.0 + self.pan_x;
         let page_y = (canvas_h - page_h) / 2.0 + self.pan_y;
-        
+
         // 2. Paginator sidebar tabs
         labels.extend(self.paginator.text_labels());
-        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open("/tmp/layout_labels_debug.txt") {
-            use std::io::Write;
-            let _ = writeln!(file, "rebuild_text_items: labels={:?}", labels.iter().map(|l| &l.text).collect::<Vec<_>>());
-        }
-        
+
         if self.toggle_rulers.toggled() {
             let unit_idx = self.dropdown_units.selected;
             let (px_per_unit, tick_step, label_step, precision) = match unit_idx {
@@ -1128,25 +1096,7 @@ impl LayoutApp {
         if self.word_processor_enabled {
             let font_family = self.wp_text_box.font_family.clone();
             for (label, bounds) in self.wp_text_box.text_labels_with_bounds(&self.ui_context) {
-                let physical_size = label.font_size * scale;
-                let metrics = Metrics::new(physical_size, physical_size * 1.4);
-                let mut buf = Buffer::new(&mut self.font_system, metrics);
-                let family_val = match font_family.as_str() {
-                    "monospace" => glyphon::Family::Name(cce_ui::layout::get_system_monospace_font()),
-                    "sans-serif" => glyphon::Family::SansSerif,
-                    "serif" => glyphon::Family::Serif,
-                    _ => glyphon::Family::Name(&font_family),
-                };
-                let attrs = Attrs::new().family(family_val);
-                buf.set_text(&mut self.font_system, &label.text, attrs, glyphon::Shaping::Advanced);
-                buf.shape_until_scroll(&mut self.font_system, true);
-                self.text_items.push(TextItem {
-                    buffer: buf,
-                    x: label.x,
-                    y: label.y,
-                    color: glyphon::Color::rgb(label.color[0], label.color[1], label.color[2]),
-                    bounds,
-                });
+                self.text_prims.push((label.text, label.font_size, label.x, label.y, label.color, Some(font_family.clone()), bounds, None));
             }
         } else {
             for (idx, element) in self.elements.iter().enumerate() {
@@ -1159,57 +1109,31 @@ impl LayoutApp {
                             (color[2] * 255.0).clamp(0.0, 255.0) as u8,
                         ];
 
-                        let physical_size = label_font_size * scale;
-                        let metrics = Metrics::new(physical_size, physical_size * 1.4);
-                        let mut buf = Buffer::new(&mut self.font_system, metrics);
-                        let family_val = match font_family.as_str() {
-                            "monospace" => glyphon::Family::Name(cce_ui::layout::get_system_monospace_font()),
-                            "sans-serif" => glyphon::Family::SansSerif,
-                            "serif" => glyphon::Family::Serif,
-                            _ => glyphon::Family::Name(font_family),
-                        };
-                        let attrs = Attrs::new().family(family_val);
-                        buf.set_text(&mut self.font_system, text, attrs, glyphon::Shaping::Advanced);
-                        
+                        // Boxed canvas text: the engine shapes it uncached with wrap +
+                        // alignment (Phase 6aj / boxed-text prims) and applies the vertical
+                        // offset from the shaped height.
                         let text_w = (*w * zoom - 16.0 * zoom).max(0.0);
                         let text_h = (*h * zoom - 12.0 * zoom).max(0.0);
-                        let text_w_opt = if *multiline { Some(text_w) } else { None };
-                        buf.set_size(&mut self.font_system, text_w_opt, Some(text_h));
-                        
-                        let align_val = match align_h {
-                            TextAlignH::Left => glyphon::cosmic_text::Align::Left,
-                            TextAlignH::Center => glyphon::cosmic_text::Align::Center,
-                            TextAlignH::Right => glyphon::cosmic_text::Align::Right,
+                        let wrap = if *multiline { Some(text_w) } else { None };
+                        let l_align_h = match align_h {
+                            TextAlignH::Left => cce_ui::scene::paint::AlignH::Left,
+                            TextAlignH::Center => cce_ui::scene::paint::AlignH::Center,
+                            TextAlignH::Right => cce_ui::scene::paint::AlignH::Right,
                         };
-                        for line in &mut buf.lines {
-                            line.set_align(Some(align_val));
-                        }
-                        
-                        buf.shape_until_scroll(&mut self.font_system, true);
-
-                        // Calculate vertical alignment offset
-                        let mut layout_runs_count = 0;
-                        for _ in buf.layout_runs() {
-                            layout_runs_count += 1;
-                        }
-                        let line_height = label_font_size * 1.4;
-                        let total_text_height = layout_runs_count as f32 * line_height;
-                        let vertical_offset = match align_v {
-                            TextAlignV::Middle => ((text_h - total_text_height) / 2.0).max(0.0),
-                            TextAlignV::Bottom => (text_h - total_text_height).max(0.0),
-                            TextAlignV::Top => 0.0,
+                        let l_align_v = match align_v {
+                            TextAlignV::Top => cce_ui::scene::paint::AlignV::Top,
+                            TextAlignV::Middle => cce_ui::scene::paint::AlignV::Middle,
+                            TextAlignV::Bottom => cce_ui::scene::paint::AlignV::Bottom,
                         };
-
+                        let tl = cce_ui::scene::paint::TextLayout {
+                            wrap_width: wrap,
+                            box_height: text_h,
+                            align_h: l_align_h,
+                            align_v: l_align_v,
+                        };
                         let label_x = page_x + *x * zoom + 8.0 * zoom;
-                        let label_y = page_y + *y * zoom + 6.0 * zoom + vertical_offset;
-
-                        self.text_items.push(TextItem {
-                            buffer: buf,
-                            x: label_x,
-                            y: label_y,
-                            color: glyphon::Color::rgb(label_color[0], label_color[1], label_color[2]),
-                            bounds: None,
-                        });
+                        let label_y = page_y + *y * zoom + 6.0 * zoom;
+                        self.text_prims.push((text.clone(), label_font_size, label_x, label_y, label_color, Some(font_family.clone()), None, Some(tl)));
                     }
                     Element::Shape { shape_type, x, y, w: _, h: _, color: _ } => {
                         let type_str = match shape_type {
@@ -1236,20 +1160,9 @@ impl LayoutApp {
                 }
             }
         }
-        
+
         for label in labels {
-            let physical_size = label.font_size * scale;
-            let metrics = Metrics::new(physical_size, physical_size * 1.4);
-            let mut buf = Buffer::new(&mut self.font_system, metrics);
-            buf.set_text(&mut self.font_system, &label.text, Attrs::new(), glyphon::Shaping::Advanced);
-            buf.shape_until_scroll(&mut self.font_system, true);
-            self.text_items.push(TextItem {
-                buffer: buf,
-                x: label.x,
-                y: label.y,
-                color: glyphon::Color::rgb(label.color[0], label.color[1], label.color[2]),
-                bounds: None,
-            });
+            self.text_prims.push((label.text, label.font_size, label.x, label.y, label.color, None, None, None));
         }
     }
 
@@ -1272,7 +1185,7 @@ impl LayoutApp {
                     format!("{}. Line: ({:.0},{:.0})->({:.0},{:.0})", idx + 1, x1, y1, x2, y2)
                 }
             };
-            
+
             let mut btn = Box::new(Button::new_list_row(0.0, 0.0, 224.0, 26.0).with_label(&label));
             btn.selected = Some(idx) == self.selected_idx;
             self.layer_buttons.push(btn);
@@ -1306,7 +1219,7 @@ impl LayoutApp {
                 self.sidebar_size.unfocus();
                 self.last_selected = Some(idx);
             }
-            
+
             let element = &self.elements[idx];
             match element {
                 Element::Text { text, x, y, w, h, font_size, color, font_family, align_h, align_v, multiline } => {
@@ -1322,7 +1235,7 @@ impl LayoutApp {
                     if !self.sidebar_w.editing { self.sidebar_w.value = w.round() as i32; }
                     if !self.sidebar_h.editing { self.sidebar_h.value = h.round() as i32; }
                     if !self.sidebar_size.editing { self.sidebar_size.value = font_size.round() as i32; }
-                    
+
                     self.slider_r.set_value(color[0]);
                     self.slider_g.set_value(color[1]);
                     self.slider_b.set_value(color[2]);
@@ -1352,7 +1265,7 @@ impl LayoutApp {
                     if !self.sidebar_y.editing { self.sidebar_y.value = y.round() as i32; }
                     if !self.sidebar_w.editing { self.sidebar_w.value = w.round() as i32; }
                     if !self.sidebar_h.editing { self.sidebar_h.value = h.round() as i32; }
-                    
+
                     self.slider_r.set_value(color[0]);
                     self.slider_g.set_value(color[1]);
                     self.slider_b.set_value(color[2]);
@@ -1375,7 +1288,7 @@ impl LayoutApp {
                         LineCap::Round => 1,
                         LineCap::Flat => 2,
                     };
-                    
+
                     self.slider_r.set_value(color[0]);
                     self.slider_g.set_value(color[1]);
                     self.slider_b.set_value(color[2]);
@@ -1462,7 +1375,7 @@ impl LayoutApp {
             } else {
                 self.sidebar_h.value as f32
             };
-            
+
             let is_vector = match &self.elements[idx] {
                 Element::Vector { .. } => true,
                 _ => false,
@@ -1489,7 +1402,7 @@ impl LayoutApp {
             } else {
                 self.sidebar_size.value as f32
             };
-            
+
             let r_val = self.slider_r.inner().value();
             let g_val = self.slider_g.inner().value();
             let b_val = self.slider_b.inner().value();
@@ -1501,7 +1414,7 @@ impl LayoutApp {
             if self.font_selector.take_change() {
                 family_str = self.font_selector.font_family.clone();
             }
-            
+
             let mut page_align_h = None;
             if self.dropdown_align_h.take_change() {
                 page_align_h = Some(self.dropdown_align_h.selected);
@@ -1558,7 +1471,7 @@ impl LayoutApp {
                 final_x2 += dx;
                 final_y2 += dy;
             }
-            
+
             match &mut self.elements[idx] {
                 Element::Text { text, x, y, w, h, font_size, color, font_family, align_h, align_v, multiline } => {
                     *text = text_val;
@@ -2496,6 +2409,21 @@ impl LayoutApp {
     }
 }
 
+/// Adapts the ported view() body's `quads.push`/`.extend` calls to the single paint path.
+struct __LayoutQuadSink<'a> {
+    pc: &'a mut cce_ui::scene::paint::PaintCtx,
+}
+impl<'a> __LayoutQuadSink<'a> {
+    fn push(&mut self, q: (f32, f32, f32, f32, [f32; 4])) {
+        self.pc.quad(cce_ui::scene::layout::Rect { x: q.0, y: q.1, width: q.2, height: q.3 }, q.4);
+    }
+    fn extend<I: IntoIterator<Item = (f32, f32, f32, f32, [f32; 4])>>(&mut self, it: I) {
+        for q in it {
+            self.push(q);
+        }
+    }
+}
+
 impl Application for LayoutApp {
     type Message = AppMessage;
 
@@ -2752,10 +2680,10 @@ impl Application for LayoutApp {
             width: 1024,
             height: 768,
             scale_factor: 1.0,
-            text_items: Vec::new(),
-            font_system: cce_ui::create_font_system_with_system_fonts(),
+            text_prims: Vec::new(),
+            font_system: cce_ui::create_font_system(),
             needs_rebuild: true,
-            
+
             dropdown_presets,
             slider_page_x,
             slider_page_y,
@@ -2785,12 +2713,12 @@ impl Application for LayoutApp {
             dropdown_align_v,
             dropdown_line_cap,
             wp_base_font_size: 14.0,
-            
+
             slider_r,
             slider_g,
             slider_b,
             slider_zoom,
- 
+
             toggle_grid,
             grid_color_selector,
             grid_color: [0.20, 0.35, 0.60, 0.8],
@@ -2813,7 +2741,7 @@ impl Application for LayoutApp {
             label_sel_desc2,
             label_grid_snap,
             label_total_elements,
-            
+
             last_selected: None,
             page_w,
             page_h,
@@ -2918,7 +2846,7 @@ impl Application for LayoutApp {
                 self.margin_x = 20.0;
                 self.margin_y = 20.0;
                 self.toggle_margin.set_toggled(false);
-                
+
                 self.dropdown_presets.selected = 0;
                 self.page_w = PRESETS[0].w;
                 self.page_h = PRESETS[0].h;
@@ -2929,7 +2857,7 @@ impl Application for LayoutApp {
 
                 self.dropdown_margin_units.selected = 0;
                 self.sync_page_units();
-                
+
                 self.grid_enabled = true;
                 self.toggle_grid.set_toggled(true);
                 self.label_grid_snap.set_toggled(true);
@@ -2937,7 +2865,7 @@ impl Application for LayoutApp {
                 self.slider_zoom.set_value(0.33333334);
                 self.toggle_rulers.set_toggled(false);
                 self.dropdown_units.selected = 0;
-                
+
                 self.toggle_word_processor.set_toggled(false);
                 self.word_processor_enabled = false;
                 self.wp_text_box.text = String::new();
@@ -3206,29 +3134,35 @@ impl Application for LayoutApp {
         }
     }
 
-    fn view(&mut self, quads: &mut Vec<(f32, f32, f32, f32, [f32; 4])>, size: LogicalSize, scale: f64) {
+    fn display_list(&mut self, size: LogicalSize, scale: f64) -> Option<cce_ui::scene::paint::DisplayList> {
+        // Phase 6aj single paint path: view() geometry + view_vectors + text prims (single-run
+        // via text_with, boxed canvas text via text_boxed). App FontSystem is bundled now (was
+        // _with_system_fonts) — kept only for widgets' prepare_text; text renders via the engine
+        // cache, fixing the face-ID invisibility.
+        let mut __pc = cce_ui::scene::paint::PaintCtx::new();
+        let quads = &mut __LayoutQuadSink { pc: &mut __pc };
         let size_changed = self.width != size.width as u32 || self.height != size.height as u32 || self.scale_factor != scale;
         if self.needs_rebuild || size_changed {
             self.width = size.width as u32;
             self.height = size.height as u32;
             self.scale_factor = scale;
-            
+
             // Set paginator bounds in the sidebar region
             cce_ui::scale::set_scale_factor(scale as f32);
             self.paginator.set_rect(0.0, 0.0, 280.0, size.height as f32);
-            
+
             self.rebuild_layers_tab_widgets();
             self.rebuild_text_items();
             self.needs_rebuild = false;
         }
- 
+
 
 
         // 3. Render Canvas & centered paper sheet
         let canvas_w = self.width as f32 - 280.0;
         let canvas_h = self.height as f32;
         let zoom = self.render_zoom();
-        
+
         // Centered Paper Position
         let page_x = 280.0 + (canvas_w - self.page_w * zoom) / 2.0 + self.pan_x;
         let page_y = (canvas_h - self.page_h * zoom) / 2.0 + self.pan_y;
@@ -3302,7 +3236,7 @@ impl Application for LayoutApp {
 
         // Paper sheet backing (Elegant Off-White)
         quads.push((page_x, page_y, self.page_w * zoom, self.page_h * zoom, self.page_color));
-        
+
         // Thin paper border outline
         let border_col = [0.75, 0.75, 0.80, 0.5];
         quads.push((page_x, page_y, self.page_w * zoom, 1.0, border_col));
@@ -3358,7 +3292,7 @@ impl Application for LayoutApp {
                     Element::Text { text: _, x, y, w, h, font_size: _, color: _, .. } => {
                         // Translucent text block container overlay
                         quads.push((page_x + *x * zoom, page_y + *y * zoom, *w * zoom, *h * zoom, [0.20, 0.30, 0.70, 0.05]));
-                        
+
                         let border_color = [0.45, 0.45, 0.55, 0.22];
                         quads.push((page_x + *x * zoom, page_y + *y * zoom, *w * zoom, 1.0, border_color));
                         quads.push((page_x + *x * zoom, page_y + *y * zoom + *h * zoom - 1.0, *w * zoom, 1.0, border_color));
@@ -3373,9 +3307,9 @@ impl Application for LayoutApp {
                             ShapeType::Banner => {
                                 // Banner drop shadow
                                 quads.push((page_x + *x * zoom + 3.0, page_y + *y * zoom + 3.0, *w * zoom, *h * zoom, [0.05, 0.05, 0.08, 0.3]));
-                                
+
                                 quads.push((page_x + *x * zoom, page_y + *y * zoom, *w * zoom, *h * zoom, *color));
-                                
+
                                 let inner_col = [1.0, 1.0, 1.0, 0.2];
                                 quads.push((page_x + *x * zoom + 2.0, page_y + *y * zoom + 2.0, *w * zoom - 4.0, 1.0, inner_col));
                                 quads.push((page_x + *x * zoom + 2.0, page_y + *y * zoom + *h * zoom - 3.0, *w * zoom - 4.0, 1.0, inner_col));
@@ -3433,32 +3367,44 @@ impl Application for LayoutApp {
 
         // Divider between Sidebar and Canvas
         quads.push((280.0, 0.0, 1.0, self.height as f32, [0.20, 0.20, 0.25, 1.0]));
-    }
 
-    fn view_vectors(&mut self, vectors: &mut Vec<(f32, f32, f32, f32, f32, [f32; 4], LineCap)>, _size: LogicalSize, _scale: f64) {
-        if self.word_processor_enabled {
-            return;
-        }
-        let zoom = self.render_zoom();
-        let canvas_w = self.width as f32 - 280.0;
-        let canvas_h = self.height as f32;
-        let page_x = 280.0 + (canvas_w - self.page_w * zoom) / 2.0 + self.pan_x;
-        let page_y = (canvas_h - self.page_h * zoom) / 2.0 + self.pan_y;
-
-        for element in &self.elements {
-            if let Element::Vector { x1, y1, x2, y2, stroke_width, color, line_cap } = element {
-                let vx1 = page_x + *x1 * zoom;
-                let vy1 = page_y + *y1 * zoom;
-                let vx2 = page_x + *x2 * zoom;
-                let vy2 = page_y + *y2 * zoom;
-                let vthickness = *stroke_width * zoom;
-                vectors.push((vx1, vy1, vx2, vy2, vthickness, *color, *line_cap));
+        // Vectors (the legacy view_vectors body), after plain geometry as the wrapper ordered.
+        if !self.word_processor_enabled {
+            let zoom = self.render_zoom();
+            let canvas_w = self.width as f32 - 280.0;
+            let canvas_h = self.height as f32;
+            let page_x = 280.0 + (canvas_w - self.page_w * zoom) / 2.0 + self.pan_x;
+            let page_y = (canvas_h - self.page_h * zoom) / 2.0 + self.pan_y;
+            for element in &self.elements {
+                if let Element::Vector { x1, y1, x2, y2, stroke_width, color, line_cap } = element {
+                    let vx1 = page_x + *x1 * zoom;
+                    let vy1 = page_y + *y1 * zoom;
+                    let vx2 = page_x + *x2 * zoom;
+                    let vy2 = page_y + *y2 * zoom;
+                    let vthickness = *stroke_width * zoom;
+                    let cap = match line_cap {
+                        LineCap::Flat => cce_ui::scene::paint::Cap::Flat,
+                        LineCap::Round => cce_ui::scene::paint::Cap::Round,
+                        LineCap::Arrow => cce_ui::scene::paint::Cap::Arrow,
+                    };
+                    __pc.vector(vx1, vy1, vx2, vy2, vthickness, *color, cap);
+                }
             }
         }
+
+        // Text prims (single-run and boxed).
+        for (text, size, x, y, color, font, bounds, layout) in &self.text_prims {
+            match layout {
+                Some(l) => __pc.text_boxed(text.clone(), *x, *y, *size, *color, font.clone(), *bounds, cce_ui::scene::paint::TextAttrs::default(), *l),
+                None => __pc.text_with(text.clone(), *x, *y, *size, *color, font.clone(), *bounds),
+            }
+        }
+
+        Some(__pc.finish())
     }
 
-    fn text_items(&self) -> &[TextItem] {
-        &self.text_items
+    fn display_list_text(&self) -> bool {
+        true
     }
 
     fn handle_pointer_move(&mut self, pos: LogicalPosition, needs_rebuild: &mut bool) {
@@ -3486,7 +3432,7 @@ impl Application for LayoutApp {
             let page_h = self.page_h * zoom;
             let page_x = 280.0 + (canvas_w - page_w) / 2.0 + self.pan_x;
             let page_y = (canvas_h - page_h) / 2.0 + self.pan_y;
-            
+
             let cx = (px - page_x) / zoom;
             let cy = (py - page_y) / zoom;
 
@@ -3497,13 +3443,13 @@ impl Application for LayoutApp {
             } else if let Some((idx, ox, oy)) = self.dragging {
                 let mut new_x = cx - ox;
                 let mut new_y = cy - oy;
-                
+
                 if self.grid_enabled {
                     let spacing = self.grid_spacing();
                     new_x = (new_x / spacing).round() * spacing;
                     new_y = (new_y / spacing).round() * spacing;
                 }
-                
+
                 match &mut self.elements[idx] {
                     Element::Text { x, y, .. } => {
                         *x = new_x;
@@ -3652,7 +3598,7 @@ impl Application for LayoutApp {
             let page_h = self.page_h * zoom;
             let page_x = 280.0 + (canvas_w - page_w) / 2.0 + self.pan_x;
             let page_y = (canvas_h - page_h) / 2.0 + self.pan_y;
-            
+
             let cx = (px - page_x) / zoom;
             let cy = (py - page_y) / zoom;
 
@@ -3763,7 +3709,7 @@ impl Application for LayoutApp {
         }
 
         let mut handled = false;
-        
+
         if self.word_processor_enabled {
             if self.wp_text_box.keyboard_input(event, &mut self.ui_context) {
                 handled = true;
@@ -3813,6 +3759,6 @@ fn main() {
 
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
     let _guard = rt.enter();
-    
+
     cce_ui::engine::run::<LayoutApp>();
 }
