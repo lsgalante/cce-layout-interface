@@ -274,7 +274,7 @@ struct LayoutApp {
     dropdown_presets: cce_ui::widget::Adapted<Dropdown>,
     slider_page_x: cce_ui::widget::Adapted<cce_ui::widget::Slider>,
     slider_page_y: cce_ui::widget::Adapted<cce_ui::widget::Slider>,
-    page_color_selector: ColorSelector,
+    page_color_selector: cce_ui::widget::Adapted<ColorSelector>,
     page_color: [f32; 4],
     toggle_margin: cce_ui::widget::Adapted<Toggle>,
     dropdown_margin_units: cce_ui::widget::Adapted<Dropdown>,
@@ -308,12 +308,12 @@ struct LayoutApp {
 
     // Page 1: Canvas settings controls
     toggle_grid: cce_ui::widget::Adapted<Toggle>,
-    grid_color_selector: ColorSelector,
+    grid_color_selector: cce_ui::widget::Adapted<ColorSelector>,
     grid_color: [f32; 4],
     grid_size: f32,
     spinbox_grid_size: cce_ui::widget::Adapted<cce_ui::widget::Spinbox>,
     dropdown_grid_units: cce_ui::widget::Adapted<Dropdown>,
-    margin_color_selector: ColorSelector,
+    margin_color_selector: cce_ui::widget::Adapted<ColorSelector>,
     margin_color: [f32; 4],
     spinbox_margin_thickness: cce_ui::widget::Adapted<cce_ui::widget::Spinbox>,
     margin_thickness: f32,
