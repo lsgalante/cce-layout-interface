@@ -1042,8 +1042,7 @@ impl LayoutApp {
         let page_x = 280.0 + (canvas_w - page_w) / 2.0 + self.pan_x;
         let page_y = (canvas_h - page_h) / 2.0 + self.pan_y;
 
-        // 2. Paginator sidebar tabs
-        labels.extend(self.paginator.text_labels());
+        // 2. Paginator sidebar tabs: emitted in display_list via the paint walk.
 
         if self.toggle_rulers.toggled() {
             let unit_idx = self.dropdown_units.selected;
@@ -1094,10 +1093,7 @@ impl LayoutApp {
 
         // 5. Canvas Element Labels (drawn relative to the paper sheet)
         if self.word_processor_enabled {
-            let font_family = self.wp_text_box.font_family.clone();
-            for (label, bounds) in self.wp_text_box.text_labels_with_bounds(&self.ui_context) {
-                self.text_prims.push((label.text, label.font_size, label.x, label.y, label.color, Some(font_family.clone()), bounds, None));
-            }
+            // Word-processor text box: emitted in display_list via the paint walk.
         } else {
             for (idx, element) in self.elements.iter().enumerate() {
                 match element {
@@ -3398,6 +3394,13 @@ impl Application for LayoutApp {
                 Some(l) => __pc.text_boxed(text.clone(), *x, *y, *size, *color, font.clone(), *bounds, cce_ui::scene::paint::TextAttrs::default(), *l),
                 None => __pc.text_with(text.clone(), *x, *y, *size, *color, font.clone(), *bounds),
             }
+        }
+
+        // Widget text via the paint walk (not the legacy text_labels* getters): the
+        // paginator's sidebar tabs, and the word-processor text box when active.
+        cce_ui::scene::painter::append_widget_text(&self.ui_context, &self.paginator, &mut __pc);
+        if self.word_processor_enabled {
+            cce_ui::scene::painter::append_widget_text(&self.ui_context, &self.wp_text_box, &mut __pc);
         }
 
         Some(__pc.finish())
