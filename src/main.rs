@@ -292,7 +292,7 @@ struct LayoutApp {
     sidebar_h: cce_ui::widget::Adapted<cce_ui::widget::Spinbox>,
     sidebar_text: cce_ui::widget::Adapted<TextBox>,
     sidebar_size: cce_ui::widget::Adapted<cce_ui::widget::Spinbox>,
-    font_selector: FontSelector,
+    font_selector: cce_ui::widget::Adapted<FontSelector>,
     dropdown_text_align_h: cce_ui::widget::Adapted<Dropdown>,
     dropdown_text_align_v: cce_ui::widget::Adapted<Dropdown>,
     toggle_multiline: cce_ui::widget::Adapted<Toggle>,
