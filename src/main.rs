@@ -1,3 +1,5 @@
+mod scroll_region;
+use scroll_region::ScrollRegion;
 use wayland_client::QueueHandle;
 use glyphon::FontSystem;
 use serde::{Serialize, Deserialize};
@@ -5,7 +7,7 @@ use cce_ui::engine::{Application, EngineState, LogicalPosition, LogicalSize, Win
 use cce_ui::widget::{
     MouseButton, ElementState, MouseScrollDelta, KeyEvent, Element as UiElement,
     TextBox, Slider, TextLabel, Paginator, Button, Dropdown, Toggle, ColorSelector,
-    Label, Spinbox, Key, NamedKey, List, FontSelector, PageSelector, MenuController
+    Label, Spinbox, Key, NamedKey, FontSelector, PageSelector, MenuController
 };
 use cce_ui::layout::{RenderTarget, Section, UiFrame};
 
@@ -249,7 +251,7 @@ struct LayoutApp {
     btn_new_doc: cce_ui::widget::Adapted<cce_ui::widget::Button>,
     btn_open: cce_ui::widget::Adapted<cce_ui::widget::Button>,
     recent_files: Vec<std::path::PathBuf>,
-    recent_files_list: List,
+    recent_files_list: ScrollRegion,
     recent_files_buttons: Vec<cce_ui::widget::Adapted<cce_ui::widget::Button>>,
     btn_exit: cce_ui::widget::Adapted<cce_ui::widget::Button>,
     btn_save: cce_ui::widget::Adapted<cce_ui::widget::Button>,
@@ -768,7 +770,9 @@ impl LayoutApp {
                 let list_h = 100.0;
                 let list_x = sec.ax(12.0);
                 let list_y = sec.ay();
-                sec.widget(&mut pc, &mut self.recent_files_list, 12.0, col_w, list_h, &mut self.ui_context);
+                self.recent_files_list.set_rect(list_x, list_y, col_w, list_h);
+                self.recent_files_list.push_prims(&mut pc);
+                sec.spacing(list_h);
 
                 self.recent_files_list.update_bounds(self.recent_files.len(), list_y, list_h);
 
@@ -1560,7 +1564,7 @@ impl LayoutApp {
             0 => {
                 self.btn_new_doc.unfocus();
                 self.btn_open.unfocus();
-                self.recent_files_list.unfocus();
+                self.recent_files_list.focused = false;
                 for btn in &mut self.recent_files_buttons {
                     btn.unfocus();
                 }
@@ -1636,7 +1640,7 @@ impl LayoutApp {
             0 => {
                 if self.btn_new_doc.hit_test(px, py, ctx) { hit_idx = Some(0); }
                 else if self.btn_open.hit_test(px, py, ctx) { hit_idx = Some(1); }
-                else if self.recent_files_list.hit_test(px, py, ctx) { hit_idx = Some(2); }
+                else if self.recent_files_list.hit(px, py) { hit_idx = Some(2); }
                 else {
                     for (i, btn) in self.recent_files_buttons.iter().enumerate() {
                         if btn.hit_test(px, py, ctx) {
@@ -1749,7 +1753,7 @@ impl LayoutApp {
             0 => {
                 if hit_idx == Some(0) { self.btn_new_doc.focus(); } else { self.btn_new_doc.unfocus(); }
                 if hit_idx == Some(1) { self.btn_open.focus(); } else { self.btn_open.unfocus(); }
-                if hit_idx == Some(2) { self.recent_files_list.focus(); } else { self.recent_files_list.unfocus(); }
+                self.recent_files_list.focused = hit_idx == Some(2);
                 for (i, btn) in self.recent_files_buttons.iter_mut().enumerate() {
                     if hit_idx == Some(3 + i) { btn.focus(); } else { btn.unfocus(); }
                 }
@@ -1857,7 +1861,7 @@ impl LayoutApp {
             0 => {
                 if self.btn_new_doc.cursor_moved(px, py, ctx) { changed = true; }
                 if self.btn_open.cursor_moved(px, py, ctx) { changed = true; }
-                if self.recent_files_list.cursor_moved(px, py, ctx) { changed = true; }
+                if self.recent_files_list.cursor_moved(px, py) { changed = true; }
                 for btn in &mut self.recent_files_buttons {
                     if btn.cursor_moved(px, py, ctx) { changed = true; }
                 }
@@ -1968,7 +1972,13 @@ impl LayoutApp {
             0 => {
                 if self.btn_new_doc.mouse_input(button, state, px, py, ctx) { changed = true; }
                 if self.btn_open.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.recent_files_list.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if button == MouseButton::Left {
+                    let handled = match state {
+                        ElementState::Pressed => self.recent_files_list.press(px, py),
+                        ElementState::Released => self.recent_files_list.release(),
+                    };
+                    if handled { changed = true; }
+                }
                 for btn in &mut self.recent_files_buttons {
                     if btn.mouse_input(button, state, px, py, ctx) { changed = true; }
                 }
@@ -2079,7 +2089,7 @@ impl LayoutApp {
             0 => {
                 if self.btn_new_doc.mouse_wheel(delta, px, py, ctx) { changed = true; }
                 if self.btn_open.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.recent_files_list.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if self.recent_files_list.wheel(delta, px, py) { changed = true; }
                 for btn in &mut self.recent_files_buttons {
                     if btn.mouse_wheel(delta, px, py, ctx) { changed = true; }
                 }
@@ -2190,7 +2200,7 @@ impl LayoutApp {
             0 => {
                 if self.btn_new_doc.focused(ctx) { if self.btn_new_doc.keyboard_input(event, ctx) { changed = true; } }
                 if self.btn_open.focused(ctx) { if self.btn_open.keyboard_input(event, ctx) { changed = true; } }
-                if self.recent_files_list.focused(ctx) { if self.recent_files_list.keyboard_input(event, ctx) { changed = true; } }
+                if self.recent_files_list.focused { if self.recent_files_list.keyboard(event) { changed = true; } }
                 for btn in &mut self.recent_files_buttons {
                     if btn.focused(ctx) { if btn.keyboard_input(event, ctx) { changed = true; } }
                 }
@@ -2301,7 +2311,6 @@ impl LayoutApp {
             0 => {
                 if self.btn_new_doc.tick(dt, ctx) { changed = true; }
                 if self.btn_open.tick(dt, ctx) { changed = true; }
-                if self.recent_files_list.tick(dt, ctx) { changed = true; }
                 for btn in &mut self.recent_files_buttons {
                     if btn.tick(dt, ctx) { changed = true; }
                 }
@@ -2649,7 +2658,7 @@ impl Application for LayoutApp {
         label_total_elements.set_rect(0.0, 0.0, 240.0, 18.0);
 
         let recent_files = Self::load_recent_files();
-        let recent_files_list = List::new(22.0, 2.0);
+        let recent_files_list = ScrollRegion::new(22.0, 2.0);
         let mut recent_files_buttons = Vec::new();
         for file in &recent_files {
             let label = file.file_name()
