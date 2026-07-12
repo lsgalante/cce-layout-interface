@@ -1223,11 +1223,11 @@ impl LayoutApp {
             let element = &self.elements[idx];
             match element {
                 Element::Text { text, x, y, w, h, font_size, color, font_family, align_h, align_v, multiline } => {
-                    self.sidebar_x.base_mut().map(|b| b.label = Some("X Position".to_string()));
-                    self.sidebar_y.base_mut().map(|b| b.label = Some("Y Position".to_string()));
-                    self.sidebar_w.base_mut().map(|b| b.label = Some("Width".to_string()));
-                    self.sidebar_h.base_mut().map(|b| b.label = Some("Height".to_string()));
-                    self.sidebar_size.base_mut().map(|b| b.label = Some("Text Size".to_string()));
+                    self.sidebar_x.base_mut().label = Some("X Position".to_string());
+                    self.sidebar_y.base_mut().label = Some("Y Position".to_string());
+                    self.sidebar_w.base_mut().label = Some("Width".to_string());
+                    self.sidebar_h.base_mut().label = Some("Height".to_string());
+                    self.sidebar_size.base_mut().label = Some("Text Size".to_string());
 
                     if !self.sidebar_text.editing { self.sidebar_text.text = text.clone(); }
                     if !self.sidebar_x.editing { self.sidebar_x.value = x.round() as i32; }
@@ -1255,10 +1255,10 @@ impl LayoutApp {
                     };
                 }
                 Element::Shape { shape_type: _, x, y, w, h, color } => {
-                    self.sidebar_x.base_mut().map(|b| b.label = Some("X Position".to_string()));
-                    self.sidebar_y.base_mut().map(|b| b.label = Some("Y Position".to_string()));
-                    self.sidebar_w.base_mut().map(|b| b.label = Some("Width".to_string()));
-                    self.sidebar_h.base_mut().map(|b| b.label = Some("Height".to_string()));
+                    self.sidebar_x.base_mut().label = Some("X Position".to_string());
+                    self.sidebar_y.base_mut().label = Some("Y Position".to_string());
+                    self.sidebar_w.base_mut().label = Some("Width".to_string());
+                    self.sidebar_h.base_mut().label = Some("Height".to_string());
 
                     if !self.sidebar_text.editing { self.sidebar_text.text = "Shape Mode".to_string(); }
                     if !self.sidebar_x.editing { self.sidebar_x.value = x.round() as i32; }
@@ -1271,11 +1271,11 @@ impl LayoutApp {
                     self.slider_b.set_value(color[2]);
                 }
                 Element::Vector { x1, y1, x2, y2, stroke_width, color, line_cap } => {
-                    self.sidebar_x.base_mut().map(|b| b.label = Some("Start X".to_string()));
-                    self.sidebar_y.base_mut().map(|b| b.label = Some("Start Y".to_string()));
-                    self.sidebar_w.base_mut().map(|b| b.label = Some("End X".to_string()));
-                    self.sidebar_h.base_mut().map(|b| b.label = Some("End Y".to_string()));
-                    self.sidebar_size.base_mut().map(|b| b.label = Some("Thickness".to_string()));
+                    self.sidebar_x.base_mut().label = Some("Start X".to_string());
+                    self.sidebar_y.base_mut().label = Some("Start Y".to_string());
+                    self.sidebar_w.base_mut().label = Some("End X".to_string());
+                    self.sidebar_h.base_mut().label = Some("End Y".to_string());
+                    self.sidebar_size.base_mut().label = Some("Thickness".to_string());
 
                     if !self.sidebar_text.editing { self.sidebar_text.text = "Line Mode".to_string(); }
                     if !self.sidebar_x.editing { self.sidebar_x.value = x1.round() as i32; }
