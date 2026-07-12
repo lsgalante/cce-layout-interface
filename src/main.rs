@@ -5,7 +5,7 @@ use glyphon::FontSystem;
 use serde::{Serialize, Deserialize};
 use cce_ui::engine::{Application, EngineState, LogicalPosition, LogicalSize, WindowSettings, LineCap};
 use cce_ui::widget::{
-    MouseButton, ElementState, MouseScrollDelta, KeyEvent, Element as UiElement,
+    MouseButton, ElementState, MouseScrollDelta, KeyEvent, WidgetHost as UiElement,
     TextBox, Slider, TextLabel, Paginator, Button, Dropdown, Toggle, ColorSelector,
     Label, Spinbox, Key, NamedKey, FontSelector, PageSelector, MenuController
 };
