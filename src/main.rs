@@ -1855,41 +1855,43 @@ impl LayoutApp {
 
     fn active_page_widgets_cursor_moved(&mut self, px: f32, py: f32) -> bool {
         let mut changed = false;
+        // Routed dispatch (6bd shrink): one Event per widget root through the router.
+        let mv = cce_ui::widget::Event::PointerMove { x: px, y: py, local_x: px, local_y: py };
         let ctx = &mut self.ui_context;
         let selected_page = self.paginator.selected_page();
         match selected_page {
             0 => {
-                if self.btn_new_doc.cursor_moved(px, py, ctx) { changed = true; }
-                if self.btn_open.cursor_moved(px, py, ctx) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_new_doc.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_open.as_ptr_mut()) { changed = true; }
                 if self.recent_files_list.cursor_moved(px, py) { changed = true; }
                 for btn in &mut self.recent_files_buttons {
-                    if btn.cursor_moved(px, py, ctx) { changed = true; }
+                    if ctx.propagate_event(&mv, btn.as_ptr_mut()) { changed = true; }
                 }
-                if self.btn_save.cursor_moved(px, py, ctx) { changed = true; }
-                if self.btn_save_as.cursor_moved(px, py, ctx) { changed = true; }
-                if self.btn_exit.cursor_moved(px, py, ctx) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_save.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_save_as.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_exit.as_ptr_mut()) { changed = true; }
             }
             1 => {
-                if self.dropdown_margin_units.cursor_moved(px, py, ctx) { changed = true; }
-                if self.dropdown_presets.cursor_moved(px, py, ctx) { changed = true; }
-                if self.slider_page_x.cursor_moved(px, py, ctx) { changed = true; }
-                if self.slider_page_y.cursor_moved(px, py, ctx) { changed = true; }
-                if self.page_color_selector.cursor_moved(px, py, ctx) { changed = true; }
-                if self.toggle_margin.cursor_moved(px, py, ctx) { changed = true; }
-                if self.toggle_word_processor.cursor_moved(px, py, ctx) { changed = true; }
-                if self.slider_margin_x.cursor_moved(px, py, ctx) { changed = true; }
-                if self.slider_margin_y.cursor_moved(px, py, ctx) { changed = true; }
+                if ctx.propagate_event(&mv, self.dropdown_margin_units.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.dropdown_presets.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.slider_page_x.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.slider_page_y.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.page_color_selector.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.toggle_margin.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.toggle_word_processor.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.slider_margin_x.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.slider_margin_y.as_ptr_mut()) { changed = true; }
             }
             2 => {
                 if self.word_processor_enabled {
-                    if self.font_selector.cursor_moved(px, py, ctx) { changed = true; }
-                    if self.sidebar_size.cursor_moved(px, py, ctx) { changed = true; }
-                    if self.slider_r.cursor_moved(px, py, ctx) { changed = true; }
-                    if self.slider_g.cursor_moved(px, py, ctx) { changed = true; }
-                    if self.slider_b.cursor_moved(px, py, ctx) { changed = true; }
+                    if ctx.propagate_event(&mv, self.font_selector.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.sidebar_size.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.slider_r.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.slider_g.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.slider_b.as_ptr_mut()) { changed = true; }
                 } else if self.selected_idx.is_some() {
-                    if self.dropdown_align_h.cursor_moved(px, py, ctx) { changed = true; }
-                    if self.dropdown_align_v.cursor_moved(px, py, ctx) { changed = true; }
+                    if ctx.propagate_event(&mv, self.dropdown_align_h.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.dropdown_align_v.as_ptr_mut()) { changed = true; }
 
                     let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
                         Some(Element::Text { .. }) => (true, false),
@@ -1897,66 +1899,66 @@ impl LayoutApp {
                         _ => (false, false),
                     };
                     if is_text {
-                        if self.sidebar_x.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.sidebar_y.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.sidebar_w.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.sidebar_h.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.sidebar_text.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.font_selector.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.toggle_multiline.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.dropdown_text_align_h.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.dropdown_text_align_v.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.sidebar_size.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.slider_r.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.slider_g.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.slider_b.cursor_moved(px, py, ctx) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_x.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_y.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_w.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_h.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_text.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.font_selector.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.toggle_multiline.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.dropdown_text_align_h.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.dropdown_text_align_v.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_size.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_r.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_g.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_b.as_ptr_mut()) { changed = true; }
                     } else if is_vector {
-                        if self.sidebar_x.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.sidebar_y.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.sidebar_w.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.sidebar_h.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.sidebar_size.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.dropdown_line_cap.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.slider_r.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.slider_g.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.slider_b.cursor_moved(px, py, ctx) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_x.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_y.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_w.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_h.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_size.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.dropdown_line_cap.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_r.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_g.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_b.as_ptr_mut()) { changed = true; }
                     } else {
-                        if self.sidebar_x.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.sidebar_y.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.sidebar_w.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.sidebar_h.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.slider_r.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.slider_g.cursor_moved(px, py, ctx) { changed = true; }
-                        if self.slider_b.cursor_moved(px, py, ctx) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_x.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_y.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_w.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_h.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_r.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_g.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_b.as_ptr_mut()) { changed = true; }
                     }
                 } else {
-                    if self.label_sel_status.cursor_moved(px, py, ctx) { changed = true; }
-                    if self.label_sel_desc1.cursor_moved(px, py, ctx) { changed = true; }
-                    if self.label_sel_desc2.cursor_moved(px, py, ctx) { changed = true; }
+                    if ctx.propagate_event(&mv, self.label_sel_status.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.label_sel_desc1.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.label_sel_desc2.as_ptr_mut()) { changed = true; }
                 }
             }
             3 => {
-                if self.btn_add_text.cursor_moved(px, py, ctx) { changed = true; }
-                if self.btn_add_rect.cursor_moved(px, py, ctx) { changed = true; }
-                if self.btn_add_banner.cursor_moved(px, py, ctx) { changed = true; }
-                if self.btn_add_vector.cursor_moved(px, py, ctx) { changed = true; }
-                if self.label_total_elements.cursor_moved(px, py, ctx) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_add_text.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_add_rect.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_add_banner.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_add_vector.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.label_total_elements.as_ptr_mut()) { changed = true; }
             }
             4 => {
-                if self.toggle_grid.cursor_moved(px, py, ctx) { changed = true; }
-                if self.grid_color_selector.cursor_moved(px, py, ctx) { changed = true; }
-                if self.spinbox_grid_size.cursor_moved(px, py, ctx) { changed = true; }
-                if self.label_grid_snap.cursor_moved(px, py, ctx) { changed = true; }
-                if self.slider_zoom.cursor_moved(px, py, ctx) { changed = true; }
-                if self.toggle_rulers.cursor_moved(px, py, ctx) { changed = true; }
-                if self.dropdown_units.cursor_moved(px, py, ctx) { changed = true; }
-                if self.margin_color_selector.cursor_moved(px, py, ctx) { changed = true; }
-                if self.spinbox_margin_thickness.cursor_moved(px, py, ctx) { changed = true; }
-                if self.dropdown_grid_units.cursor_moved(px, py, ctx) { changed = true; }
+                if ctx.propagate_event(&mv, self.toggle_grid.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.grid_color_selector.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.spinbox_grid_size.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.label_grid_snap.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.slider_zoom.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.toggle_rulers.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.dropdown_units.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.margin_color_selector.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.spinbox_margin_thickness.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.dropdown_grid_units.as_ptr_mut()) { changed = true; }
             }
             5 => {
                 for btn in &mut self.layer_buttons {
-                    if btn.cursor_moved(px, py, ctx) { changed = true; }
+                    if ctx.propagate_event(&mv, btn.as_ptr_mut()) { changed = true; }
                 }
             }
             _ => {}
@@ -1966,12 +1968,13 @@ impl LayoutApp {
 
     fn active_page_widgets_mouse_input(&mut self, button: MouseButton, state: ElementState, px: f32, py: f32) -> bool {
         let mut changed = false;
+        let ev = cce_ui::widget::Event::MouseButton { button, state, x: px, y: py, local_x: px, local_y: py };
         let ctx = &mut self.ui_context;
         let selected_page = self.paginator.selected_page();
         match selected_page {
             0 => {
-                if self.btn_new_doc.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.btn_open.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_new_doc.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_open.as_ptr_mut()) { changed = true; }
                 if button == MouseButton::Left {
                     let handled = match state {
                         ElementState::Pressed => self.recent_files_list.press(px, py),
@@ -1980,33 +1983,33 @@ impl LayoutApp {
                     if handled { changed = true; }
                 }
                 for btn in &mut self.recent_files_buttons {
-                    if btn.mouse_input(button, state, px, py, ctx) { changed = true; }
+                    if ctx.propagate_event(&ev, btn.as_ptr_mut()) { changed = true; }
                 }
-                if self.btn_save.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.btn_save_as.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.btn_exit.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_save.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_save_as.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_exit.as_ptr_mut()) { changed = true; }
             }
             1 => {
-                if self.dropdown_margin_units.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.dropdown_presets.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.slider_page_x.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.slider_page_y.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.page_color_selector.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.toggle_margin.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.toggle_word_processor.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.slider_margin_x.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.slider_margin_y.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if ctx.propagate_event(&ev, self.dropdown_margin_units.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.dropdown_presets.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.slider_page_x.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.slider_page_y.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.page_color_selector.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.toggle_margin.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.toggle_word_processor.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.slider_margin_x.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.slider_margin_y.as_ptr_mut()) { changed = true; }
             }
             2 => {
                 if self.word_processor_enabled {
-                    if self.font_selector.mouse_input(button, state, px, py, ctx) { changed = true; }
-                    if self.sidebar_size.mouse_input(button, state, px, py, ctx) { changed = true; }
-                    if self.slider_r.mouse_input(button, state, px, py, ctx) { changed = true; }
-                    if self.slider_g.mouse_input(button, state, px, py, ctx) { changed = true; }
-                    if self.slider_b.mouse_input(button, state, px, py, ctx) { changed = true; }
+                    if ctx.propagate_event(&ev, self.font_selector.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.sidebar_size.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.slider_r.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.slider_g.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.slider_b.as_ptr_mut()) { changed = true; }
                 } else if self.selected_idx.is_some() {
-                    if self.dropdown_align_h.mouse_input(button, state, px, py, ctx) { changed = true; }
-                    if self.dropdown_align_v.mouse_input(button, state, px, py, ctx) { changed = true; }
+                    if ctx.propagate_event(&ev, self.dropdown_align_h.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.dropdown_align_v.as_ptr_mut()) { changed = true; }
 
                     let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
                         Some(Element::Text { .. }) => (true, false),
@@ -2014,66 +2017,66 @@ impl LayoutApp {
                         _ => (false, false),
                     };
                     if is_text {
-                        if self.sidebar_x.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.sidebar_y.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.sidebar_w.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.sidebar_h.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.sidebar_text.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.font_selector.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.toggle_multiline.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.dropdown_text_align_h.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.dropdown_text_align_v.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.sidebar_size.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.slider_r.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.slider_g.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.slider_b.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_x.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_y.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_w.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_h.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_text.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.font_selector.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.toggle_multiline.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.dropdown_text_align_h.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.dropdown_text_align_v.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_size.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_r.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_g.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_b.as_ptr_mut()) { changed = true; }
                     } else if is_vector {
-                        if self.sidebar_x.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.sidebar_y.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.sidebar_w.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.sidebar_h.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.sidebar_size.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.dropdown_line_cap.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.slider_r.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.slider_g.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.slider_b.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_x.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_y.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_w.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_h.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_size.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.dropdown_line_cap.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_r.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_g.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_b.as_ptr_mut()) { changed = true; }
                     } else {
-                        if self.sidebar_x.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.sidebar_y.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.sidebar_w.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.sidebar_h.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.slider_r.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.slider_g.mouse_input(button, state, px, py, ctx) { changed = true; }
-                        if self.slider_b.mouse_input(button, state, px, py, ctx) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_x.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_y.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_w.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_h.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_r.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_g.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_b.as_ptr_mut()) { changed = true; }
                     }
                 } else {
-                    if self.label_sel_status.mouse_input(button, state, px, py, ctx) { changed = true; }
-                    if self.label_sel_desc1.mouse_input(button, state, px, py, ctx) { changed = true; }
-                    if self.label_sel_desc2.mouse_input(button, state, px, py, ctx) { changed = true; }
+                    if ctx.propagate_event(&ev, self.label_sel_status.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.label_sel_desc1.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.label_sel_desc2.as_ptr_mut()) { changed = true; }
                 }
             }
             3 => {
-                if self.btn_add_text.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.btn_add_rect.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.btn_add_banner.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.btn_add_vector.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.label_total_elements.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_add_text.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_add_rect.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_add_banner.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_add_vector.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.label_total_elements.as_ptr_mut()) { changed = true; }
             }
             4 => {
-                if self.toggle_grid.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.grid_color_selector.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.spinbox_grid_size.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.label_grid_snap.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.slider_zoom.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.toggle_rulers.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.dropdown_units.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.margin_color_selector.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.spinbox_margin_thickness.mouse_input(button, state, px, py, ctx) { changed = true; }
-                if self.dropdown_grid_units.mouse_input(button, state, px, py, ctx) { changed = true; }
+                if ctx.propagate_event(&ev, self.toggle_grid.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.grid_color_selector.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.spinbox_grid_size.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.label_grid_snap.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.slider_zoom.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.toggle_rulers.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.dropdown_units.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.margin_color_selector.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.spinbox_margin_thickness.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.dropdown_grid_units.as_ptr_mut()) { changed = true; }
             }
             5 => {
                 for btn in &mut self.layer_buttons {
-                    if btn.mouse_input(button, state, px, py, ctx) { changed = true; }
+                    if ctx.propagate_event(&ev, btn.as_ptr_mut()) { changed = true; }
                 }
             }
             _ => {}
@@ -2083,41 +2086,42 @@ impl LayoutApp {
 
     fn active_page_widgets_mouse_wheel(&mut self, delta: &MouseScrollDelta, px: f32, py: f32) -> bool {
         let mut changed = false;
+        let wev = cce_ui::widget::Event::MouseWheel { delta: *delta, x: px, y: py, local_x: px, local_y: py };
         let ctx = &mut self.ui_context;
         let selected_page = self.paginator.selected_page();
         match selected_page {
             0 => {
-                if self.btn_new_doc.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.btn_open.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_new_doc.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_open.as_ptr_mut()) { changed = true; }
                 if self.recent_files_list.wheel(delta, px, py) { changed = true; }
                 for btn in &mut self.recent_files_buttons {
-                    if btn.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                    if ctx.propagate_event(&wev, btn.as_ptr_mut()) { changed = true; }
                 }
-                if self.btn_save.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.btn_save_as.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.btn_exit.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_save.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_save_as.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_exit.as_ptr_mut()) { changed = true; }
             }
             1 => {
-                if self.dropdown_margin_units.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.dropdown_presets.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.slider_page_x.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.slider_page_y.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.page_color_selector.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.toggle_margin.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.toggle_word_processor.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.slider_margin_x.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.slider_margin_y.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if ctx.propagate_event(&wev, self.dropdown_margin_units.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.dropdown_presets.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.slider_page_x.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.slider_page_y.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.page_color_selector.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.toggle_margin.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.toggle_word_processor.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.slider_margin_x.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.slider_margin_y.as_ptr_mut()) { changed = true; }
             }
             2 => {
                 if self.word_processor_enabled {
-                    if self.font_selector.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                    if self.sidebar_size.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                    if self.slider_r.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                    if self.slider_g.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                    if self.slider_b.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                    if ctx.propagate_event(&wev, self.font_selector.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.sidebar_size.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.slider_r.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.slider_g.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.slider_b.as_ptr_mut()) { changed = true; }
                 } else if self.selected_idx.is_some() {
-                    if self.dropdown_align_h.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                    if self.dropdown_align_v.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                    if ctx.propagate_event(&wev, self.dropdown_align_h.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.dropdown_align_v.as_ptr_mut()) { changed = true; }
 
                     let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
                         Some(Element::Text { .. }) => (true, false),
@@ -2125,66 +2129,66 @@ impl LayoutApp {
                         _ => (false, false),
                     };
                     if is_text {
-                        if self.sidebar_x.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.sidebar_y.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.sidebar_w.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.sidebar_h.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.sidebar_text.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.font_selector.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.toggle_multiline.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.dropdown_text_align_h.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.dropdown_text_align_v.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.sidebar_size.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.slider_r.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.slider_g.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.slider_b.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_x.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_y.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_w.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_h.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_text.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.font_selector.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.toggle_multiline.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.dropdown_text_align_h.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.dropdown_text_align_v.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_size.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_r.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_g.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_b.as_ptr_mut()) { changed = true; }
                     } else if is_vector {
-                        if self.sidebar_x.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.sidebar_y.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.sidebar_w.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.sidebar_h.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.sidebar_size.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.dropdown_line_cap.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.slider_r.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.slider_g.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.slider_b.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_x.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_y.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_w.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_h.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_size.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.dropdown_line_cap.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_r.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_g.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_b.as_ptr_mut()) { changed = true; }
                     } else {
-                        if self.sidebar_x.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.sidebar_y.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.sidebar_w.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.sidebar_h.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.slider_r.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.slider_g.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                        if self.slider_b.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_x.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_y.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_w.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_h.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_r.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_g.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_b.as_ptr_mut()) { changed = true; }
                     }
                 } else {
-                    if self.label_sel_status.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                    if self.label_sel_desc1.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                    if self.label_sel_desc2.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                    if ctx.propagate_event(&wev, self.label_sel_status.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.label_sel_desc1.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.label_sel_desc2.as_ptr_mut()) { changed = true; }
                 }
             }
             3 => {
-                if self.btn_add_text.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.btn_add_rect.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.btn_add_banner.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.btn_add_vector.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.label_total_elements.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_add_text.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_add_rect.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_add_banner.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_add_vector.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.label_total_elements.as_ptr_mut()) { changed = true; }
             }
             4 => {
-                if self.toggle_grid.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.grid_color_selector.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.spinbox_grid_size.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.label_grid_snap.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.slider_zoom.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.toggle_rulers.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.dropdown_units.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.margin_color_selector.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.spinbox_margin_thickness.mouse_wheel(delta, px, py, ctx) { changed = true; }
-                if self.dropdown_grid_units.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                if ctx.propagate_event(&wev, self.toggle_grid.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.grid_color_selector.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.spinbox_grid_size.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.label_grid_snap.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.slider_zoom.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.toggle_rulers.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.dropdown_units.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.margin_color_selector.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.spinbox_margin_thickness.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.dropdown_grid_units.as_ptr_mut()) { changed = true; }
             }
             5 => {
                 for btn in &mut self.layer_buttons {
-                    if btn.mouse_wheel(delta, px, py, ctx) { changed = true; }
+                    if ctx.propagate_event(&wev, btn.as_ptr_mut()) { changed = true; }
                 }
             }
             _ => {}
@@ -2194,41 +2198,42 @@ impl LayoutApp {
 
     fn active_page_widgets_keyboard_input(&mut self, event: &KeyEvent) -> bool {
         let mut changed = false;
+        let kev = cce_ui::widget::Event::KeyInput(event.clone());
         let ctx = &mut self.ui_context;
         let selected_page = self.paginator.selected_page();
         match selected_page {
             0 => {
-                if self.btn_new_doc.focused(ctx) { if self.btn_new_doc.keyboard_input(event, ctx) { changed = true; } }
-                if self.btn_open.focused(ctx) { if self.btn_open.keyboard_input(event, ctx) { changed = true; } }
+                if self.btn_new_doc.focused(ctx) { if ctx.propagate_event(&kev, self.btn_new_doc.as_ptr_mut()) { changed = true; } }
+                if self.btn_open.focused(ctx) { if ctx.propagate_event(&kev, self.btn_open.as_ptr_mut()) { changed = true; } }
                 if self.recent_files_list.focused { if self.recent_files_list.keyboard(event) { changed = true; } }
                 for btn in &mut self.recent_files_buttons {
-                    if btn.focused(ctx) { if btn.keyboard_input(event, ctx) { changed = true; } }
+                    if btn.focused(ctx) { if ctx.propagate_event(&kev, btn.as_ptr_mut()) { changed = true; } }
                 }
-                if self.btn_save.focused(ctx) { if self.btn_save.keyboard_input(event, ctx) { changed = true; } }
-                if self.btn_save_as.focused(ctx) { if self.btn_save_as.keyboard_input(event, ctx) { changed = true; } }
-                if self.btn_exit.focused(ctx) { if self.btn_exit.keyboard_input(event, ctx) { changed = true; } }
+                if self.btn_save.focused(ctx) { if ctx.propagate_event(&kev, self.btn_save.as_ptr_mut()) { changed = true; } }
+                if self.btn_save_as.focused(ctx) { if ctx.propagate_event(&kev, self.btn_save_as.as_ptr_mut()) { changed = true; } }
+                if self.btn_exit.focused(ctx) { if ctx.propagate_event(&kev, self.btn_exit.as_ptr_mut()) { changed = true; } }
             }
             1 => {
-                if self.dropdown_margin_units.focused(ctx) { if self.dropdown_margin_units.keyboard_input(event, ctx) { changed = true; } }
-                if self.dropdown_presets.focused(ctx) { if self.dropdown_presets.keyboard_input(event, ctx) { changed = true; } }
-                if self.slider_page_x.focused(ctx) { if self.slider_page_x.keyboard_input(event, ctx) { changed = true; } }
-                if self.slider_page_y.focused(ctx) { if self.slider_page_y.keyboard_input(event, ctx) { changed = true; } }
-                if self.page_color_selector.focused(ctx) { if self.page_color_selector.keyboard_input(event, ctx) { changed = true; } }
-                if self.toggle_margin.focused(ctx) { if self.toggle_margin.keyboard_input(event, ctx) { changed = true; } }
-                if self.toggle_word_processor.focused(ctx) { if self.toggle_word_processor.keyboard_input(event, ctx) { changed = true; } }
-                if self.slider_margin_x.focused(ctx) { if self.slider_margin_x.keyboard_input(event, ctx) { changed = true; } }
-                if self.slider_margin_y.focused(ctx) { if self.slider_margin_y.keyboard_input(event, ctx) { changed = true; } }
+                if self.dropdown_margin_units.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_margin_units.as_ptr_mut()) { changed = true; } }
+                if self.dropdown_presets.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_presets.as_ptr_mut()) { changed = true; } }
+                if self.slider_page_x.focused(ctx) { if ctx.propagate_event(&kev, self.slider_page_x.as_ptr_mut()) { changed = true; } }
+                if self.slider_page_y.focused(ctx) { if ctx.propagate_event(&kev, self.slider_page_y.as_ptr_mut()) { changed = true; } }
+                if self.page_color_selector.focused(ctx) { if ctx.propagate_event(&kev, self.page_color_selector.as_ptr_mut()) { changed = true; } }
+                if self.toggle_margin.focused(ctx) { if ctx.propagate_event(&kev, self.toggle_margin.as_ptr_mut()) { changed = true; } }
+                if self.toggle_word_processor.focused(ctx) { if ctx.propagate_event(&kev, self.toggle_word_processor.as_ptr_mut()) { changed = true; } }
+                if self.slider_margin_x.focused(ctx) { if ctx.propagate_event(&kev, self.slider_margin_x.as_ptr_mut()) { changed = true; } }
+                if self.slider_margin_y.focused(ctx) { if ctx.propagate_event(&kev, self.slider_margin_y.as_ptr_mut()) { changed = true; } }
             }
             2 => {
                 if self.word_processor_enabled {
-                    if self.font_selector.focused(ctx) { if self.font_selector.keyboard_input(event, ctx) { changed = true; } }
-                    if self.sidebar_size.focused(ctx) { if self.sidebar_size.keyboard_input(event, ctx) { changed = true; } }
-                    if self.slider_r.focused(ctx) { if self.slider_r.keyboard_input(event, ctx) { changed = true; } }
-                    if self.slider_g.focused(ctx) { if self.slider_g.keyboard_input(event, ctx) { changed = true; } }
-                    if self.slider_b.focused(ctx) { if self.slider_b.keyboard_input(event, ctx) { changed = true; } }
+                    if self.font_selector.focused(ctx) { if ctx.propagate_event(&kev, self.font_selector.as_ptr_mut()) { changed = true; } }
+                    if self.sidebar_size.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_size.as_ptr_mut()) { changed = true; } }
+                    if self.slider_r.focused(ctx) { if ctx.propagate_event(&kev, self.slider_r.as_ptr_mut()) { changed = true; } }
+                    if self.slider_g.focused(ctx) { if ctx.propagate_event(&kev, self.slider_g.as_ptr_mut()) { changed = true; } }
+                    if self.slider_b.focused(ctx) { if ctx.propagate_event(&kev, self.slider_b.as_ptr_mut()) { changed = true; } }
                 } else if self.selected_idx.is_some() {
-                    if self.dropdown_align_h.focused(ctx) { if self.dropdown_align_h.keyboard_input(event, ctx) { changed = true; } }
-                    if self.dropdown_align_v.focused(ctx) { if self.dropdown_align_v.keyboard_input(event, ctx) { changed = true; } }
+                    if self.dropdown_align_h.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_align_h.as_ptr_mut()) { changed = true; } }
+                    if self.dropdown_align_v.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_align_v.as_ptr_mut()) { changed = true; } }
 
                     let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
                         Some(Element::Text { .. }) => (true, false),
@@ -2236,66 +2241,66 @@ impl LayoutApp {
                         _ => (false, false),
                     };
                     if is_text {
-                        if self.sidebar_x.focused(ctx) { if self.sidebar_x.keyboard_input(event, ctx) { changed = true; } }
-                        if self.sidebar_y.focused(ctx) { if self.sidebar_y.keyboard_input(event, ctx) { changed = true; } }
-                        if self.sidebar_w.focused(ctx) { if self.sidebar_w.keyboard_input(event, ctx) { changed = true; } }
-                        if self.sidebar_h.focused(ctx) { if self.sidebar_h.keyboard_input(event, ctx) { changed = true; } }
-                        if self.sidebar_text.focused(ctx) { if self.sidebar_text.keyboard_input(event, ctx) { changed = true; } }
-                        if self.font_selector.focused(ctx) { if self.font_selector.keyboard_input(event, ctx) { changed = true; } }
-                        if self.toggle_multiline.focused(ctx) { if self.toggle_multiline.keyboard_input(event, ctx) { changed = true; } }
-                        if self.dropdown_text_align_h.focused(ctx) { if self.dropdown_text_align_h.keyboard_input(event, ctx) { changed = true; } }
-                        if self.dropdown_text_align_v.focused(ctx) { if self.dropdown_text_align_v.keyboard_input(event, ctx) { changed = true; } }
-                        if self.sidebar_size.focused(ctx) { if self.sidebar_size.keyboard_input(event, ctx) { changed = true; } }
-                        if self.slider_r.focused(ctx) { if self.slider_r.keyboard_input(event, ctx) { changed = true; } }
-                        if self.slider_g.focused(ctx) { if self.slider_g.keyboard_input(event, ctx) { changed = true; } }
-                        if self.slider_b.focused(ctx) { if self.slider_b.keyboard_input(event, ctx) { changed = true; } }
+                        if self.sidebar_x.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_x.as_ptr_mut()) { changed = true; } }
+                        if self.sidebar_y.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_y.as_ptr_mut()) { changed = true; } }
+                        if self.sidebar_w.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_w.as_ptr_mut()) { changed = true; } }
+                        if self.sidebar_h.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_h.as_ptr_mut()) { changed = true; } }
+                        if self.sidebar_text.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_text.as_ptr_mut()) { changed = true; } }
+                        if self.font_selector.focused(ctx) { if ctx.propagate_event(&kev, self.font_selector.as_ptr_mut()) { changed = true; } }
+                        if self.toggle_multiline.focused(ctx) { if ctx.propagate_event(&kev, self.toggle_multiline.as_ptr_mut()) { changed = true; } }
+                        if self.dropdown_text_align_h.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_text_align_h.as_ptr_mut()) { changed = true; } }
+                        if self.dropdown_text_align_v.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_text_align_v.as_ptr_mut()) { changed = true; } }
+                        if self.sidebar_size.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_size.as_ptr_mut()) { changed = true; } }
+                        if self.slider_r.focused(ctx) { if ctx.propagate_event(&kev, self.slider_r.as_ptr_mut()) { changed = true; } }
+                        if self.slider_g.focused(ctx) { if ctx.propagate_event(&kev, self.slider_g.as_ptr_mut()) { changed = true; } }
+                        if self.slider_b.focused(ctx) { if ctx.propagate_event(&kev, self.slider_b.as_ptr_mut()) { changed = true; } }
                     } else if is_vector {
-                        if self.sidebar_x.focused(ctx) { if self.sidebar_x.keyboard_input(event, ctx) { changed = true; } }
-                        if self.sidebar_y.focused(ctx) { if self.sidebar_y.keyboard_input(event, ctx) { changed = true; } }
-                        if self.sidebar_w.focused(ctx) { if self.sidebar_w.keyboard_input(event, ctx) { changed = true; } }
-                        if self.sidebar_h.focused(ctx) { if self.sidebar_h.keyboard_input(event, ctx) { changed = true; } }
-                        if self.sidebar_size.focused(ctx) { if self.sidebar_size.keyboard_input(event, ctx) { changed = true; } }
-                        if self.dropdown_line_cap.focused(ctx) { if self.dropdown_line_cap.keyboard_input(event, ctx) { changed = true; } }
-                        if self.slider_r.focused(ctx) { if self.slider_r.keyboard_input(event, ctx) { changed = true; } }
-                        if self.slider_g.focused(ctx) { if self.slider_g.keyboard_input(event, ctx) { changed = true; } }
-                        if self.slider_b.focused(ctx) { if self.slider_b.keyboard_input(event, ctx) { changed = true; } }
+                        if self.sidebar_x.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_x.as_ptr_mut()) { changed = true; } }
+                        if self.sidebar_y.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_y.as_ptr_mut()) { changed = true; } }
+                        if self.sidebar_w.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_w.as_ptr_mut()) { changed = true; } }
+                        if self.sidebar_h.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_h.as_ptr_mut()) { changed = true; } }
+                        if self.sidebar_size.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_size.as_ptr_mut()) { changed = true; } }
+                        if self.dropdown_line_cap.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_line_cap.as_ptr_mut()) { changed = true; } }
+                        if self.slider_r.focused(ctx) { if ctx.propagate_event(&kev, self.slider_r.as_ptr_mut()) { changed = true; } }
+                        if self.slider_g.focused(ctx) { if ctx.propagate_event(&kev, self.slider_g.as_ptr_mut()) { changed = true; } }
+                        if self.slider_b.focused(ctx) { if ctx.propagate_event(&kev, self.slider_b.as_ptr_mut()) { changed = true; } }
                     } else {
-                        if self.sidebar_x.focused(ctx) { if self.sidebar_x.keyboard_input(event, ctx) { changed = true; } }
-                        if self.sidebar_y.focused(ctx) { if self.sidebar_y.keyboard_input(event, ctx) { changed = true; } }
-                        if self.sidebar_w.focused(ctx) { if self.sidebar_w.keyboard_input(event, ctx) { changed = true; } }
-                        if self.sidebar_h.focused(ctx) { if self.sidebar_h.keyboard_input(event, ctx) { changed = true; } }
-                        if self.slider_r.focused(ctx) { if self.slider_r.keyboard_input(event, ctx) { changed = true; } }
-                        if self.slider_g.focused(ctx) { if self.slider_g.keyboard_input(event, ctx) { changed = true; } }
-                        if self.slider_b.focused(ctx) { if self.slider_b.keyboard_input(event, ctx) { changed = true; } }
+                        if self.sidebar_x.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_x.as_ptr_mut()) { changed = true; } }
+                        if self.sidebar_y.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_y.as_ptr_mut()) { changed = true; } }
+                        if self.sidebar_w.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_w.as_ptr_mut()) { changed = true; } }
+                        if self.sidebar_h.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_h.as_ptr_mut()) { changed = true; } }
+                        if self.slider_r.focused(ctx) { if ctx.propagate_event(&kev, self.slider_r.as_ptr_mut()) { changed = true; } }
+                        if self.slider_g.focused(ctx) { if ctx.propagate_event(&kev, self.slider_g.as_ptr_mut()) { changed = true; } }
+                        if self.slider_b.focused(ctx) { if ctx.propagate_event(&kev, self.slider_b.as_ptr_mut()) { changed = true; } }
                     }
                 } else {
-                    if self.label_sel_status.focused(ctx) { if self.label_sel_status.keyboard_input(event, ctx) { changed = true; } }
-                    if self.label_sel_desc1.focused(ctx) { if self.label_sel_desc1.keyboard_input(event, ctx) { changed = true; } }
-                    if self.label_sel_desc2.focused(ctx) { if self.label_sel_desc2.keyboard_input(event, ctx) { changed = true; } }
+                    if self.label_sel_status.focused(ctx) { if ctx.propagate_event(&kev, self.label_sel_status.as_ptr_mut()) { changed = true; } }
+                    if self.label_sel_desc1.focused(ctx) { if ctx.propagate_event(&kev, self.label_sel_desc1.as_ptr_mut()) { changed = true; } }
+                    if self.label_sel_desc2.focused(ctx) { if ctx.propagate_event(&kev, self.label_sel_desc2.as_ptr_mut()) { changed = true; } }
                 }
             }
             3 => {
-                if self.btn_add_text.focused(ctx) { if self.btn_add_text.keyboard_input(event, ctx) { changed = true; } }
-                if self.btn_add_rect.focused(ctx) { if self.btn_add_rect.keyboard_input(event, ctx) { changed = true; } }
-                if self.btn_add_banner.focused(ctx) { if self.btn_add_banner.keyboard_input(event, ctx) { changed = true; } }
-                if self.btn_add_vector.focused(ctx) { if self.btn_add_vector.keyboard_input(event, ctx) { changed = true; } }
-                if self.label_total_elements.focused(ctx) { if self.label_total_elements.keyboard_input(event, ctx) { changed = true; } }
+                if self.btn_add_text.focused(ctx) { if ctx.propagate_event(&kev, self.btn_add_text.as_ptr_mut()) { changed = true; } }
+                if self.btn_add_rect.focused(ctx) { if ctx.propagate_event(&kev, self.btn_add_rect.as_ptr_mut()) { changed = true; } }
+                if self.btn_add_banner.focused(ctx) { if ctx.propagate_event(&kev, self.btn_add_banner.as_ptr_mut()) { changed = true; } }
+                if self.btn_add_vector.focused(ctx) { if ctx.propagate_event(&kev, self.btn_add_vector.as_ptr_mut()) { changed = true; } }
+                if self.label_total_elements.focused(ctx) { if ctx.propagate_event(&kev, self.label_total_elements.as_ptr_mut()) { changed = true; } }
             }
             4 => {
-                if self.toggle_grid.focused(ctx) { if self.toggle_grid.keyboard_input(event, ctx) { changed = true; } }
-                if self.grid_color_selector.focused(ctx) { if self.grid_color_selector.keyboard_input(event, ctx) { changed = true; } }
-                if self.spinbox_grid_size.focused(ctx) { if self.spinbox_grid_size.keyboard_input(event, ctx) { changed = true; } }
-                if self.label_grid_snap.focused(ctx) { if self.label_grid_snap.keyboard_input(event, ctx) { changed = true; } }
-                if self.slider_zoom.focused(ctx) { if self.slider_zoom.keyboard_input(event, ctx) { changed = true; } }
-                if self.toggle_rulers.focused(ctx) { if self.toggle_rulers.keyboard_input(event, ctx) { changed = true; } }
-                if self.dropdown_units.focused(ctx) { if self.dropdown_units.keyboard_input(event, ctx) { changed = true; } }
-                if self.margin_color_selector.focused(ctx) { if self.margin_color_selector.keyboard_input(event, ctx) { changed = true; } }
-                if self.spinbox_margin_thickness.focused(ctx) { if self.spinbox_margin_thickness.keyboard_input(event, ctx) { changed = true; } }
-                if self.dropdown_grid_units.focused(ctx) { if self.dropdown_grid_units.keyboard_input(event, ctx) { changed = true; } }
+                if self.toggle_grid.focused(ctx) { if ctx.propagate_event(&kev, self.toggle_grid.as_ptr_mut()) { changed = true; } }
+                if self.grid_color_selector.focused(ctx) { if ctx.propagate_event(&kev, self.grid_color_selector.as_ptr_mut()) { changed = true; } }
+                if self.spinbox_grid_size.focused(ctx) { if ctx.propagate_event(&kev, self.spinbox_grid_size.as_ptr_mut()) { changed = true; } }
+                if self.label_grid_snap.focused(ctx) { if ctx.propagate_event(&kev, self.label_grid_snap.as_ptr_mut()) { changed = true; } }
+                if self.slider_zoom.focused(ctx) { if ctx.propagate_event(&kev, self.slider_zoom.as_ptr_mut()) { changed = true; } }
+                if self.toggle_rulers.focused(ctx) { if ctx.propagate_event(&kev, self.toggle_rulers.as_ptr_mut()) { changed = true; } }
+                if self.dropdown_units.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_units.as_ptr_mut()) { changed = true; } }
+                if self.margin_color_selector.focused(ctx) { if ctx.propagate_event(&kev, self.margin_color_selector.as_ptr_mut()) { changed = true; } }
+                if self.spinbox_margin_thickness.focused(ctx) { if ctx.propagate_event(&kev, self.spinbox_margin_thickness.as_ptr_mut()) { changed = true; } }
+                if self.dropdown_grid_units.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_grid_units.as_ptr_mut()) { changed = true; } }
             }
             5 => {
                 for btn in &mut self.layer_buttons {
-                    if btn.focused(ctx) { if btn.keyboard_input(event, ctx) { changed = true; } }
+                    if btn.focused(ctx) { if ctx.propagate_event(&kev, btn.as_ptr_mut()) { changed = true; } }
                 }
             }
             _ => {}
@@ -3426,14 +3431,24 @@ impl Application for LayoutApp {
 
         let sidebar_w = 280.0;
         if px < sidebar_w {
-            if self.paginator.cursor_moved(px, py, &mut self.ui_context) { changed = true; }
+            if {
+                // Self-routing composite: handle_event, not propagate — the router's
+                // children-first descent would let the embedded strip consume this.
+                let mv = cce_ui::widget::Event::PointerMove { x: px, y: py, local_x: px, local_y: py };
+                self.paginator.handle_event(&mv, &mut self.ui_context)
+            } { changed = true; }
             if self.active_page_widgets_cursor_moved(px, py) { changed = true; }
             if self.paginator.selected_page() == 2 && changed {
                 self.apply_sidebar_changes();
             }
         } else {
             // Clear hover state on sidebar widgets if mouse moves to canvas
-            if self.paginator.cursor_moved(px, py, &mut self.ui_context) { changed = true; }
+            if {
+                // Self-routing composite: handle_event, not propagate — the router's
+                // children-first descent would let the embedded strip consume this.
+                let mv = cce_ui::widget::Event::PointerMove { x: px, y: py, local_x: px, local_y: py };
+                self.paginator.handle_event(&mv, &mut self.ui_context)
+            } { changed = true; }
             if self.active_page_widgets_cursor_moved(px, py) { changed = true; }
 
             // Compute centering coordinates for canvas elements
@@ -3449,7 +3464,9 @@ impl Application for LayoutApp {
             let cy = (py - page_y) / zoom;
 
             if self.word_processor_enabled {
-                if self.wp_text_box.on_cursor_moved(px, py, &mut self.ui_context) {
+                let mv = cce_ui::widget::Event::PointerMove { x: px, y: py, local_x: px, local_y: py };
+                let ptr = self.wp_text_box.as_ptr_mut();
+                if self.ui_context.propagate_event(&mv, ptr) {
                     changed = true;
                 }
             } else if let Some((idx, ox, oy)) = self.dragging {
@@ -3499,7 +3516,11 @@ impl Application for LayoutApp {
 
         let sidebar_w = 280.0;
         if px < sidebar_w {
-            let pag_mouse = self.paginator.mouse_input(button, state, px, py, &mut self.ui_context);
+            let pag_mouse = {
+                // Self-routing composite: handle_event, not propagate (see pointer move).
+                let ev = cce_ui::widget::Event::MouseButton { button, state, x: px, y: py, local_x: px, local_y: py };
+                self.paginator.handle_event(&ev, &mut self.ui_context)
+            };
             if pag_mouse {
                 changed = true;
                 if let Some((new_page, _)) = self.paginator.menu_click() {
@@ -3615,7 +3636,11 @@ impl Application for LayoutApp {
             let cy = (py - page_y) / zoom;
 
             if self.word_processor_enabled {
-                if self.wp_text_box.mouse_input(button, state, px, py, &mut self.ui_context) {
+                if {
+                    let ev = cce_ui::widget::Event::MouseButton { button, state, x: px, y: py, local_x: px, local_y: py };
+                    let ptr = self.wp_text_box.as_ptr_mut();
+                    self.ui_context.propagate_event(&ev, ptr)
+                } {
                     changed = true;
                 } else if state == ElementState::Pressed {
                     self.wp_text_box.unfocus();
@@ -3687,7 +3712,10 @@ impl Application for LayoutApp {
             if self.active_page_widgets_mouse_wheel(delta, px, py) {
                 wheel_handled = true;
             }
-            if self.paginator.mouse_wheel(delta, px, py, &mut self.ui_context) {
+            if {
+                let wev = cce_ui::widget::Event::MouseWheel { delta: *delta, x: px, y: py, local_x: px, local_y: py };
+                self.paginator.handle_event(&wev, &mut self.ui_context)
+            } {
                 wheel_handled = true;
             }
             if wheel_handled {
@@ -3723,7 +3751,9 @@ impl Application for LayoutApp {
         let mut handled = false;
 
         if self.word_processor_enabled {
-            if self.wp_text_box.keyboard_input(event, &mut self.ui_context) {
+            let kev = cce_ui::widget::Event::KeyInput(event.clone());
+            let ptr = self.wp_text_box.as_ptr_mut();
+            if self.ui_context.propagate_event(&kev, ptr) {
                 handled = true;
             }
         }
@@ -3732,7 +3762,10 @@ impl Application for LayoutApp {
             handled = true;
         }
 
-        if self.paginator.keyboard_input(event, &mut self.ui_context) {
+        if {
+            let kev = cce_ui::widget::Event::KeyInput(event.clone());
+            self.paginator.handle_event(&kev, &mut self.ui_context)
+        } {
             handled = true;
             let active_page = self.paginator.selected_page();
             if active_page == 2 {
