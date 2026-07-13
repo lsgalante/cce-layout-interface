@@ -1861,37 +1861,37 @@ impl LayoutApp {
         let selected_page = self.paginator.selected_page();
         match selected_page {
             0 => {
-                if ctx.propagate_event(&mv, self.btn_new_doc.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.btn_open.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_new_doc.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_open.id()) { changed = true; }
                 if self.recent_files_list.cursor_moved(px, py) { changed = true; }
                 for btn in &mut self.recent_files_buttons {
-                    if ctx.propagate_event(&mv, btn.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&mv, btn.id()) { changed = true; }
                 }
-                if ctx.propagate_event(&mv, self.btn_save.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.btn_save_as.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.btn_exit.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_save.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_save_as.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_exit.id()) { changed = true; }
             }
             1 => {
-                if ctx.propagate_event(&mv, self.dropdown_margin_units.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.dropdown_presets.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.slider_page_x.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.slider_page_y.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.page_color_selector.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.toggle_margin.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.toggle_word_processor.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.slider_margin_x.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.slider_margin_y.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.dropdown_margin_units.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.dropdown_presets.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.slider_page_x.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.slider_page_y.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.page_color_selector.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.toggle_margin.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.toggle_word_processor.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.slider_margin_x.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.slider_margin_y.id()) { changed = true; }
             }
             2 => {
                 if self.word_processor_enabled {
-                    if ctx.propagate_event(&mv, self.font_selector.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&mv, self.sidebar_size.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&mv, self.slider_r.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&mv, self.slider_g.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&mv, self.slider_b.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.font_selector.id()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.sidebar_size.id()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.slider_r.id()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.slider_g.id()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.slider_b.id()) { changed = true; }
                 } else if self.selected_idx.is_some() {
-                    if ctx.propagate_event(&mv, self.dropdown_align_h.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&mv, self.dropdown_align_v.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.dropdown_align_h.id()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.dropdown_align_v.id()) { changed = true; }
 
                     let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
                         Some(Element::Text { .. }) => (true, false),
@@ -1899,66 +1899,66 @@ impl LayoutApp {
                         _ => (false, false),
                     };
                     if is_text {
-                        if ctx.propagate_event(&mv, self.sidebar_x.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.sidebar_y.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.sidebar_w.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.sidebar_h.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.sidebar_text.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.font_selector.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.toggle_multiline.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.dropdown_text_align_h.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.dropdown_text_align_v.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.sidebar_size.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.slider_r.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.slider_g.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.slider_b.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_x.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_y.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_w.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_h.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_text.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.font_selector.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.toggle_multiline.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.dropdown_text_align_h.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.dropdown_text_align_v.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_size.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_r.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_g.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_b.id()) { changed = true; }
                     } else if is_vector {
-                        if ctx.propagate_event(&mv, self.sidebar_x.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.sidebar_y.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.sidebar_w.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.sidebar_h.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.sidebar_size.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.dropdown_line_cap.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.slider_r.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.slider_g.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.slider_b.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_x.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_y.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_w.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_h.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_size.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.dropdown_line_cap.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_r.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_g.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_b.id()) { changed = true; }
                     } else {
-                        if ctx.propagate_event(&mv, self.sidebar_x.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.sidebar_y.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.sidebar_w.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.sidebar_h.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.slider_r.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.slider_g.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&mv, self.slider_b.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_x.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_y.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_w.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.sidebar_h.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_r.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_g.id()) { changed = true; }
+                        if ctx.propagate_event(&mv, self.slider_b.id()) { changed = true; }
                     }
                 } else {
-                    if ctx.propagate_event(&mv, self.label_sel_status.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&mv, self.label_sel_desc1.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&mv, self.label_sel_desc2.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.label_sel_status.id()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.label_sel_desc1.id()) { changed = true; }
+                    if ctx.propagate_event(&mv, self.label_sel_desc2.id()) { changed = true; }
                 }
             }
             3 => {
-                if ctx.propagate_event(&mv, self.btn_add_text.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.btn_add_rect.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.btn_add_banner.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.btn_add_vector.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.label_total_elements.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_add_text.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_add_rect.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_add_banner.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.btn_add_vector.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.label_total_elements.id()) { changed = true; }
             }
             4 => {
-                if ctx.propagate_event(&mv, self.toggle_grid.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.grid_color_selector.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.spinbox_grid_size.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.label_grid_snap.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.slider_zoom.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.toggle_rulers.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.dropdown_units.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.margin_color_selector.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.spinbox_margin_thickness.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&mv, self.dropdown_grid_units.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&mv, self.toggle_grid.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.grid_color_selector.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.spinbox_grid_size.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.label_grid_snap.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.slider_zoom.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.toggle_rulers.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.dropdown_units.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.margin_color_selector.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.spinbox_margin_thickness.id()) { changed = true; }
+                if ctx.propagate_event(&mv, self.dropdown_grid_units.id()) { changed = true; }
             }
             5 => {
                 for btn in &mut self.layer_buttons {
-                    if ctx.propagate_event(&mv, btn.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&mv, btn.id()) { changed = true; }
                 }
             }
             _ => {}
@@ -1973,8 +1973,8 @@ impl LayoutApp {
         let selected_page = self.paginator.selected_page();
         match selected_page {
             0 => {
-                if ctx.propagate_event(&ev, self.btn_new_doc.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.btn_open.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_new_doc.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_open.id()) { changed = true; }
                 if button == MouseButton::Left {
                     let handled = match state {
                         ElementState::Pressed => self.recent_files_list.press(px, py),
@@ -1983,33 +1983,33 @@ impl LayoutApp {
                     if handled { changed = true; }
                 }
                 for btn in &mut self.recent_files_buttons {
-                    if ctx.propagate_event(&ev, btn.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&ev, btn.id()) { changed = true; }
                 }
-                if ctx.propagate_event(&ev, self.btn_save.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.btn_save_as.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.btn_exit.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_save.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_save_as.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_exit.id()) { changed = true; }
             }
             1 => {
-                if ctx.propagate_event(&ev, self.dropdown_margin_units.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.dropdown_presets.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.slider_page_x.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.slider_page_y.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.page_color_selector.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.toggle_margin.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.toggle_word_processor.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.slider_margin_x.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.slider_margin_y.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.dropdown_margin_units.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.dropdown_presets.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.slider_page_x.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.slider_page_y.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.page_color_selector.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.toggle_margin.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.toggle_word_processor.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.slider_margin_x.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.slider_margin_y.id()) { changed = true; }
             }
             2 => {
                 if self.word_processor_enabled {
-                    if ctx.propagate_event(&ev, self.font_selector.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&ev, self.sidebar_size.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&ev, self.slider_r.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&ev, self.slider_g.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&ev, self.slider_b.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.font_selector.id()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.sidebar_size.id()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.slider_r.id()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.slider_g.id()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.slider_b.id()) { changed = true; }
                 } else if self.selected_idx.is_some() {
-                    if ctx.propagate_event(&ev, self.dropdown_align_h.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&ev, self.dropdown_align_v.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.dropdown_align_h.id()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.dropdown_align_v.id()) { changed = true; }
 
                     let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
                         Some(Element::Text { .. }) => (true, false),
@@ -2017,66 +2017,66 @@ impl LayoutApp {
                         _ => (false, false),
                     };
                     if is_text {
-                        if ctx.propagate_event(&ev, self.sidebar_x.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.sidebar_y.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.sidebar_w.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.sidebar_h.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.sidebar_text.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.font_selector.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.toggle_multiline.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.dropdown_text_align_h.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.dropdown_text_align_v.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.sidebar_size.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.slider_r.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.slider_g.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.slider_b.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_x.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_y.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_w.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_h.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_text.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.font_selector.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.toggle_multiline.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.dropdown_text_align_h.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.dropdown_text_align_v.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_size.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_r.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_g.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_b.id()) { changed = true; }
                     } else if is_vector {
-                        if ctx.propagate_event(&ev, self.sidebar_x.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.sidebar_y.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.sidebar_w.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.sidebar_h.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.sidebar_size.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.dropdown_line_cap.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.slider_r.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.slider_g.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.slider_b.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_x.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_y.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_w.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_h.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_size.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.dropdown_line_cap.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_r.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_g.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_b.id()) { changed = true; }
                     } else {
-                        if ctx.propagate_event(&ev, self.sidebar_x.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.sidebar_y.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.sidebar_w.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.sidebar_h.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.slider_r.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.slider_g.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&ev, self.slider_b.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_x.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_y.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_w.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.sidebar_h.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_r.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_g.id()) { changed = true; }
+                        if ctx.propagate_event(&ev, self.slider_b.id()) { changed = true; }
                     }
                 } else {
-                    if ctx.propagate_event(&ev, self.label_sel_status.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&ev, self.label_sel_desc1.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&ev, self.label_sel_desc2.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.label_sel_status.id()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.label_sel_desc1.id()) { changed = true; }
+                    if ctx.propagate_event(&ev, self.label_sel_desc2.id()) { changed = true; }
                 }
             }
             3 => {
-                if ctx.propagate_event(&ev, self.btn_add_text.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.btn_add_rect.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.btn_add_banner.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.btn_add_vector.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.label_total_elements.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_add_text.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_add_rect.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_add_banner.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.btn_add_vector.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.label_total_elements.id()) { changed = true; }
             }
             4 => {
-                if ctx.propagate_event(&ev, self.toggle_grid.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.grid_color_selector.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.spinbox_grid_size.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.label_grid_snap.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.slider_zoom.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.toggle_rulers.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.dropdown_units.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.margin_color_selector.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.spinbox_margin_thickness.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&ev, self.dropdown_grid_units.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&ev, self.toggle_grid.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.grid_color_selector.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.spinbox_grid_size.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.label_grid_snap.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.slider_zoom.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.toggle_rulers.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.dropdown_units.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.margin_color_selector.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.spinbox_margin_thickness.id()) { changed = true; }
+                if ctx.propagate_event(&ev, self.dropdown_grid_units.id()) { changed = true; }
             }
             5 => {
                 for btn in &mut self.layer_buttons {
-                    if ctx.propagate_event(&ev, btn.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&ev, btn.id()) { changed = true; }
                 }
             }
             _ => {}
@@ -2091,37 +2091,37 @@ impl LayoutApp {
         let selected_page = self.paginator.selected_page();
         match selected_page {
             0 => {
-                if ctx.propagate_event(&wev, self.btn_new_doc.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.btn_open.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_new_doc.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_open.id()) { changed = true; }
                 if self.recent_files_list.wheel(delta, px, py) { changed = true; }
                 for btn in &mut self.recent_files_buttons {
-                    if ctx.propagate_event(&wev, btn.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&wev, btn.id()) { changed = true; }
                 }
-                if ctx.propagate_event(&wev, self.btn_save.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.btn_save_as.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.btn_exit.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_save.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_save_as.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_exit.id()) { changed = true; }
             }
             1 => {
-                if ctx.propagate_event(&wev, self.dropdown_margin_units.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.dropdown_presets.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.slider_page_x.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.slider_page_y.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.page_color_selector.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.toggle_margin.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.toggle_word_processor.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.slider_margin_x.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.slider_margin_y.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.dropdown_margin_units.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.dropdown_presets.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.slider_page_x.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.slider_page_y.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.page_color_selector.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.toggle_margin.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.toggle_word_processor.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.slider_margin_x.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.slider_margin_y.id()) { changed = true; }
             }
             2 => {
                 if self.word_processor_enabled {
-                    if ctx.propagate_event(&wev, self.font_selector.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&wev, self.sidebar_size.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&wev, self.slider_r.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&wev, self.slider_g.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&wev, self.slider_b.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.font_selector.id()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.sidebar_size.id()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.slider_r.id()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.slider_g.id()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.slider_b.id()) { changed = true; }
                 } else if self.selected_idx.is_some() {
-                    if ctx.propagate_event(&wev, self.dropdown_align_h.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&wev, self.dropdown_align_v.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.dropdown_align_h.id()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.dropdown_align_v.id()) { changed = true; }
 
                     let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
                         Some(Element::Text { .. }) => (true, false),
@@ -2129,66 +2129,66 @@ impl LayoutApp {
                         _ => (false, false),
                     };
                     if is_text {
-                        if ctx.propagate_event(&wev, self.sidebar_x.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.sidebar_y.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.sidebar_w.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.sidebar_h.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.sidebar_text.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.font_selector.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.toggle_multiline.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.dropdown_text_align_h.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.dropdown_text_align_v.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.sidebar_size.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.slider_r.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.slider_g.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.slider_b.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_x.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_y.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_w.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_h.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_text.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.font_selector.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.toggle_multiline.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.dropdown_text_align_h.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.dropdown_text_align_v.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_size.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_r.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_g.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_b.id()) { changed = true; }
                     } else if is_vector {
-                        if ctx.propagate_event(&wev, self.sidebar_x.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.sidebar_y.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.sidebar_w.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.sidebar_h.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.sidebar_size.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.dropdown_line_cap.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.slider_r.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.slider_g.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.slider_b.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_x.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_y.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_w.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_h.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_size.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.dropdown_line_cap.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_r.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_g.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_b.id()) { changed = true; }
                     } else {
-                        if ctx.propagate_event(&wev, self.sidebar_x.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.sidebar_y.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.sidebar_w.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.sidebar_h.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.slider_r.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.slider_g.as_ptr_mut()) { changed = true; }
-                        if ctx.propagate_event(&wev, self.slider_b.as_ptr_mut()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_x.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_y.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_w.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.sidebar_h.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_r.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_g.id()) { changed = true; }
+                        if ctx.propagate_event(&wev, self.slider_b.id()) { changed = true; }
                     }
                 } else {
-                    if ctx.propagate_event(&wev, self.label_sel_status.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&wev, self.label_sel_desc1.as_ptr_mut()) { changed = true; }
-                    if ctx.propagate_event(&wev, self.label_sel_desc2.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.label_sel_status.id()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.label_sel_desc1.id()) { changed = true; }
+                    if ctx.propagate_event(&wev, self.label_sel_desc2.id()) { changed = true; }
                 }
             }
             3 => {
-                if ctx.propagate_event(&wev, self.btn_add_text.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.btn_add_rect.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.btn_add_banner.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.btn_add_vector.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.label_total_elements.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_add_text.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_add_rect.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_add_banner.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.btn_add_vector.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.label_total_elements.id()) { changed = true; }
             }
             4 => {
-                if ctx.propagate_event(&wev, self.toggle_grid.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.grid_color_selector.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.spinbox_grid_size.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.label_grid_snap.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.slider_zoom.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.toggle_rulers.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.dropdown_units.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.margin_color_selector.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.spinbox_margin_thickness.as_ptr_mut()) { changed = true; }
-                if ctx.propagate_event(&wev, self.dropdown_grid_units.as_ptr_mut()) { changed = true; }
+                if ctx.propagate_event(&wev, self.toggle_grid.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.grid_color_selector.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.spinbox_grid_size.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.label_grid_snap.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.slider_zoom.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.toggle_rulers.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.dropdown_units.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.margin_color_selector.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.spinbox_margin_thickness.id()) { changed = true; }
+                if ctx.propagate_event(&wev, self.dropdown_grid_units.id()) { changed = true; }
             }
             5 => {
                 for btn in &mut self.layer_buttons {
-                    if ctx.propagate_event(&wev, btn.as_ptr_mut()) { changed = true; }
+                    if ctx.propagate_event(&wev, btn.id()) { changed = true; }
                 }
             }
             _ => {}
@@ -2203,37 +2203,37 @@ impl LayoutApp {
         let selected_page = self.paginator.selected_page();
         match selected_page {
             0 => {
-                if self.btn_new_doc.focused(ctx) { if ctx.propagate_event(&kev, self.btn_new_doc.as_ptr_mut()) { changed = true; } }
-                if self.btn_open.focused(ctx) { if ctx.propagate_event(&kev, self.btn_open.as_ptr_mut()) { changed = true; } }
+                if self.btn_new_doc.focused(ctx) { if ctx.propagate_event(&kev, self.btn_new_doc.id()) { changed = true; } }
+                if self.btn_open.focused(ctx) { if ctx.propagate_event(&kev, self.btn_open.id()) { changed = true; } }
                 if self.recent_files_list.focused { if self.recent_files_list.keyboard(event) { changed = true; } }
                 for btn in &mut self.recent_files_buttons {
-                    if btn.focused(ctx) { if ctx.propagate_event(&kev, btn.as_ptr_mut()) { changed = true; } }
+                    if btn.focused(ctx) { if ctx.propagate_event(&kev, btn.id()) { changed = true; } }
                 }
-                if self.btn_save.focused(ctx) { if ctx.propagate_event(&kev, self.btn_save.as_ptr_mut()) { changed = true; } }
-                if self.btn_save_as.focused(ctx) { if ctx.propagate_event(&kev, self.btn_save_as.as_ptr_mut()) { changed = true; } }
-                if self.btn_exit.focused(ctx) { if ctx.propagate_event(&kev, self.btn_exit.as_ptr_mut()) { changed = true; } }
+                if self.btn_save.focused(ctx) { if ctx.propagate_event(&kev, self.btn_save.id()) { changed = true; } }
+                if self.btn_save_as.focused(ctx) { if ctx.propagate_event(&kev, self.btn_save_as.id()) { changed = true; } }
+                if self.btn_exit.focused(ctx) { if ctx.propagate_event(&kev, self.btn_exit.id()) { changed = true; } }
             }
             1 => {
-                if self.dropdown_margin_units.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_margin_units.as_ptr_mut()) { changed = true; } }
-                if self.dropdown_presets.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_presets.as_ptr_mut()) { changed = true; } }
-                if self.slider_page_x.focused(ctx) { if ctx.propagate_event(&kev, self.slider_page_x.as_ptr_mut()) { changed = true; } }
-                if self.slider_page_y.focused(ctx) { if ctx.propagate_event(&kev, self.slider_page_y.as_ptr_mut()) { changed = true; } }
-                if self.page_color_selector.focused(ctx) { if ctx.propagate_event(&kev, self.page_color_selector.as_ptr_mut()) { changed = true; } }
-                if self.toggle_margin.focused(ctx) { if ctx.propagate_event(&kev, self.toggle_margin.as_ptr_mut()) { changed = true; } }
-                if self.toggle_word_processor.focused(ctx) { if ctx.propagate_event(&kev, self.toggle_word_processor.as_ptr_mut()) { changed = true; } }
-                if self.slider_margin_x.focused(ctx) { if ctx.propagate_event(&kev, self.slider_margin_x.as_ptr_mut()) { changed = true; } }
-                if self.slider_margin_y.focused(ctx) { if ctx.propagate_event(&kev, self.slider_margin_y.as_ptr_mut()) { changed = true; } }
+                if self.dropdown_margin_units.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_margin_units.id()) { changed = true; } }
+                if self.dropdown_presets.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_presets.id()) { changed = true; } }
+                if self.slider_page_x.focused(ctx) { if ctx.propagate_event(&kev, self.slider_page_x.id()) { changed = true; } }
+                if self.slider_page_y.focused(ctx) { if ctx.propagate_event(&kev, self.slider_page_y.id()) { changed = true; } }
+                if self.page_color_selector.focused(ctx) { if ctx.propagate_event(&kev, self.page_color_selector.id()) { changed = true; } }
+                if self.toggle_margin.focused(ctx) { if ctx.propagate_event(&kev, self.toggle_margin.id()) { changed = true; } }
+                if self.toggle_word_processor.focused(ctx) { if ctx.propagate_event(&kev, self.toggle_word_processor.id()) { changed = true; } }
+                if self.slider_margin_x.focused(ctx) { if ctx.propagate_event(&kev, self.slider_margin_x.id()) { changed = true; } }
+                if self.slider_margin_y.focused(ctx) { if ctx.propagate_event(&kev, self.slider_margin_y.id()) { changed = true; } }
             }
             2 => {
                 if self.word_processor_enabled {
-                    if self.font_selector.focused(ctx) { if ctx.propagate_event(&kev, self.font_selector.as_ptr_mut()) { changed = true; } }
-                    if self.sidebar_size.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_size.as_ptr_mut()) { changed = true; } }
-                    if self.slider_r.focused(ctx) { if ctx.propagate_event(&kev, self.slider_r.as_ptr_mut()) { changed = true; } }
-                    if self.slider_g.focused(ctx) { if ctx.propagate_event(&kev, self.slider_g.as_ptr_mut()) { changed = true; } }
-                    if self.slider_b.focused(ctx) { if ctx.propagate_event(&kev, self.slider_b.as_ptr_mut()) { changed = true; } }
+                    if self.font_selector.focused(ctx) { if ctx.propagate_event(&kev, self.font_selector.id()) { changed = true; } }
+                    if self.sidebar_size.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_size.id()) { changed = true; } }
+                    if self.slider_r.focused(ctx) { if ctx.propagate_event(&kev, self.slider_r.id()) { changed = true; } }
+                    if self.slider_g.focused(ctx) { if ctx.propagate_event(&kev, self.slider_g.id()) { changed = true; } }
+                    if self.slider_b.focused(ctx) { if ctx.propagate_event(&kev, self.slider_b.id()) { changed = true; } }
                 } else if self.selected_idx.is_some() {
-                    if self.dropdown_align_h.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_align_h.as_ptr_mut()) { changed = true; } }
-                    if self.dropdown_align_v.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_align_v.as_ptr_mut()) { changed = true; } }
+                    if self.dropdown_align_h.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_align_h.id()) { changed = true; } }
+                    if self.dropdown_align_v.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_align_v.id()) { changed = true; } }
 
                     let (is_text, is_vector) = match self.selected_idx.map(|idx| &self.elements[idx]) {
                         Some(Element::Text { .. }) => (true, false),
@@ -2241,66 +2241,66 @@ impl LayoutApp {
                         _ => (false, false),
                     };
                     if is_text {
-                        if self.sidebar_x.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_x.as_ptr_mut()) { changed = true; } }
-                        if self.sidebar_y.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_y.as_ptr_mut()) { changed = true; } }
-                        if self.sidebar_w.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_w.as_ptr_mut()) { changed = true; } }
-                        if self.sidebar_h.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_h.as_ptr_mut()) { changed = true; } }
-                        if self.sidebar_text.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_text.as_ptr_mut()) { changed = true; } }
-                        if self.font_selector.focused(ctx) { if ctx.propagate_event(&kev, self.font_selector.as_ptr_mut()) { changed = true; } }
-                        if self.toggle_multiline.focused(ctx) { if ctx.propagate_event(&kev, self.toggle_multiline.as_ptr_mut()) { changed = true; } }
-                        if self.dropdown_text_align_h.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_text_align_h.as_ptr_mut()) { changed = true; } }
-                        if self.dropdown_text_align_v.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_text_align_v.as_ptr_mut()) { changed = true; } }
-                        if self.sidebar_size.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_size.as_ptr_mut()) { changed = true; } }
-                        if self.slider_r.focused(ctx) { if ctx.propagate_event(&kev, self.slider_r.as_ptr_mut()) { changed = true; } }
-                        if self.slider_g.focused(ctx) { if ctx.propagate_event(&kev, self.slider_g.as_ptr_mut()) { changed = true; } }
-                        if self.slider_b.focused(ctx) { if ctx.propagate_event(&kev, self.slider_b.as_ptr_mut()) { changed = true; } }
+                        if self.sidebar_x.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_x.id()) { changed = true; } }
+                        if self.sidebar_y.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_y.id()) { changed = true; } }
+                        if self.sidebar_w.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_w.id()) { changed = true; } }
+                        if self.sidebar_h.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_h.id()) { changed = true; } }
+                        if self.sidebar_text.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_text.id()) { changed = true; } }
+                        if self.font_selector.focused(ctx) { if ctx.propagate_event(&kev, self.font_selector.id()) { changed = true; } }
+                        if self.toggle_multiline.focused(ctx) { if ctx.propagate_event(&kev, self.toggle_multiline.id()) { changed = true; } }
+                        if self.dropdown_text_align_h.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_text_align_h.id()) { changed = true; } }
+                        if self.dropdown_text_align_v.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_text_align_v.id()) { changed = true; } }
+                        if self.sidebar_size.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_size.id()) { changed = true; } }
+                        if self.slider_r.focused(ctx) { if ctx.propagate_event(&kev, self.slider_r.id()) { changed = true; } }
+                        if self.slider_g.focused(ctx) { if ctx.propagate_event(&kev, self.slider_g.id()) { changed = true; } }
+                        if self.slider_b.focused(ctx) { if ctx.propagate_event(&kev, self.slider_b.id()) { changed = true; } }
                     } else if is_vector {
-                        if self.sidebar_x.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_x.as_ptr_mut()) { changed = true; } }
-                        if self.sidebar_y.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_y.as_ptr_mut()) { changed = true; } }
-                        if self.sidebar_w.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_w.as_ptr_mut()) { changed = true; } }
-                        if self.sidebar_h.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_h.as_ptr_mut()) { changed = true; } }
-                        if self.sidebar_size.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_size.as_ptr_mut()) { changed = true; } }
-                        if self.dropdown_line_cap.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_line_cap.as_ptr_mut()) { changed = true; } }
-                        if self.slider_r.focused(ctx) { if ctx.propagate_event(&kev, self.slider_r.as_ptr_mut()) { changed = true; } }
-                        if self.slider_g.focused(ctx) { if ctx.propagate_event(&kev, self.slider_g.as_ptr_mut()) { changed = true; } }
-                        if self.slider_b.focused(ctx) { if ctx.propagate_event(&kev, self.slider_b.as_ptr_mut()) { changed = true; } }
+                        if self.sidebar_x.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_x.id()) { changed = true; } }
+                        if self.sidebar_y.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_y.id()) { changed = true; } }
+                        if self.sidebar_w.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_w.id()) { changed = true; } }
+                        if self.sidebar_h.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_h.id()) { changed = true; } }
+                        if self.sidebar_size.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_size.id()) { changed = true; } }
+                        if self.dropdown_line_cap.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_line_cap.id()) { changed = true; } }
+                        if self.slider_r.focused(ctx) { if ctx.propagate_event(&kev, self.slider_r.id()) { changed = true; } }
+                        if self.slider_g.focused(ctx) { if ctx.propagate_event(&kev, self.slider_g.id()) { changed = true; } }
+                        if self.slider_b.focused(ctx) { if ctx.propagate_event(&kev, self.slider_b.id()) { changed = true; } }
                     } else {
-                        if self.sidebar_x.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_x.as_ptr_mut()) { changed = true; } }
-                        if self.sidebar_y.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_y.as_ptr_mut()) { changed = true; } }
-                        if self.sidebar_w.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_w.as_ptr_mut()) { changed = true; } }
-                        if self.sidebar_h.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_h.as_ptr_mut()) { changed = true; } }
-                        if self.slider_r.focused(ctx) { if ctx.propagate_event(&kev, self.slider_r.as_ptr_mut()) { changed = true; } }
-                        if self.slider_g.focused(ctx) { if ctx.propagate_event(&kev, self.slider_g.as_ptr_mut()) { changed = true; } }
-                        if self.slider_b.focused(ctx) { if ctx.propagate_event(&kev, self.slider_b.as_ptr_mut()) { changed = true; } }
+                        if self.sidebar_x.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_x.id()) { changed = true; } }
+                        if self.sidebar_y.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_y.id()) { changed = true; } }
+                        if self.sidebar_w.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_w.id()) { changed = true; } }
+                        if self.sidebar_h.focused(ctx) { if ctx.propagate_event(&kev, self.sidebar_h.id()) { changed = true; } }
+                        if self.slider_r.focused(ctx) { if ctx.propagate_event(&kev, self.slider_r.id()) { changed = true; } }
+                        if self.slider_g.focused(ctx) { if ctx.propagate_event(&kev, self.slider_g.id()) { changed = true; } }
+                        if self.slider_b.focused(ctx) { if ctx.propagate_event(&kev, self.slider_b.id()) { changed = true; } }
                     }
                 } else {
-                    if self.label_sel_status.focused(ctx) { if ctx.propagate_event(&kev, self.label_sel_status.as_ptr_mut()) { changed = true; } }
-                    if self.label_sel_desc1.focused(ctx) { if ctx.propagate_event(&kev, self.label_sel_desc1.as_ptr_mut()) { changed = true; } }
-                    if self.label_sel_desc2.focused(ctx) { if ctx.propagate_event(&kev, self.label_sel_desc2.as_ptr_mut()) { changed = true; } }
+                    if self.label_sel_status.focused(ctx) { if ctx.propagate_event(&kev, self.label_sel_status.id()) { changed = true; } }
+                    if self.label_sel_desc1.focused(ctx) { if ctx.propagate_event(&kev, self.label_sel_desc1.id()) { changed = true; } }
+                    if self.label_sel_desc2.focused(ctx) { if ctx.propagate_event(&kev, self.label_sel_desc2.id()) { changed = true; } }
                 }
             }
             3 => {
-                if self.btn_add_text.focused(ctx) { if ctx.propagate_event(&kev, self.btn_add_text.as_ptr_mut()) { changed = true; } }
-                if self.btn_add_rect.focused(ctx) { if ctx.propagate_event(&kev, self.btn_add_rect.as_ptr_mut()) { changed = true; } }
-                if self.btn_add_banner.focused(ctx) { if ctx.propagate_event(&kev, self.btn_add_banner.as_ptr_mut()) { changed = true; } }
-                if self.btn_add_vector.focused(ctx) { if ctx.propagate_event(&kev, self.btn_add_vector.as_ptr_mut()) { changed = true; } }
-                if self.label_total_elements.focused(ctx) { if ctx.propagate_event(&kev, self.label_total_elements.as_ptr_mut()) { changed = true; } }
+                if self.btn_add_text.focused(ctx) { if ctx.propagate_event(&kev, self.btn_add_text.id()) { changed = true; } }
+                if self.btn_add_rect.focused(ctx) { if ctx.propagate_event(&kev, self.btn_add_rect.id()) { changed = true; } }
+                if self.btn_add_banner.focused(ctx) { if ctx.propagate_event(&kev, self.btn_add_banner.id()) { changed = true; } }
+                if self.btn_add_vector.focused(ctx) { if ctx.propagate_event(&kev, self.btn_add_vector.id()) { changed = true; } }
+                if self.label_total_elements.focused(ctx) { if ctx.propagate_event(&kev, self.label_total_elements.id()) { changed = true; } }
             }
             4 => {
-                if self.toggle_grid.focused(ctx) { if ctx.propagate_event(&kev, self.toggle_grid.as_ptr_mut()) { changed = true; } }
-                if self.grid_color_selector.focused(ctx) { if ctx.propagate_event(&kev, self.grid_color_selector.as_ptr_mut()) { changed = true; } }
-                if self.spinbox_grid_size.focused(ctx) { if ctx.propagate_event(&kev, self.spinbox_grid_size.as_ptr_mut()) { changed = true; } }
-                if self.label_grid_snap.focused(ctx) { if ctx.propagate_event(&kev, self.label_grid_snap.as_ptr_mut()) { changed = true; } }
-                if self.slider_zoom.focused(ctx) { if ctx.propagate_event(&kev, self.slider_zoom.as_ptr_mut()) { changed = true; } }
-                if self.toggle_rulers.focused(ctx) { if ctx.propagate_event(&kev, self.toggle_rulers.as_ptr_mut()) { changed = true; } }
-                if self.dropdown_units.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_units.as_ptr_mut()) { changed = true; } }
-                if self.margin_color_selector.focused(ctx) { if ctx.propagate_event(&kev, self.margin_color_selector.as_ptr_mut()) { changed = true; } }
-                if self.spinbox_margin_thickness.focused(ctx) { if ctx.propagate_event(&kev, self.spinbox_margin_thickness.as_ptr_mut()) { changed = true; } }
-                if self.dropdown_grid_units.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_grid_units.as_ptr_mut()) { changed = true; } }
+                if self.toggle_grid.focused(ctx) { if ctx.propagate_event(&kev, self.toggle_grid.id()) { changed = true; } }
+                if self.grid_color_selector.focused(ctx) { if ctx.propagate_event(&kev, self.grid_color_selector.id()) { changed = true; } }
+                if self.spinbox_grid_size.focused(ctx) { if ctx.propagate_event(&kev, self.spinbox_grid_size.id()) { changed = true; } }
+                if self.label_grid_snap.focused(ctx) { if ctx.propagate_event(&kev, self.label_grid_snap.id()) { changed = true; } }
+                if self.slider_zoom.focused(ctx) { if ctx.propagate_event(&kev, self.slider_zoom.id()) { changed = true; } }
+                if self.toggle_rulers.focused(ctx) { if ctx.propagate_event(&kev, self.toggle_rulers.id()) { changed = true; } }
+                if self.dropdown_units.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_units.id()) { changed = true; } }
+                if self.margin_color_selector.focused(ctx) { if ctx.propagate_event(&kev, self.margin_color_selector.id()) { changed = true; } }
+                if self.spinbox_margin_thickness.focused(ctx) { if ctx.propagate_event(&kev, self.spinbox_margin_thickness.id()) { changed = true; } }
+                if self.dropdown_grid_units.focused(ctx) { if ctx.propagate_event(&kev, self.dropdown_grid_units.id()) { changed = true; } }
             }
             5 => {
                 for btn in &mut self.layer_buttons {
-                    if btn.focused(ctx) { if ctx.propagate_event(&kev, btn.as_ptr_mut()) { changed = true; } }
+                    if btn.focused(ctx) { if ctx.propagate_event(&kev, btn.id()) { changed = true; } }
                 }
             }
             _ => {}
@@ -3145,6 +3145,12 @@ impl Application for LayoutApp {
     }
 
     fn display_list(&mut self, size: LogicalSize, scale: f64) -> Option<cce_ui::scene::paint::DisplayList> {
+        // Id-rooted router: the word-processor box dispatches by id — keep its
+        // registration fresh (idempotent) whether or not the mode is enabled.
+        {
+            let (id, ptr) = (self.wp_text_box.id(), self.wp_text_box.as_ptr_mut());
+            self.ui_context.register_widget(id, ptr);
+        }
         // Phase 6aj single paint path: view() geometry + view_vectors + text prims (single-run
         // via text_with, boxed canvas text via text_boxed). App FontSystem is bundled now (was
         // _with_system_fonts) — kept only for widgets' prepare_text; text renders via the engine
@@ -3465,8 +3471,8 @@ impl Application for LayoutApp {
 
             if self.word_processor_enabled {
                 let mv = cce_ui::widget::Event::PointerMove { x: px, y: py, local_x: px, local_y: py };
-                let ptr = self.wp_text_box.as_ptr_mut();
-                if self.ui_context.propagate_event(&mv, ptr) {
+                let root = self.wp_text_box.id();
+                if self.ui_context.propagate_event(&mv, root) {
                     changed = true;
                 }
             } else if let Some((idx, ox, oy)) = self.dragging {
@@ -3638,8 +3644,8 @@ impl Application for LayoutApp {
             if self.word_processor_enabled {
                 if {
                     let ev = cce_ui::widget::Event::MouseButton { button, state, x: px, y: py, local_x: px, local_y: py };
-                    let ptr = self.wp_text_box.as_ptr_mut();
-                    self.ui_context.propagate_event(&ev, ptr)
+                    let root = self.wp_text_box.id();
+                    self.ui_context.propagate_event(&ev, root)
                 } {
                     changed = true;
                 } else if state == ElementState::Pressed {
@@ -3752,8 +3758,8 @@ impl Application for LayoutApp {
 
         if self.word_processor_enabled {
             let kev = cce_ui::widget::Event::KeyInput(event.clone());
-            let ptr = self.wp_text_box.as_ptr_mut();
-            if self.ui_context.propagate_event(&kev, ptr) {
+            let root = self.wp_text_box.id();
+            if self.ui_context.propagate_event(&kev, root) {
                 handled = true;
             }
         }
