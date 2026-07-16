@@ -7,7 +7,7 @@ use cce_ui::engine::{Application, EngineState, LogicalPosition, LogicalSize, Win
 use cce_ui::widget::{
     MouseButton, ElementState, MouseScrollDelta, KeyEvent, WidgetHost as UiElement,
     TextBox, Slider, TextLabel, Paginator, Button, Dropdown, Toggle, ColorSelector,
-    Label, Spinbox, Key, NamedKey, FontSelector, PageSelector, MenuController
+    Label, Spinbox, Key, FontSelector, PageSelector, MenuController
 };
 use cce_ui::layout::{RenderTarget, Section, UiFrame};
 
@@ -247,7 +247,24 @@ const PRESETS: &[PagePreset] = &[
     PagePreset { name: "Custom", w: 510.0, h: 660.0 },
 ];
 
+/// App shortcuts, resolved once at startup from input.kdl
+/// (`cce-layout-interface` domain → `cce-ui` domain).
+struct LayoutKeys {
+    save_document: String,
+    delete_element: String,
+}
+
+impl LayoutKeys {
+    fn load() -> Self {
+        Self {
+            save_document: cce_ui::input::app_chord("save_document", "ctrl+s"),
+            delete_element: cce_ui::input::app_chord("delete_element", "delete"),
+        }
+    }
+}
+
 struct LayoutApp {
+    keys: LayoutKeys,
     btn_new_doc: cce_ui::widget::Adapted<cce_ui::widget::Button>,
     btn_open: cce_ui::widget::Adapted<cce_ui::widget::Button>,
     recent_files: Vec<std::path::PathBuf>,
@@ -2674,6 +2691,7 @@ impl Application for LayoutApp {
         }
 
         let mut app = Self {
+            keys: LayoutKeys::load(),
             btn_new_doc,
             btn_open,
             recent_files,
@@ -3744,13 +3762,16 @@ impl Application for LayoutApp {
     }
 
     fn handle_key_input(&mut self, event: &KeyEvent, needs_rebuild: &mut bool) -> Option<Self::Message> {
-        if event.state == ElementState::Pressed && event.ctrl {
-            if let Key::Character(ref s) = event.logical_key {
-                if s == "s" || s == "S" || s == "\u{13}" || s == "\x13" {
-                    *needs_rebuild = true;
-                    self.needs_rebuild = true;
-                    return Some(AppMessage::Save);
-                }
+        if event.state == ElementState::Pressed {
+            // Ctrl+letter can arrive as the raw control character; keep the
+            // \u{13} form matching whenever the chord is the ctrl+s default.
+            let ctrl_char_save = self.keys.save_document == "ctrl+s"
+                && event.ctrl
+                && matches!(event.logical_key, Key::Character(ref s) if s == "\u{13}");
+            if cce_ui::widget::match_key_shortcut(event, &self.keys.save_document) || ctrl_char_save {
+                *needs_rebuild = true;
+                self.needs_rebuild = true;
+                return Some(AppMessage::Save);
             }
         }
 
@@ -3780,7 +3801,7 @@ impl Application for LayoutApp {
         }
 
         if !handled && !self.word_processor_enabled && event.state == ElementState::Pressed {
-            if let Key::Named(NamedKey::Delete) = event.logical_key {
+            if cce_ui::widget::match_key_shortcut(event, &self.keys.delete_element) {
                 if let Some(idx) = self.selected_idx {
                     if idx < self.elements.len() {
                         self.elements.remove(idx);
