@@ -3447,6 +3447,12 @@ impl Application for LayoutApp {
             cce_ui::scene::painter::append_widget_text(&self.ui_context, &self.wp_text_box, &mut __pc);
         }
 
+        // Open dropdown popovers, last, on top of everything — PaintCtx is a
+        // RenderTarget, and render_popovers sweeps the registry for open
+        // popovers (this app registers none explicitly). Without this pass an
+        // open menu was invisible: it hit-tested and occluded, but never drew.
+        cce_ui::layout::render_popovers(&mut __pc, &self.ui_context);
+
         Some(__pc.finish())
     }
 
