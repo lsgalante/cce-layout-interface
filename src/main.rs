@@ -452,6 +452,14 @@ impl LayoutApp {
     }
 
     fn rebuild_recent_buttons(&mut self) {
+        // Widget ids are globally monotonic and never reused, so the buttons pushed below
+        // register under NEW ids; the dropped ones would stay in the registry pointing at
+        // freed memory, and the engine derefs the whole registry on every left press
+        // (`close_popovers_missed_by_press`). Drop their registrations first.
+        let stale: Vec<_> = self.recent_files_buttons.iter().map(|b| b.id()).collect();
+        for id in stale {
+            self.ui_context.unregister_widget(id);
+        }
         self.recent_files_buttons.clear();
         for file in &self.recent_files {
             let label = file.file_name()
@@ -1184,6 +1192,12 @@ impl LayoutApp {
     }
 
     fn rebuild_layers_tab_widgets(&mut self) {
+        // See the note in rebuild_recent_buttons(): monotonic ids mean the outgoing buttons
+        // must be unregistered or the registry keeps dangling pointers into freed boxes.
+        let stale: Vec<_> = self.layer_buttons.iter().map(|b| b.id()).collect();
+        for id in stale {
+            self.ui_context.unregister_widget(id);
+        }
         self.layer_buttons.clear();
         for (idx, element) in self.elements.iter().enumerate() {
             let label = match element {
