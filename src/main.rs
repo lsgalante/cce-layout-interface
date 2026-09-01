@@ -2392,6 +2392,8 @@ impl LayoutApp {
             0 => {
                 if self.btn_new_doc.tick(dt, ctx) { changed = true; }
                 if self.btn_open.tick(dt, ctx) { changed = true; }
+                // Raise/sink upkeep for the recent-files scrollbar.
+                if self.recent_files_list.tick(dt) { changed = true; }
                 for btn in &mut self.recent_files_buttons {
                     if btn.tick(dt, ctx) { changed = true; }
                 }
@@ -2745,7 +2747,10 @@ impl Application for LayoutApp {
         label_total_elements.set_rect(0.0, 0.0, 240.0, 18.0);
 
         let recent_files = Self::load_recent_files();
-        let recent_files_list = ScrollRegion::new(22.0, 2.0);
+        // Designer raise/sink treatment, self-contained for a framed region:
+        // push_prims lays the sunk bar under the translucent bg fill (a dim
+        // ghost inside the well) and the raised bar on top while scrolling.
+        let recent_files_list = ScrollRegion::new(22.0, 2.0).with_sink_behind(true);
         let mut recent_files_buttons = Vec::new();
         for file in &recent_files {
             let label = file.file_name()
