@@ -1,5 +1,4 @@
-mod scroll_region;
-use scroll_region::ScrollRegion;
+use cce_ui::widget::ScrollRegion;
 use wayland_client::QueueHandle;
 use cce_ui::cosmic_text::FontSystem;
 use serde::{Serialize, Deserialize};
@@ -14,6 +13,13 @@ use cce_ui::layout::{RenderTarget, Section, UiFrame};
 pub struct PageContent {
     pub rects: Vec<([f32; 4], f32, f32, f32, f32)>,
     pub texts: Vec<(String, f32, f32, f32, [f32; 4], Option<String>, Option<[f32; 4]>)>,
+    /// Scoped clip `[l, t, r, b]`: while set, recorded rects are CLAMPED to it
+    /// (exact for this flat pipeline — every rect is a plain quad) and texts
+    /// get it intersected into their bounds. Set around the recent-files row
+    /// loop so partially visible rows render cut at the list viewport instead
+    /// of bleeding out of the well (the toolkit ScrollRegion's intersection
+    /// contract returns partial rows).
+    pub active_clip: Option<[f32; 4]>,
 }
 
 impl PageContent {
@@ -21,29 +27,52 @@ impl PageContent {
         Self {
             rects: Vec::new(),
             texts: Vec::new(),
+            active_clip: None,
+        }
+    }
+
+    fn clipped_bounds(&self, bounds: Option<[f32; 4]>) -> Option<[f32; 4]> {
+        match (self.active_clip, bounds) {
+            (Some(c), Some(b)) => Some([b[0].max(c[0]), b[1].max(c[1]), b[2].min(c[2]), b[3].min(c[3])]),
+            (Some(c), None) => Some(c),
+            (None, b) => b,
         }
     }
 }
 
 impl RenderTarget for PageContent {
     fn rect(&mut self, color: [f32; 4], x: f32, y: f32, w: f32, h: f32) {
-        self.rects.push((color, x, y, w, h));
+        let (mut x0, mut y0, mut x1, mut y1) = (x, y, x + w, y + h);
+        if let Some(c) = self.active_clip {
+            x0 = x0.max(c[0]);
+            y0 = y0.max(c[1]);
+            x1 = x1.min(c[2]);
+            y1 = y1.min(c[3]);
+            if x1 <= x0 || y1 <= y0 {
+                return;
+            }
+        }
+        self.rects.push((color, x0, y0, x1 - x0, y1 - y0));
     }
 
     fn text(&mut self, content: &str, x: f32, y: f32, size: f32, color: [f32; 4]) {
-        self.texts.push((content.to_string(), size, x, y, color, None, None));
+        let b = self.clipped_bounds(None);
+        self.texts.push((content.to_string(), size, x, y, color, None, b));
     }
 
     fn text_with_font(&mut self, content: &str, x: f32, y: f32, size: f32, color: [f32; 4], font: &str) {
-        self.texts.push((content.to_string(), size, x, y, color, Some(font.to_string()), None));
+        let b = self.clipped_bounds(None);
+        self.texts.push((content.to_string(), size, x, y, color, Some(font.to_string()), b));
     }
 
     fn text_with_bounds(&mut self, content: &str, x: f32, y: f32, size: f32, color: [f32; 4], bounds: Option<[f32; 4]>) {
-        self.texts.push((content.to_string(), size, x, y, color, None, bounds));
+        let b = self.clipped_bounds(bounds);
+        self.texts.push((content.to_string(), size, x, y, color, None, b));
     }
 
     fn text_with_font_and_bounds(&mut self, content: &str, x: f32, y: f32, size: f32, color: [f32; 4], font: &str, bounds: Option<[f32; 4]>) {
-        self.texts.push((content.to_string(), size, x, y, color, Some(font.to_string()), bounds));
+        let b = self.clipped_bounds(bounds);
+        self.texts.push((content.to_string(), size, x, y, color, Some(font.to_string()), b));
     }
 }
 
@@ -805,13 +834,29 @@ impl LayoutApp {
                 let inner_x = list_x + 4.0;
                 let inner_w = col_w - 16.0;
 
+                // `get_item_draw_y` returns PARTIALLY visible rows (toolkit
+                // ScrollRegion intersection contract); the scoped clip clamps
+                // their quads and bounds their labels to the list viewport, so
+                // an edge row renders cut instead of bleeding out of the well.
+                pc.active_clip = Some([list_x, list_y, list_x + col_w, list_y + list_h]);
                 for (idx, btn) in self.recent_files_buttons.iter_mut().enumerate() {
                     if let Some(draw_y) = self.recent_files_list.get_item_draw_y(idx, 0.0) {
                         cce_ui::layout::render_widget(&mut pc, btn, inner_x, draw_y, inner_w, btn_h, &mut self.ui_context);
+                        // Hit rect = the VISIBLE sliver: the drawn geometry is
+                        // already recorded (clamped by the clip above), so
+                        // re-clamping the stored rect only affects hit-testing
+                        // — without it a straddling row's hidden part would
+                        // shadow the controls below the well.
+                        let cy = draw_y.max(list_y);
+                        let cb = (draw_y + btn_h).min(list_y + list_h);
+                        if cb - cy < btn_h {
+                            btn.set_rect(inner_x, cy, inner_w, (cb - cy).max(0.0));
+                        }
                     } else {
                         btn.set_rect(-9999.0, -9999.0, 0.0, 0.0);
                     }
                 }
+                pc.active_clip = None;
 
                 if self.recent_files.is_empty() {
                     pc.text("No recent files", list_x + 12.0, list_y + 16.0, 11.0, [0.55, 0.55, 0.60, 1.0]);
