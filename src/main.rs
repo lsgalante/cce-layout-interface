@@ -1,4 +1,5 @@
 use cce_ui::widget::ScrollRegion;
+use cce_ui::widget::scroll_motion::{Bounds, ScrollMotion, LINE_PX};
 use wayland_client::QueueHandle;
 use cce_ui::cosmic_text::FontSystem;
 use serde::{Serialize, Deserialize};
@@ -384,6 +385,10 @@ struct LayoutApp {
     page_h: f32,
     pan_x: f32,
     pan_y: f32,
+    /// Drives `pan_x`/`pan_y` (the drawn values) from the wheel: notches
+    /// glide, fingers track 1:1 and fling on the lift. Unbounded — the
+    /// canvas pans freely. `tick_pan` carries the drawn values after it.
+    pan_motion: ScrollMotion,
     sidebar_quads: Vec<(f32, f32, f32, f32, [f32; 4])>,
     ui_context: cce_ui::context::UiContext,
 }
@@ -2384,6 +2389,19 @@ impl LayoutApp {
         changed
     }
 
+    /// Per-frame canvas-pan glide/coast: true while `pan_x`/`pan_y` are
+    /// still moving, so the frame loop keeps drawing.
+    fn tick_pan(&mut self, dt: f32) -> bool {
+        self.pan_motion.reconcile(self.pan_x, self.pan_y);
+        if !self.pan_motion.is_animating() {
+            return false;
+        }
+        let moved = self.pan_motion.tick(dt, Bounds::UNBOUNDED, Bounds::UNBOUNDED);
+        self.pan_x = self.pan_motion.x.pos();
+        self.pan_y = self.pan_motion.y.pos();
+        moved || self.pan_motion.is_animating()
+    }
+
     fn active_page_widgets_tick(&mut self, dt: f32) -> bool {
         let mut changed = false;
         let ctx = &mut self.ui_context;
@@ -2845,6 +2863,7 @@ impl Application for LayoutApp {
             page_h,
             pan_x: 0.0,
             pan_y: 0.0,
+            pan_motion: ScrollMotion::new(),
             sidebar_quads: Vec::new(),
             current_file_path: None,
             layer_buttons: Vec::new(),
@@ -3053,6 +3072,10 @@ impl Application for LayoutApp {
 
     fn tick(&mut self, dt: f32, needs_rebuild: &mut bool) {
         if self.paginator.tick(dt, &mut self.ui_context) {
+            *needs_rebuild = true;
+            self.needs_rebuild = true;
+        }
+        if self.tick_pan(dt) {
             *needs_rebuild = true;
             self.needs_rebuild = true;
         }
@@ -3826,14 +3849,21 @@ impl Application for LayoutApp {
                 self.needs_rebuild = true;
             }
         } else {
+            // Canvas pan: the page follows the wheel's own sign (a notch is
+            // LINE_PX, pixels are 1:1), unclamped. The motion glides notches
+            // and coasts a flick; `tick_pan` carries the drawn values after it.
             let (dx, dy) = match delta {
-                MouseScrollDelta::LineDelta(x, y) => (*x * 24.0, *y * 24.0),
+                MouseScrollDelta::LineDelta(x, y) => (*x * LINE_PX, *y * LINE_PX),
                 MouseScrollDelta::PixelDelta(pos) => (pos.x as f32, pos.y as f32),
             };
-            self.pan_x += dx;
-            self.pan_y += dy;
-            *needs_rebuild = true;
-            self.needs_rebuild = true;
+            let discrete = matches!(delta, MouseScrollDelta::LineDelta(..));
+            self.pan_motion.reconcile(self.pan_x, self.pan_y);
+            if self.pan_motion.apply_px(dx, dy, discrete, Bounds::UNBOUNDED, Bounds::UNBOUNDED) {
+                self.pan_x = self.pan_motion.x.pos();
+                self.pan_y = self.pan_motion.y.pos();
+                *needs_rebuild = true;
+                self.needs_rebuild = true;
+            }
         }
     }
 
