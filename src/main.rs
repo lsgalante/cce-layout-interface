@@ -3485,8 +3485,13 @@ impl Application for LayoutApp {
             }
         }
 
-        // Render Paginator Sidebar (includes backgrounds and active tab sliding container)
+        // Render Paginator Sidebar (includes backgrounds and active tab sliding container).
+        // The tab column's state fills are rounded rects (cce-ui's ButtonStrip rounds its
+        // segments), so read both bridges: plain quads, then the rounded ones.
         quads.extend(self.paginator.extra_quads());
+        for (qx, qy, qw, qh, qr, qc, qcorners) in self.paginator.all_rounded_quads(&self.ui_context) {
+            quads.pc.rounded_rect(cce_ui::scene::layout::Rect { x: qx, y: qy, width: qw, height: qh }, qr, qcorners, qc);
+        }
         if let Some(hq) = self.paginator.highlight_quad(&self.ui_context) {
             quads.push(hq);
         }
