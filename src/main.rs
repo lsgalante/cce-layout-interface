@@ -3267,6 +3267,8 @@ impl Application for LayoutApp {
         // _with_system_fonts) — kept only for widgets' prepare_text; text renders via the engine
         // cache, fixing the face-ID invisibility.
         let mut __pc = cce_ui::scene::paint::PaintCtx::new();
+        // The standard root plate (cce-ui PlateSpec::window).
+        __pc.root_plate(size.width as f32, size.height as f32);
         let quads = &mut __LayoutQuadSink { pc: &mut __pc };
         let size_changed = self.width != size.width as u32 || self.height != size.height as u32 || self.scale_factor != scale;
         if self.needs_rebuild || size_changed {
