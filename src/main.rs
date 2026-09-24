@@ -9,7 +9,13 @@ use cce_ui::widget::{
     TextBox, Slider, TextLabel, Paginator, Button, Dropdown, Toggle, ColorSelector,
     Label, Spinbox, Key, FontSelector, PageSelector, MenuController
 };
-use cce_ui::layout::{RenderTarget, Section, UiFrame};
+use cce_ui::layout::{plate_gap, plate_padding, root_plate_gap, root_plate_inset, RenderTarget, Section, UiFrame};
+
+/// The sidebar's width — a size, not a spacing, and the one place it is
+/// named: the paginator's rect, the canvas's left edge and the pointer
+/// handlers' sidebar/canvas split all derive from it (`sidebar_rect`,
+/// `canvas_rect`).
+const SIDEBAR_W: f32 = 280.0;
 
 pub struct PageContent {
     pub rects: Vec<([f32; 4], f32, f32, f32, f32)>,
@@ -695,6 +701,33 @@ impl LayoutApp {
         self.slider_zoom.get_scaled_value() * zoom_multiplier
     }
 
+    /// The sidebar's rect `(x, y, w, h)`: standing on the root plate, inset
+    /// from the window edge on its three outer sides, `SIDEBAR_W` wide.
+    fn sidebar_rect(&self) -> (f32, f32, f32, f32) {
+        let inset = root_plate_inset();
+        (inset, inset, SIDEBAR_W, self.height as f32 - 2.0 * inset)
+    }
+
+    /// The canvas's rect `(x, y, w, h)`: the sidebar's sibling on the root
+    /// plate, one root gap to its right and inset from the other three edges.
+    /// Paint and hit-testing both read it, so the two cannot drift.
+    fn canvas_rect(&self) -> (f32, f32, f32, f32) {
+        let inset = root_plate_inset();
+        let x = inset + SIDEBAR_W + root_plate_gap();
+        (x, inset, self.width as f32 - x - inset, self.height as f32 - 2.0 * inset)
+    }
+
+    /// Top-left of the page sheet: centred on the canvas at the render zoom,
+    /// then panned.
+    fn page_origin(&self) -> (f32, f32) {
+        let zoom = self.render_zoom();
+        let (cx, cy, cw, ch) = self.canvas_rect();
+        (
+            cx + (cw - self.page_w * zoom) / 2.0 + self.pan_x,
+            cy + (ch - self.page_h * zoom) / 2.0 + self.pan_y,
+        )
+    }
+
     fn rebuild_text_items(&mut self) {
         let font_system = &mut self.font_system;
         let selected_page = self.paginator.selected_page();
@@ -809,25 +842,30 @@ impl LayoutApp {
         let mut pc = PageContent::new();
         let ui_frame = UiFrame::start(0.0);
 
-        let sidebar_w = self.paginator.sidebar_w();
-        let cx = sidebar_w;
-        let cy = 16.0;
-        let cw = 280.0 - sidebar_w;
+        // The tab strip takes the left of the sidebar and the selected page's
+        // sections the rest, starting one pane padding below the sidebar's top.
+        let (side_x, side_y, side_w, _) = self.sidebar_rect();
+        let strip_w = self.paginator.sidebar_w();
+        let cx = side_x + strip_w;
+        let cy = side_y + plate_padding();
+        let cw = side_w - strip_w;
 
         match self.paginator.selected_page() {
             0 => {
                 let mut sec = Section::new(&mut pc, cx, cy, cw, "File Operations");
-                let col_w = cw - 40.0;
-                sec.widget(&mut pc, &mut self.btn_new_doc, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.btn_open, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
+                let col_w = sec.content_width();
+                sec.widget(&mut pc, &mut self.btn_new_doc, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
+                sec.widget(&mut pc, &mut self.btn_open, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
 
-                sec.text(&mut pc, "Recent Files", 12.0, 0.0, 11.0, [0.83, 0.83, 0.83, 1.0]);
+                sec.text(&mut pc, "Recent Files", Section::DEFAULT_MARGIN_X, 0.0, 11.0, [0.83, 0.83, 0.83, 1.0]);
+                // TODO(style): the heading's line height, not a gap — the 11px
+                // label plus the room under it before the well.
                 sec.spacing(16.0);
 
                 let list_h = 100.0;
-                let list_x = sec.ax(12.0);
+                let list_x = sec.content_left();
                 let list_y = sec.ay();
                 self.recent_files_list.set_rect(list_x, list_y, col_w, list_h);
                 self.recent_files_list.push_prims(&mut pc);
@@ -836,8 +874,11 @@ impl LayoutApp {
                 self.recent_files_list.update_bounds(self.recent_files.len(), list_y, list_h);
 
                 let btn_h = 22.0;
-                let inner_x = list_x + 4.0;
-                let inner_w = col_w - 16.0;
+                // Rows hug the well's border by the same inset its scrollbar
+                // keeps from the frame, and leave the bar's lane on the right.
+                let hug = self.recent_files_list.edge_inset;
+                let inner_x = list_x + hug;
+                let inner_w = col_w - hug - (cce_ui::layout::scrollbar_width() + hug);
 
                 // `get_item_draw_y` returns PARTIALLY visible rows (toolkit
                 // ScrollRegion intersection contract); the scoped clip clamps
@@ -864,58 +905,58 @@ impl LayoutApp {
                 pc.active_clip = None;
 
                 if self.recent_files.is_empty() {
-                    pc.text("No recent files", list_x + 12.0, list_y + 16.0, 11.0, [0.55, 0.55, 0.60, 1.0]);
+                    pc.text("No recent files", list_x + plate_padding(), list_y + plate_padding(), 11.0, [0.55, 0.55, 0.60, 1.0]);
                 }
 
-                sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.btn_save, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.btn_save_as, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.btn_exit, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
+                sec.spacing(plate_gap());
+                sec.widget(&mut pc, &mut self.btn_save, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
+                sec.widget(&mut pc, &mut self.btn_save_as, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
+                sec.widget(&mut pc, &mut self.btn_exit, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
                 sec.finish(&mut pc);
             }
             1 => {
                 let mut sec = Section::new(&mut pc, cx, cy, cw, "Document Size");
-                let col_w = cw - 40.0;
-                sec.widget(&mut pc, &mut self.dropdown_presets, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.slider_page_x, 12.0, col_w, 18.0, &mut self.ui_context);
-                sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.slider_page_y, 12.0, col_w, 18.0, &mut self.ui_context);
-                sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.page_color_selector, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
+                let col_w = sec.content_width();
+                sec.widget(&mut pc, &mut self.dropdown_presets, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
+                sec.widget(&mut pc, &mut self.slider_page_x, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
+                sec.widget(&mut pc, &mut self.slider_page_y, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
+                sec.widget(&mut pc, &mut self.page_color_selector, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
                 let next_y = sec.finish(&mut pc);
 
                 let mut sec2 = Section::new(&mut pc, cx, next_y, cw, "Margins & Mode");
-                sec2.widget(&mut pc, &mut self.toggle_margin, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec2.spacing(12.0);
-                sec2.widget(&mut pc, &mut self.dropdown_margin_units, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec2.spacing(12.0);
-                sec2.widget(&mut pc, &mut self.slider_margin_x, 12.0, col_w, 18.0, &mut self.ui_context);
-                sec2.spacing(12.0);
-                sec2.widget(&mut pc, &mut self.slider_margin_y, 12.0, col_w, 18.0, &mut self.ui_context);
-                sec2.spacing(12.0);
-                sec2.widget(&mut pc, &mut self.toggle_word_processor, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec2.spacing(12.0);
+                sec2.widget(&mut pc, &mut self.toggle_margin, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec2.spacing(plate_gap());
+                sec2.widget(&mut pc, &mut self.dropdown_margin_units, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec2.spacing(plate_gap());
+                sec2.widget(&mut pc, &mut self.slider_margin_x, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                sec2.spacing(plate_gap());
+                sec2.widget(&mut pc, &mut self.slider_margin_y, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                sec2.spacing(plate_gap());
+                sec2.widget(&mut pc, &mut self.toggle_word_processor, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec2.spacing(plate_gap());
                 sec2.finish(&mut pc);
             }
             2 => {
-                let col_w = cw - 40.0;
                 if self.word_processor_enabled {
                     let mut sec = Section::new(&mut pc, cx, cy, cw, "Word Processor");
-                    sec.widget(&mut pc, &mut self.font_selector, 12.0, col_w, 26.0, &mut self.ui_context);
-                    sec.spacing(12.0);
-                    sec.widget(&mut pc, &mut self.sidebar_size, 12.0, col_w, 26.0, &mut self.ui_context);
-                    sec.spacing(12.0);
-                    sec.widget(&mut pc, &mut self.slider_r, 12.0, col_w, 18.0, &mut self.ui_context);
-                    sec.spacing(12.0);
-                    sec.widget(&mut pc, &mut self.slider_g, 12.0, col_w, 18.0, &mut self.ui_context);
-                    sec.spacing(12.0);
-                    sec.widget(&mut pc, &mut self.slider_b, 12.0, col_w, 18.0, &mut self.ui_context);
-                    sec.spacing(12.0);
+                    let col_w = sec.content_width();
+                    sec.widget(&mut pc, &mut self.font_selector, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                    sec.spacing(plate_gap());
+                    sec.widget(&mut pc, &mut self.sidebar_size, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                    sec.spacing(plate_gap());
+                    sec.widget(&mut pc, &mut self.slider_r, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                    sec.spacing(plate_gap());
+                    sec.widget(&mut pc, &mut self.slider_g, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                    sec.spacing(plate_gap());
+                    sec.widget(&mut pc, &mut self.slider_b, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                    sec.spacing(plate_gap());
                     sec.finish(&mut pc);
                 } else if let Some(idx) = self.selected_idx {
                     let (is_text, is_vector) = match &self.elements[idx] {
@@ -925,139 +966,143 @@ impl LayoutApp {
                     };
 
                     let mut sec = Section::new(&mut pc, cx, cy, cw, "Geometry");
-                    sec.widget(&mut pc, &mut self.sidebar_x, 12.0, col_w, 26.0, &mut self.ui_context);
-                    sec.spacing(16.0);
-                    sec.widget(&mut pc, &mut self.sidebar_y, 12.0, col_w, 26.0, &mut self.ui_context);
-                    sec.spacing(16.0);
-                    sec.widget(&mut pc, &mut self.sidebar_w, 12.0, col_w, 26.0, &mut self.ui_context);
-                    sec.spacing(16.0);
-                    sec.widget(&mut pc, &mut self.sidebar_h, 12.0, col_w, 26.0, &mut self.ui_context);
-                    sec.spacing(12.0);
+                    let col_w = sec.content_width();
+                    sec.widget(&mut pc, &mut self.sidebar_x, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                    sec.spacing(plate_gap());
+                    sec.widget(&mut pc, &mut self.sidebar_y, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                    sec.spacing(plate_gap());
+                    sec.widget(&mut pc, &mut self.sidebar_w, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                    sec.spacing(plate_gap());
+                    sec.widget(&mut pc, &mut self.sidebar_h, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                    sec.spacing(plate_gap());
                     let next_y = sec.finish(&mut pc);
 
                     let mut sec_align = Section::new(&mut pc, cx, next_y, cw, "Alignment");
-                    sec_align.widget(&mut pc, &mut self.dropdown_align_h, 12.0, col_w, 26.0, &mut self.ui_context);
-                    sec_align.spacing(12.0);
-                    sec_align.widget(&mut pc, &mut self.dropdown_align_v, 12.0, col_w, 26.0, &mut self.ui_context);
+                    sec_align.widget(&mut pc, &mut self.dropdown_align_h, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                    sec_align.spacing(plate_gap());
+                    sec_align.widget(&mut pc, &mut self.dropdown_align_v, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
                     let next_y = sec_align.finish(&mut pc);
 
                     if is_text {
                         let mut sec2 = Section::new(&mut pc, cx, next_y, cw, "Text Properties");
-                        sec2.widget(&mut pc, &mut self.sidebar_text, 12.0, col_w, 26.0, &mut self.ui_context);
-                        sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.toggle_multiline, 12.0, col_w, 26.0, &mut self.ui_context);
-                        sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.font_selector, 12.0, col_w, 26.0, &mut self.ui_context);
-                        sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.sidebar_size, 12.0, col_w, 26.0, &mut self.ui_context);
-                        sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_r, 12.0, col_w, 18.0, &mut self.ui_context);
-                        sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_g, 12.0, col_w, 18.0, &mut self.ui_context);
-                        sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_b, 12.0, col_w, 18.0, &mut self.ui_context);
-                        sec2.spacing(12.0);
+                        sec2.widget(&mut pc, &mut self.sidebar_text, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                        sec2.spacing(plate_gap());
+                        sec2.widget(&mut pc, &mut self.toggle_multiline, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                        sec2.spacing(plate_gap());
+                        sec2.widget(&mut pc, &mut self.font_selector, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                        sec2.spacing(plate_gap());
+                        sec2.widget(&mut pc, &mut self.sidebar_size, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                        sec2.spacing(plate_gap());
+                        sec2.widget(&mut pc, &mut self.slider_r, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                        sec2.spacing(plate_gap());
+                        sec2.widget(&mut pc, &mut self.slider_g, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                        sec2.spacing(plate_gap());
+                        sec2.widget(&mut pc, &mut self.slider_b, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                        sec2.spacing(plate_gap());
                         let next_y_align = sec2.finish(&mut pc);
 
                         let mut sec_text_align = Section::new(&mut pc, cx, next_y_align, cw, "Text Alignment");
-                        sec_text_align.widget(&mut pc, &mut self.dropdown_text_align_h, 12.0, col_w, 26.0, &mut self.ui_context);
-                        sec_text_align.spacing(12.0);
-                        sec_text_align.widget(&mut pc, &mut self.dropdown_text_align_v, 12.0, col_w, 26.0, &mut self.ui_context);
+                        sec_text_align.widget(&mut pc, &mut self.dropdown_text_align_h, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                        sec_text_align.spacing(plate_gap());
+                        sec_text_align.widget(&mut pc, &mut self.dropdown_text_align_v, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
                         sec_text_align.finish(&mut pc);
                     } else if is_vector {
                         let mut sec2 = Section::new(&mut pc, cx, next_y, cw, "Line Properties");
-                        sec2.widget(&mut pc, &mut self.sidebar_size, 12.0, col_w, 26.0, &mut self.ui_context);
-                        sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.dropdown_line_cap, 12.0, col_w, 26.0, &mut self.ui_context);
-                        sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_r, 12.0, col_w, 18.0, &mut self.ui_context);
-                        sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_g, 12.0, col_w, 18.0, &mut self.ui_context);
-                        sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_b, 12.0, col_w, 18.0, &mut self.ui_context);
-                        sec2.spacing(12.0);
+                        sec2.widget(&mut pc, &mut self.sidebar_size, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                        sec2.spacing(plate_gap());
+                        sec2.widget(&mut pc, &mut self.dropdown_line_cap, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                        sec2.spacing(plate_gap());
+                        sec2.widget(&mut pc, &mut self.slider_r, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                        sec2.spacing(plate_gap());
+                        sec2.widget(&mut pc, &mut self.slider_g, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                        sec2.spacing(plate_gap());
+                        sec2.widget(&mut pc, &mut self.slider_b, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                        sec2.spacing(plate_gap());
                         sec2.finish(&mut pc);
                     } else {
                         let mut sec2 = Section::new(&mut pc, cx, next_y, cw, "Fill Color");
-                        sec2.widget(&mut pc, &mut self.slider_r, 12.0, col_w, 18.0, &mut self.ui_context);
-                        sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_g, 12.0, col_w, 18.0, &mut self.ui_context);
-                        sec2.spacing(12.0);
-                        sec2.widget(&mut pc, &mut self.slider_b, 12.0, col_w, 18.0, &mut self.ui_context);
-                        sec2.spacing(12.0);
+                        sec2.widget(&mut pc, &mut self.slider_r, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                        sec2.spacing(plate_gap());
+                        sec2.widget(&mut pc, &mut self.slider_g, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                        sec2.spacing(plate_gap());
+                        sec2.widget(&mut pc, &mut self.slider_b, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                        sec2.spacing(plate_gap());
                         sec2.finish(&mut pc);
                     }
                 } else {
                     let mut sec = Section::new(&mut pc, cx, cy, cw, "Properties");
-                    sec.widget(&mut pc, &mut self.label_sel_status, 12.0, col_w, 18.0, &mut self.ui_context);
+                    let col_w = sec.content_width();
+                    sec.widget(&mut pc, &mut self.label_sel_status, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                    // style: deliberate — the lines of one caption, set tight,
+                    // not siblings on the pane.
                     sec.spacing(8.0);
-                    sec.widget(&mut pc, &mut self.label_sel_desc1, 12.0, col_w, 14.0, &mut self.ui_context);
+                    sec.widget(&mut pc, &mut self.label_sel_desc1, Section::DEFAULT_MARGIN_X, col_w, 14.0, &mut self.ui_context);
                     sec.spacing(6.0);
-                    sec.widget(&mut pc, &mut self.label_sel_desc2, 12.0, col_w, 14.0, &mut self.ui_context);
-                    sec.spacing(12.0);
+                    sec.widget(&mut pc, &mut self.label_sel_desc2, Section::DEFAULT_MARGIN_X, col_w, 14.0, &mut self.ui_context);
+                    sec.spacing(plate_gap());
                     sec.finish(&mut pc);
                 }
             }
             3 => {
                 let mut sec = Section::new(&mut pc, cx, cy, cw, "Add Elements");
-                let col_w = cw - 40.0;
-                sec.widget(&mut pc, &mut self.btn_add_text, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.btn_add_rect, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.btn_add_banner, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.btn_add_vector, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.label_total_elements, 12.0, col_w, 18.0, &mut self.ui_context);
-                sec.spacing(12.0);
+                let col_w = sec.content_width();
+                sec.widget(&mut pc, &mut self.btn_add_text, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
+                sec.widget(&mut pc, &mut self.btn_add_rect, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
+                sec.widget(&mut pc, &mut self.btn_add_banner, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
+                sec.widget(&mut pc, &mut self.btn_add_vector, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
+                sec.widget(&mut pc, &mut self.label_total_elements, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
                 sec.finish(&mut pc);
             }
             4 => {
                 let mut sec = Section::new(&mut pc, cx, cy, cw, "Grid");
-                let col_w = cw - 40.0;
-                sec.widget(&mut pc, &mut self.toggle_grid, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.grid_color_selector, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.spinbox_grid_size, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.label_grid_snap, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
-                sec.widget(&mut pc, &mut self.dropdown_grid_units, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec.spacing(12.0);
+                let col_w = sec.content_width();
+                sec.widget(&mut pc, &mut self.toggle_grid, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
+                sec.widget(&mut pc, &mut self.grid_color_selector, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
+                sec.widget(&mut pc, &mut self.spinbox_grid_size, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
+                sec.widget(&mut pc, &mut self.label_grid_snap, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
+                sec.widget(&mut pc, &mut self.dropdown_grid_units, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec.spacing(plate_gap());
                 let next_y = sec.finish(&mut pc);
 
                 let mut sec_zoom = Section::new(&mut pc, cx, next_y, cw, "Zoom");
-                sec_zoom.widget(&mut pc, &mut self.slider_zoom, 12.0, col_w, 18.0, &mut self.ui_context);
-                sec_zoom.spacing(12.0);
+                sec_zoom.widget(&mut pc, &mut self.slider_zoom, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                sec_zoom.spacing(plate_gap());
                 let next_y = sec_zoom.finish(&mut pc);
 
                 let mut sec_margins = Section::new(&mut pc, cx, next_y, cw, "Margins");
-                sec_margins.widget(&mut pc, &mut self.margin_color_selector, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec_margins.spacing(12.0);
-                sec_margins.widget(&mut pc, &mut self.spinbox_margin_thickness, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec_margins.spacing(12.0);
+                sec_margins.widget(&mut pc, &mut self.margin_color_selector, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec_margins.spacing(plate_gap());
+                sec_margins.widget(&mut pc, &mut self.spinbox_margin_thickness, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec_margins.spacing(plate_gap());
                 let next_y = sec_margins.finish(&mut pc);
 
                 let mut sec2 = Section::new(&mut pc, cx, next_y, cw, "Rulers");
-                sec2.widget(&mut pc, &mut self.toggle_rulers, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec2.spacing(12.0);
-                sec2.widget(&mut pc, &mut self.dropdown_units, 12.0, col_w, 26.0, &mut self.ui_context);
-                sec2.spacing(12.0);
+                sec2.widget(&mut pc, &mut self.toggle_rulers, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec2.spacing(plate_gap());
+                sec2.widget(&mut pc, &mut self.dropdown_units, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                sec2.spacing(plate_gap());
                 sec2.finish(&mut pc);
             }
             5 => {
                 let mut sec = Section::new(&mut pc, cx, cy, cw, "Layers List");
-                let col_w = cw - 40.0;
+                let col_w = sec.content_width();
                 if self.layer_buttons.is_empty() {
                     let mut label_no_layers = Label::new("No elements found").with_color([0x83, 0x83, 0x8a]);
-                    sec.widget(&mut pc, &mut label_no_layers, 12.0, col_w, 18.0, &mut self.ui_context);
-                    sec.spacing(12.0);
+                    sec.widget(&mut pc, &mut label_no_layers, Section::DEFAULT_MARGIN_X, col_w, 18.0, &mut self.ui_context);
+                    sec.spacing(plate_gap());
                 } else {
                     for btn in &mut self.layer_buttons {
-                        sec.widget(&mut pc, &mut **btn, 12.0, col_w, 26.0, &mut self.ui_context);
-                        sec.spacing(8.0);
+                        sec.widget(&mut pc, &mut **btn, Section::DEFAULT_MARGIN_X, col_w, 26.0, &mut self.ui_context);
+                        sec.spacing(plate_gap());
                     }
                 }
                 sec.finish(&mut pc);
@@ -1113,13 +1158,8 @@ impl LayoutApp {
 
         let mut labels = Vec::new();
 
-        let canvas_w = self.width as f32 - 280.0;
-        let canvas_h = self.height as f32;
         let zoom = self.render_zoom();
-        let page_w = self.page_w * zoom;
-        let page_h = self.page_h * zoom;
-        let page_x = 280.0 + (canvas_w - page_w) / 2.0 + self.pan_x;
-        let page_y = (canvas_h - page_h) / 2.0 + self.pan_y;
+        let (page_x, page_y) = self.page_origin();
 
         // 2. Paginator sidebar tabs: emitted in display_list via the paint walk.
 
@@ -1171,6 +1211,10 @@ impl LayoutApp {
 
 
         // 5. Canvas Element Labels (drawn relative to the paper sheet)
+        // TODO(style): the `8.0 * zoom` / `6.0 * zoom` label offsets and the
+        // text box's `16.0`/`12.0` insets are page-space padding inside a
+        // document element — they scale with the zoom, so they are content,
+        // not UI spacing.
         if self.word_processor_enabled {
             // Word-processor text box: emitted in display_list via the paint walk.
         } else {
@@ -3278,7 +3322,8 @@ impl Application for LayoutApp {
 
             // Set paginator bounds in the sidebar region
             cce_ui::scale::set_scale_factor(scale as f32);
-            self.paginator.set_rect(0.0, 0.0, 280.0, size.height as f32);
+            let (side_x, side_y, side_w, side_h) = self.sidebar_rect();
+            self.paginator.set_rect(side_x, side_y, side_w, side_h);
 
             self.rebuild_layers_tab_widgets();
             self.rebuild_text_items();
@@ -3288,22 +3333,22 @@ impl Application for LayoutApp {
 
 
         // 3. Render Canvas & centered paper sheet
-        let canvas_w = self.width as f32 - 280.0;
-        let canvas_h = self.height as f32;
+        let (canvas_x, canvas_y, canvas_w, canvas_h) = self.canvas_rect();
         let zoom = self.render_zoom();
 
         // Centered Paper Position
-        let page_x = 280.0 + (canvas_w - self.page_w * zoom) / 2.0 + self.pan_x;
-        let page_y = (canvas_h - self.page_h * zoom) / 2.0 + self.pan_y;
+        let (page_x, page_y) = self.page_origin();
 
         // Dark slate canvas backdrop
         let mut canvas_bg = [0.12, 0.12, 0.15, 1.0];
         if let Some(opacity) = cce_ui::color::read_opacity_if_configured() {
             canvas_bg[3] = opacity;
         }
-        quads.push((280.0, 0.0, canvas_w, canvas_h, canvas_bg));
+        quads.push((canvas_x, canvas_y, canvas_w, canvas_h, canvas_bg));
 
         // Axis Rulers
+        // TODO(style): the 20px band, the 12/6 tick lengths and the corner
+        // block are the ruler's own geometry, not spacing on a plate.
         if self.toggle_rulers.toggled() {
             let ruler_bg = [0.18, 0.18, 0.22, 1.0];
             let tick_color = [0.45, 0.45, 0.50, 0.8];
@@ -3499,16 +3544,17 @@ impl Application for LayoutApp {
         }
         quads.extend(self.sidebar_quads.iter().cloned());
 
-        // Divider between Sidebar and Canvas
-        quads.push((280.0, 0.0, 1.0, self.height as f32, [0.20, 0.20, 0.25, 1.0]));
+        // Divider between Sidebar and Canvas: a hairline down the middle of
+        // the root gap that separates them.
+        {
+            let (canvas_x, canvas_y, _, canvas_h) = self.canvas_rect();
+            quads.push((canvas_x - root_plate_gap() / 2.0, canvas_y, 1.0, canvas_h, [0.20, 0.20, 0.25, 1.0]));
+        }
 
         // Vectors (the legacy view_vectors body), after plain geometry as the wrapper ordered.
         if !self.word_processor_enabled {
             let zoom = self.render_zoom();
-            let canvas_w = self.width as f32 - 280.0;
-            let canvas_h = self.height as f32;
-            let page_x = 280.0 + (canvas_w - self.page_w * zoom) / 2.0 + self.pan_x;
-            let page_y = (canvas_h - self.page_h * zoom) / 2.0 + self.pan_y;
+            let (page_x, page_y) = self.page_origin();
             for element in &self.elements {
                 if let Element::Vector { x1, y1, x2, y2, stroke_width, color, line_cap } = element {
                     let vx1 = page_x + *x1 * zoom;
@@ -3559,8 +3605,7 @@ impl Application for LayoutApp {
         let px = pos.x as f32;
         let py = pos.y as f32;
 
-        let sidebar_w = 280.0;
-        if px < sidebar_w {
+        if px < self.canvas_rect().0 {
             if {
                 // Self-routing composite: handle_event, not propagate — the router's
                 // children-first descent would let the embedded strip consume this.
@@ -3582,13 +3627,8 @@ impl Application for LayoutApp {
             if self.active_page_widgets_cursor_moved(px, py) { changed = true; }
 
             // Compute centering coordinates for canvas elements
-            let canvas_w = self.width as f32 - 280.0;
-            let canvas_h = self.height as f32;
             let zoom = self.render_zoom();
-            let page_w = self.page_w * zoom;
-            let page_h = self.page_h * zoom;
-            let page_x = 280.0 + (canvas_w - page_w) / 2.0 + self.pan_x;
-            let page_y = (canvas_h - page_h) / 2.0 + self.pan_y;
+            let (page_x, page_y) = self.page_origin();
 
             let cx = (px - page_x) / zoom;
             let cy = (py - page_y) / zoom;
@@ -3644,8 +3684,7 @@ impl Application for LayoutApp {
         let px = pos.x as f32;
         let py = pos.y as f32;
 
-        let sidebar_w = 280.0;
-        if px < sidebar_w {
+        if px < self.canvas_rect().0 {
             let pag_mouse = {
                 // Self-routing composite: handle_event, not propagate (see pointer move).
                 let ev = cce_ui::widget::Event::MouseButton { button, state, x: px, y: py, local_x: px, local_y: py };
@@ -3754,13 +3793,8 @@ impl Application for LayoutApp {
             }
         } else {
             // Compute centering coordinates for canvas elements
-            let canvas_w = self.width as f32 - 280.0;
-            let canvas_h = self.height as f32;
             let zoom = self.render_zoom();
-            let page_w = self.page_w * zoom;
-            let page_h = self.page_h * zoom;
-            let page_x = 280.0 + (canvas_w - page_w) / 2.0 + self.pan_x;
-            let page_y = (canvas_h - page_h) / 2.0 + self.pan_y;
+            let (page_x, page_y) = self.page_origin();
 
             let cx = (px - page_x) / zoom;
             let cy = (py - page_y) / zoom;
@@ -3837,7 +3871,7 @@ impl Application for LayoutApp {
     fn handle_mouse_wheel(&mut self, delta: &MouseScrollDelta, pos: LogicalPosition, needs_rebuild: &mut bool) {
         let px = pos.x as f32;
         let py = pos.y as f32;
-        if px < 280.0 {
+        if px < self.canvas_rect().0 {
             let mut wheel_handled = false;
             if self.active_page_widgets_mouse_wheel(delta, px, py) {
                 wheel_handled = true;
